@@ -1,23 +1,74 @@
 {
     "name": "Focussium",
     "short_name": "Focussium",
-    "description": "Your Zen productivity companion.",
+    "description": "A premium, Zen-inspired productivity suite featuring Pomodoro timers, task management, and deep focus tools.",
     "start_url": "./index.html",
+    "id": "focussium-pwa",
     "display": "standalone",
     "background_color": "#080808",
     "theme_color": "#d4a574",
+    "lang": "en-US",
+    "dir": "ltr",
+    "orientation": "any",
+    "categories": [
+        "productivity",
+        "utilities",
+        "lifestyle"
+    ],
     "icons": [
         {
             "src": "./icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
         },
         {
             "src": "./icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "./screenshot-desktop.png",
+            "sizes": "1920x1080",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Focussium Desktop Dashboard"
+        },
+        {
+            "src": "./screenshot-mobile.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Focussium Mobile Focus Screen"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Start Timer",
+            "short_name": "Timer",
+            "description": "Quickly jump into a focus session",
+            "url": "./index.html",
+            "icons": [
+                {
+                    "src": "./icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
         }
     ]
 }
