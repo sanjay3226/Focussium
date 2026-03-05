@@ -117,112 +117,112 @@
             --tx3: #a09a92;
             --tx4: #cdc7c0;
             --bd: rgba(0, 0, 0, .06);
-            --bdh: rgba(0, 0, 0, .1);
+            --bdh: rgba(0, 0, 0, .15);
             --bds: rgba(0, 0, 0, .1);
             --shsm: 0 2px 10px rgba(0, 0, 0, .04);
             --shmd: 0 8px 28px rgba(0, 0, 0, .06);
             --shlg: 0 20px 50px rgba(0, 0, 0, .08);
-            --glass: rgba(255, 255, 255, .5);
-            --glassh: rgba(255, 255, 255, .7);
-            --navbg: rgba(244, 242, 239, .94);
-            --modalbg: rgba(0, 0, 0, .18);
+            --glass: rgba(255, 255, 255, .7);
+            --glassh: rgba(255, 255, 255, .9);
+            --navbg: rgba(244, 242, 239, .96);
+            --modalbg: rgba(0, 0, 0, .2);
             --chgrid: rgba(0, 0, 0, .05);
             --chtxt: #a09a92;
-            --surface: linear-gradient(145deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, .3));
+            --surface: linear-gradient(145deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .5));
         }
 
         /*═══════════════════════════════════════
-  3 · ACCENT COLORS
+  3 · ACCENT COLORS (PERSONALITY THEMES)
 ═══════════════════════════════════════*/
         :root,
-        [data-accent="amber"] {
-            --ac: #d4a574;
-            --acr: 212, 165, 116;
-            --acl: #e0be96;
-            --acd: #b8895c;
-            --acg: rgba(212, 165, 116, .2);
-            --acgr: linear-gradient(135deg, #d4a574, #c4956a);
-            --acs: rgba(212, 165, 116, .1)
+        [data-accent="neon"] {
+            --ac: #00f2ff;
+            --acr: 0, 242, 255;
+            --acl: #80f9ff;
+            --acd: #00a3ad;
+            --acg: rgba(0, 242, 255, .2);
+            --acgr: linear-gradient(135deg, #00f2ff, #7000ff);
+            --acs: rgba(0, 242, 255, .1)
         }
 
-        [data-accent="sage"] {
-            --ac: #7daa8c;
-            --acr: 125, 170, 140;
-            --acl: #9bc4a9;
-            --acd: #5f8a6e;
-            --acg: rgba(125, 170, 140, .2);
-            --acgr: linear-gradient(135deg, #7daa8c, #6b9e7c);
-            --acs: rgba(125, 170, 140, .1)
+        [data-accent="matcha"] {
+            --ac: #a3e635;
+            --acr: 163, 230, 53;
+            --acl: #bef264;
+            --acd: #65a30d;
+            --acg: rgba(163, 230, 53, .2);
+            --acgr: linear-gradient(135deg, #a3e635, #16a34a);
+            --acs: rgba(163, 230, 53, .1)
         }
 
-        [data-accent="ocean"] {
-            --ac: #6ba5b4;
-            --acr: 107, 165, 180;
-            --acl: #8cc0cc;
-            --acd: #508a98;
-            --acg: rgba(107, 165, 180, .2);
-            --acgr: linear-gradient(135deg, #6ba5b4, #5a96a6);
-            --acs: rgba(107, 165, 180, .1)
+        [data-accent="sunset"] {
+            --ac: #ff4d4d;
+            --acr: 255, 77, 77;
+            --acl: #ff8080;
+            --acd: #cc0000;
+            --acg: rgba(255, 77, 77, .2);
+            --acgr: linear-gradient(135deg, #ff4d4d, #f97316);
+            --acs: rgba(255, 77, 77, .1)
         }
 
         [data-accent="lavender"] {
-            --ac: #9b8ec4;
-            --acr: 155, 142, 196;
-            --acl: #b5aad6;
-            --acd: #7b6eaa;
-            --acg: rgba(155, 142, 196, .2);
-            --acgr: linear-gradient(135deg, #9b8ec4, #8a7cb6);
-            --acs: rgba(155, 142, 196, .1)
-        }
-
-        [data-accent="rose"] {
-            --ac: #c48a8a;
-            --acr: 196, 138, 138;
-            --acl: #d6a5a5;
-            --acd: #aa6e6e;
-            --acg: rgba(196, 138, 138, .2);
-            --acgr: linear-gradient(135deg, #c48a8a, #b67a7a);
-            --acs: rgba(196, 138, 138, .1)
+            --ac: #8b5cf6;
+            --acr: 139, 92, 246;
+            --acl: #a78bfa;
+            --acd: #6d28d9;
+            --acg: rgba(139, 92, 246, .2);
+            --acgr: linear-gradient(135deg, #8b5cf6, #d946ef);
+            --acs: rgba(139, 92, 246, .1)
         }
 
         [data-accent="sky"] {
-            --ac: #7daacf;
-            --acr: 125, 170, 207;
-            --acl: #9ac0de;
-            --acd: #5e8eb5;
-            --acg: rgba(125, 170, 207, .2);
-            --acgr: linear-gradient(135deg, #7daacf, #6d9ac0);
-            --acs: rgba(125, 170, 207, .1)
+            --ac: #0ea5e9;
+            --acr: 14, 165, 233;
+            --acl: #38bdf8;
+            --acd: #0369a1;
+            --acg: rgba(14, 165, 233, .2);
+            --acgr: linear-gradient(135deg, #0ea5e9, #6366f1);
+            --acs: rgba(14, 165, 233, .1)
         }
 
-        [data-accent="coral"] {
-            --ac: #cf8a6b;
-            --acr: 207, 138, 107;
-            --acl: #dea68a;
-            --acd: #b5704e;
-            --acg: rgba(207, 138, 107, .2);
-            --acgr: linear-gradient(135deg, #cf8a6b, #c07a5a);
-            --acs: rgba(207, 138, 107, .1)
+        [data-accent="rose"] {
+            --ac: #f43f5e;
+            --acr: 244, 63, 94;
+            --acl: #fb7185;
+            --acd: #be123c;
+            --acg: rgba(244, 63, 94, .2);
+            --acgr: linear-gradient(135deg, #f43f5e, #ec4899);
+            --acs: rgba(244, 63, 94, .1)
+        }
+
+        [data-accent="royal"] {
+            --ac: #facc15;
+            --acr: 250, 204, 21;
+            --acl: #fde047;
+            --acd: #ca8a04;
+            --acg: rgba(250, 204, 21, .2);
+            --acgr: linear-gradient(135deg, #facc15, #f59e0b);
+            --acs: rgba(250, 204, 21, .1)
         }
 
         [data-accent="mint"] {
-            --ac: #6bbfa8;
-            --acr: 107, 191, 168;
-            --acl: #8dd4c0;
-            --acd: #4ea58c;
-            --acg: rgba(107, 191, 168, .2);
-            --acgr: linear-gradient(135deg, #6bbfa8, #5ab098);
-            --acs: rgba(107, 191, 168, .1)
+            --ac: #2dd4bf;
+            --acr: 45, 212, 191;
+            --acl: #5eead4;
+            --acd: #0f766e;
+            --acg: rgba(45, 212, 191, .2);
+            --acgr: linear-gradient(135deg, #2dd4bf, #10b981);
+            --acs: rgba(45, 212, 191, .1)
         }
 
-        [data-accent="storm"] {
-            --ac: #8a9aaa;
-            --acr: 138, 154, 170;
-            --acl: #a6b4c2;
-            --acd: #6e8090;
-            --acg: rgba(138, 154, 170, .2);
-            --acgr: linear-gradient(135deg, #8a9aaa, #7a8c9c);
-            --acs: rgba(138, 154, 170, .1)
+        [data-accent="void"] {
+            --ac: #94a3b8;
+            --acr: 148, 163, 184;
+            --acl: #cbd5e1;
+            --acd: #475569;
+            --acg: rgba(148, 163, 184, .2);
+            --acgr: linear-gradient(135deg, #94a3b8, #334155);
+            --acs: rgba(148, 163, 184, .1)
         }
 
         :root {
@@ -352,8 +352,32 @@
             }
 
             50% {
-                transform: scale(1.5);
+                transform: scale(1.05);
                 opacity: 1
+            }
+        }
+
+        @keyframes logoEntry {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(20px);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes shimmerGlow {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
             }
         }
 
@@ -425,6 +449,18 @@
             }
         }
 
+        @keyframes obStepIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
         /*═══════════════════════════════════════
   5 · LOADING
 ═══════════════════════════════════════*/
@@ -432,48 +468,61 @@
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: var(--bg0);
+            background: radial-gradient(circle at center, var(--bg1), var(--bg0));
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity .6s
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), clip-path 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .ld-scr.hide {
             opacity: 0;
+            clip-path: circle(0% at 50% 50%);
             pointer-events: none
         }
 
         .ld-logo {
-            margin-bottom: 20px;
-            animation: breathe 2.5s ease-in-out infinite
+            margin-bottom: 30px;
+            animation: logoEntry 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards, breathe 4s ease-in-out 1.2s infinite;
+            filter: drop-shadow(0 0 20px var(--acg));
         }
 
         .ld-t {
             font-family: "DM Serif Display", Georgia, serif;
-            font-size: 1.8rem;
-            margin-bottom: 6px
+            font-size: 2.4rem;
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+            background: linear-gradient(90deg, var(--tx1), var(--ac), var(--tx1));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerGlow 4s linear infinite;
         }
 
         .ld-s {
-            font-size: .75rem;
+            font-size: .8rem;
             color: var(--tx3);
-            margin-bottom: 18px;
-            letter-spacing: .04em
+            margin-bottom: 24px;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            font-weight: 600;
         }
 
         .ld-dots {
             display: flex;
-            gap: 7px
+            gap: 10px;
+            margin-top: 10px;
         }
 
         .ld-dots span {
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--ac);
-            animation: dotB .8s ease infinite
+            box-shadow: 0 0 8px var(--ac);
+            animation: dotB 1.2s ease infinite
         }
 
         .ld-dots span:nth-child(2) {
@@ -700,11 +749,13 @@
         .ob-step {
             display: none;
             flex-direction: column;
-            align-items: center
+            align-items: center;
+            width: 100%;
         }
 
         .ob-step.on {
-            display: flex
+            display: flex;
+            animation: obStepIn .5s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .ob-emoji {
@@ -1058,16 +1109,19 @@
             overflow-x: hidden;
             padding: 12px 24px 110px;
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateX(15px);
             pointer-events: none;
-            transition: opacity .4s cubic-bezier(.16, 1, .3, 1), transform .4s cubic-bezier(.16, 1, .3, 1);
-            scrollbar-width: thin
+            transition: opacity .5s cubic-bezier(.16, 1, .3, 1), transform .5s cubic-bezier(.16, 1, .3, 1);
+            filter: blur(8px);
+            scrollbar-width: thin;
+            will-change: transform, opacity, filter;
         }
 
         .pg.on {
             opacity: 1;
-            transform: none;
-            pointer-events: all
+            transform: translateX(0);
+            pointer-events: all;
+            filter: blur(0);
         }
 
         .bnav {
@@ -1194,9 +1248,9 @@
         }
 
         .card:hover {
-            border-color: var(--bdh);
-            transform: translateY(-2px);
-            box-shadow: var(--shmd)
+            border-color: var(--ac);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: var(--shlg);
         }
 
         .card::after {
@@ -1755,7 +1809,17 @@
         }
 
         .fab:hover {
-            transform: scale(1.12) translateY(-3px)
+            transform: scale(1.15) translateY(-5px);
+            box-shadow: 0 10px 30px var(--acg);
+        }
+
+        .fab:hover::before {
+            opacity: 0.8;
+            transform: scale(1.3);
+        }
+
+        .fab:active {
+            transform: scale(0.9) translateY(0);
         }
 
         .fab:hover::before {
@@ -3580,7 +3644,7 @@
         const DF = { tasks: [], lists: ['My Tasks', 'Work', 'Personal'], dumps: [], pomo: [], cur: 'All', streak: 0, last: null, name: '', onboarded: false, settings: { theme: 'dark', accent: 'amber', sound: true, focusDur: 25, breakDur: 5, longDur: 15, sessions: 4 } };
         let D = JSON.parse(JSON.stringify(DF)), usr = null, pg = 'home', wkO = 0, selR = 'none', tmpS = [];
         let P = { on: false, mode: 'focus', left: 0, tot: 0, iv: null, cnt: 0 };
-        function td() { return new Date().toISOString().split('T')[0] }
+        function td() { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}` }
         function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML }
         function f12(t) { const [h, m] = t.split(':'); const hr = +h; return `${hr % 12 || 12}:${m} ${hr < 12 ? 'AM' : 'PM'}` }
         let svTO; function save() { if (!usr) return; localStorage.setItem('ff5', JSON.stringify(D)); clearTimeout(svTO); const dt = document.getElementById('sd'); if (dt) dt.className = 'sync-dot saving'; svTO = setTimeout(async () => { if (!usr) return; try { await db.collection('users').doc(usr.uid).set(JSON.parse(JSON.stringify(D))); if (dt) dt.className = 'sync-dot' } catch (e) { if (dt) dt.className = 'sync-dot err' } }, 1500) }
@@ -3657,8 +3721,24 @@
 
         // ONBOARDING
         let obStep = 0;
-        const ACS = [{ id: 'amber', c: '#d4a574' }, { id: 'sage', c: '#7daa8c' }, { id: 'ocean', c: '#6ba5b4' }, { id: 'lavender', c: '#9b8ec4' }, { id: 'rose', c: '#c48a8a' }, { id: 'sky', c: '#7daacf' }, { id: 'coral', c: '#cf8a6b' }, { id: 'mint', c: '#6bbfa8' }, { id: 'storm', c: '#8a9aaa' }];
-        function showOB() { document.getElementById('obS').classList.add('show'); obStep = 0; renderOB(); document.getElementById('obColors').innerHTML = ACS.map(a => `<div class="ob-color ${D.settings.accent === a.id ? 'on' : ''}" style="background:${a.c}" onclick="obAc('${a.id}')"></div>`).join('');['obE0', 'obE1', 'obE2', 'obE3', 'obE4'].forEach((id, i) => document.getElementById(id).innerHTML = em(['crystal', 'nova', 'spark', 'moon', 'check'][i], 56)) }
+        const ACS = [
+            { id: 'neon', c: '#00f2ff', n: 'Cyber Neon' },
+            { id: 'matcha', c: '#a3e635', n: 'Fresh Matcha' },
+            { id: 'sunset', c: '#ff4d4d', n: 'Aura Sunset' },
+            { id: 'lavender', c: '#8b5cf6', n: 'Pure Lavender' },
+            { id: 'sky', c: '#0ea5e9', n: 'Vibrant Sky' },
+            { id: 'rose', c: '#f43f5e', n: 'Pink Rose' },
+            { id: 'royal', c: '#facc15', n: 'Premium Gold' },
+            { id: 'mint', c: '#2dd4bf', n: 'Crystal Mint' },
+            { id: 'void', c: '#94a3b8', n: 'Deep Void' }
+        ];
+        function showOB() {
+            document.getElementById('obS').classList.add('show');
+            obStep = 0;
+            renderOB();
+            document.getElementById('obColors').innerHTML = ACS.map(a => `<div class="ob-color ${D.settings.accent === a.id ? 'on' : ''}" style="background:${a.c}" onclick="obAc('${a.id}')" title="${a.n}"></div>`).join('');
+            ['spark', 'nova', 'lens', 'zen', 'check'].forEach((e, i) => document.getElementById('obE' + i).innerHTML = em(e, 64));
+        }
         function renderOB() { for (let i = 0; i < 5; i++)document.getElementById('ob' + i).classList.toggle('on', i === obStep); let dots = ''; for (let i = 0; i < 5; i++)dots += `<div class="ob-dot ${i === obStep ? 'on' : ''}"></div>`; document.getElementById('obDots').innerHTML = dots }
         function obNext() { if (obStep === 1) { D.name = document.getElementById('obName').value.trim() } obStep++; if (obStep > 4) obStep = 4; renderOB(); sfx(S_.pp) }
         function obAc(a) { D.settings.accent = a; document.documentElement.setAttribute('data-accent', a); document.querySelectorAll('.ob-color').forEach(e => e.classList.toggle('on', e.style.background.includes(ACS.find(x => x.id === a).c.slice(1)))) }
@@ -3676,22 +3756,23 @@
         function go(p) { pg = p; document.querySelectorAll('.pg').forEach(e => e.classList.remove('on')); document.getElementById(pgMap[p]).classList.add('on'); document.querySelectorAll('.ni').forEach(n => n.classList.toggle('on', n.dataset.p === p)); document.getElementById('fab').style.display = p === 'tasks' ? 'flex' : 'none'; sfx(S_.nv); if (p === 'home') renderHome(); if (p === 'tasks') renderTasks(); if (p === 'dump') renderDumps(); if (p === 'report') renderReport() }
 
         // CLOCK
-        function updClk() { const n = new Date(), h = n.getHours(), m = String(n.getMinutes()).padStart(2, '0'); document.getElementById('clk').innerHTML = `${h % 12 || 12}:${m}<span class="clock-ap">${h < 12 ? 'AM' : 'PM'}</span>`; const ds = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; document.getElementById('dte').textContent = `${ds[n.getDay()]}, ${ms[n.getMonth()]} ${n.getDate()}`; let g, e; if (h < 5) { g = 'Still up'; e = 'moon' } else if (h < 12) { g = 'Good morning'; e = 'nova' } else if (h < 17) { g = 'Good afternoon'; e = 'flame' } else if (h < 21) { g = 'Good evening'; e = 'zen' } else { g = 'Night owl mode'; e = 'moon' }; const nm = D.name || usr?.displayName?.split(' ')[0] || ''; document.getElementById('gT').textContent = nm ? `${g}, ${nm}` : g; const t = td(); if (D.last !== t) { const y = new Date(Date.now() - 864e5).toISOString().split('T')[0]; if (D.last === y) D.streak = (D.streak || 0) + 1; else if (D.last) D.streak = 1; else D.streak = 1; D.last = t; save() } }
+        function updClk() { const n = new Date(), h = n.getHours(), m = String(n.getMinutes()).padStart(2, '0'); document.getElementById('clk').innerHTML = `${h % 12 || 12}:${m}<span class="clock-ap">${h < 12 ? 'AM' : 'PM'}</span>`; const ds = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ms = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']; document.getElementById('dte').textContent = `${ds[n.getDay()]}, ${ms[n.getMonth()]} ${n.getDate()}`; let g, e; if (h < 5) { g = 'Still up'; e = 'moon' } else if (h < 12) { g = 'Good morning'; e = 'nova' } else if (h < 17) { g = 'Good afternoon'; e = 'flame' } else if (h < 21) { g = 'Good evening'; e = 'zen' } else { g = 'Night owl mode'; e = 'moon' }; const nm = D.name || usr?.displayName?.split(' ')[0] || ''; document.getElementById('gT').textContent = nm ? `${g}, ${nm}` : g; const t = td(); if (D.last !== t) { const y = new Date(Date.now() - 864e5).toISOString().split('T')[0]; if (D.last === y) D.streak = (D.streak || 0) + 1; else if (D.last) D.streak = 1; else D.streak = 1; D.last = t; summon(); } }
 
         // TASKS
         const CK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
         const DL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>`;
         function rl(r) { const m = { none: '', daily: 'Daily', '2days': '2d', weekdays: 'Wkdays', weekly: 'Weekly' }; if (m[r] !== undefined) return m[r]; if (r?.startsWith('custom:')) return `${r.split(':')[1]}d`; return '' }
-        function mkT(t) { const pc = t.priority && t.priority !== 'none' ? ` p${t.priority[0]}` : ''; let mt = ''; if (t.date) { const d = new Date(t.date + 'T00:00:00'); mt += `<span class="bg">${t.date === td() ? 'Today' : d.toLocaleDateString('en', { month: 'short', day: 'numeric' })}</span>` } if (t.time) mt += `<span class="bg">${f12(t.time)}</span>`; if (t.priority && t.priority !== 'none') { const c = { high: 'var(--err)', medium: 'var(--warn)', low: 'var(--ok)' }; mt += `<span class="bg" style="color:${c[t.priority]}">${t.priority}</span>` } const rr = rl(t.repeat); if (rr) mt += `<span class="bg rp">${rr}</span>`; let nt = t.notes ? `<div class="tsk-nt">${esc(t.notes)}</div>` : ''; let sb = ''; if (t.subtasks?.length) { sb = '<div class="sbl">'; t.subtasks.forEach((s, i) => { sb += `<div class="sbi"><div class="sc ${s.done ? 'on' : ''}" onclick="tSb('${t.id}',${i})">${CK}</div><span class="st ${s.done ? 'x' : ''}">${esc(s.text)}</span></div>` }); sb += '</div>' } return `<div class="tsk${pc} ${t.completed ? 'done' : ''}" data-id="${t.id}"><div class="ck ${t.completed ? 'on' : ''}" onclick="tT('${t.id}')">${CK}</div><div class="tsk-b"><div class="tsk-t">${esc(t.text)}</div>${nt}<div class="tsk-m">${mt}</div>${sb}</div><div class="tsk-a"><button class="ab del" onclick="dT('${t.id}')">${DL}</button></div></div>` }
+        function mkT(t, i = 0) { const pc = t.priority && t.priority !== 'none' ? ` p${t.priority[0]}` : ''; let mt = ''; if (t.date) { const today = td(); let dLab = ''; if (t.date === today) dLab = 'Today'; else if (t.date < today) dLab = 'Overdue'; else { const d = new Date(t.date + 'T00:00:00'); dLab = d.toLocaleDateString('en', { month: 'short', day: 'numeric' }) } mt += `<span class="bg" style="${t.date < today && !t.completed ? 'color:var(--err)' : ''}">${dLab}</span>` } if (t.time) mt += `<span class="bg">${f12(t.time)}</span>`; if (t.priority && t.priority !== 'none') { const c = { high: 'var(--err)', medium: 'var(--warn)', low: 'var(--ok)' }; mt += `<span class="bg" style="color:${c[t.priority]}">${t.priority}</span>` } const rr = rl(t.repeat); if (rr) mt += `<span class="bg rp">${rr}</span>`; let nt = t.notes ? `<div class="tsk-nt">${esc(t.notes)}</div>` : ''; let sb = ''; if (t.subtasks?.length) { sb = '<div class="sbl">'; t.subtasks.forEach((s, i) => { sb += `<div class="sbi"><div class="sc ${s.done ? 'on' : ''}" onclick="tSb('${t.id}',${i})">${CK}</div><span class="st ${s.done ? 'x' : ''}">${esc(s.text)}</span></div>` }); sb += '</div>' } return `<div class="tsk${pc} ${t.completed ? 'done' : ''}" data-id="${t.id}" style="animation-delay:${i * 0.05}s"><div class="ck ${t.completed ? 'on' : ''}" onclick="tT('${t.id}')">${CK}</div><div class="tsk-b"><div class="tsk-t">${esc(t.text)}</div>${nt}<div class="tsk-m">${mt}</div>${sb}</div><div class="tsk-a"><button class="ab del" onclick="dT('${t.id}')">${DL}</button></div></div>` }
 
         function renderTasks() {
-            // Smart tabs — only show lists with tasks + "All"
-            const listsWithTasks = D.lists.filter(l => D.tasks.some(t => t.list === l));
+            const today = td();
+            const visibleTasks = D.tasks.filter(t => !t.date || t.date <= today || t.completed);
+            const listsWithTasks = D.lists.filter(l => visibleTasks.some(t => t.list === l));
             const allLists = ['All', ...listsWithTasks];
-            document.getElementById('tabE').innerHTML = allLists.map(l => { const c = l === 'All' ? D.tasks.filter(t => !t.completed).length : D.tasks.filter(t => t.list === l && !t.completed).length; return `<button class="ttab ${l === D.cur ? 'on' : ''}" onclick="pL('${l.replace(/'/g, "\\'")}')">${esc(l)}${c ? `<span class="ttab-c">${c}</span>` : ''}</button>` }).join('');
-            const el = document.getElementById('tlE'), ts = D.cur === 'All' ? D.tasks : D.tasks.filter(t => t.list === D.cur);
+            document.getElementById('tabE').innerHTML = allLists.map(l => { const c = l === 'All' ? visibleTasks.filter(t => !t.completed).length : visibleTasks.filter(t => t.list === l && !t.completed).length; return `<button class="ttab ${l === D.cur ? 'on' : ''}" onclick="pL('${l.replace(/'/g, "\\'")}')">${esc(l)}${c ? `<span class="ttab-c">${c}</span>` : ''}</button>` }).join('');
+            const el = document.getElementById('tlE'), ts = (D.cur === 'All' ? visibleTasks : visibleTasks.filter(t => t.list === D.cur));
             if (!ts.length) { el.innerHTML = `<div class="empty"><div class="empty-i">${em('zen', 48)}</div><p>Nothing here yet. Tap + to add.</p></div>`; return }
-            el.innerHTML = [...ts.filter(t => !t.completed), ...ts.filter(t => t.completed)].map(mkT).join('');
+            el.innerHTML = [...ts.filter(t => !t.completed), ...ts.filter(t => t.completed)].map((t, i) => mkT(t, i)).join('');
             document.getElementById('xL').innerHTML = D.lists.map(l => `<option value="${l}">${l}</option>`).join('')
         }
         function pL(l) { D.cur = l; save(); renderTasks(); sfx(S_.ck) }
@@ -3701,8 +3782,53 @@
         function aS() { const i = document.getElementById('xS'), t = i.value.trim(); if (!t) return; tmpS.push({ text: t, done: false }); i.value = ''; rSb(); sfx(S_.ck) }
         function rSb() { document.getElementById('sbE').innerHTML = tmpS.map((s, i) => `<div class="sip"><span>${esc(s.text)}</span><button class="srm" onclick="tmpS.splice(${i},1);rSb();sfx(S_.dl)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('') }
         function subT() { const title = document.getElementById('xT').value.trim(); if (!title) { document.getElementById('xT').focus(); return } let rpt = selR; if (rpt === 'custom') rpt = 'custom:' + (parseInt(document.getElementById('xCD').value) || 3); D.tasks.unshift({ id: 't' + Date.now() + Math.random().toString(36).substr(2, 4), text: title, notes: document.getElementById('xN').value.trim(), date: document.getElementById('xD').value, time: document.getElementById('xTm').value, priority: document.getElementById('xP').value, list: document.getElementById('xL').value, completed: false, completedAt: null, createdAt: Date.now(), subtasks: [...tmpS], repeat: rpt }); save(); document.getElementById('aM').classList.remove('on'); renderTasks(); renderHome(); sfx(S_.dn); toast('Task added!') }
-        function tT(id) { const t = D.tasks.find(x => x.id === id); if (!t) return; t.completed = !t.completed; t.completedAt = t.completed ? Date.now() : null; if (t.completed && t.repeat && t.repeat !== 'none') spR(t); save(); if (t.completed) { sfx(S_.dn); const el = document.querySelector(`[data-id="${id}"]`); if (el) el.classList.add('pop'); setTimeout(() => { renderTasks(); renderHome() }, 500) } else { sfx(S_.ck); renderTasks(); renderHome() } }
-        function spR(t) { let nd = t.date ? new Date(t.date + 'T00:00:00') : new Date(); const r = t.repeat; if (r === 'daily') nd.setDate(nd.getDate() + 1); else if (r === '2days') nd.setDate(nd.getDate() + 2); else if (r === 'weekly') nd.setDate(nd.getDate() + 7); else if (r === 'weekdays') { nd.setDate(nd.getDate() + 1); while (nd.getDay() === 0 || nd.getDay() === 6) nd.setDate(nd.getDate() + 1) } else if (r?.startsWith('custom:')) nd.setDate(nd.getDate() + (parseInt(r.split(':')[1]) || 3)); D.tasks.unshift({ ...t, id: 't' + Date.now() + Math.random().toString(36).substr(2, 4), date: nd.toISOString().split('T')[0], completed: false, completedAt: null, createdAt: Date.now(), subtasks: t.subtasks ? t.subtasks.map(s => ({ ...s, done: false })) : [] }) }
+        function tT(id) {
+            const t = D.tasks.find(x => x.id === id);
+            if (!t) return;
+            t.completed = !t.completed;
+            t.completedAt = t.completed ? Date.now() : null;
+            save();
+            if (t.completed) {
+                sfx(S_.dn);
+                const els = document.querySelectorAll(`[data-id="${id}"]`);
+                els.forEach(el => el.classList.add('pop'));
+                setTimeout(() => { renderTasks(); renderHome(); }, 400);
+            } else {
+                sfx(S_.ck);
+                renderTasks();
+                renderHome();
+            }
+        }
+        function summon() {
+            console.log('Focussium: Running Daily Summon...');
+            const today = td();
+            const recNames = [...new Set(D.tasks.filter(t => t.repeat && t.repeat !== 'none').map(t => t.text))];
+            recNames.forEach(name => {
+                const items = D.tasks.filter(t => t.text === name && t.repeat && t.repeat !== 'none');
+                const active = items.filter(t => !t.completed);
+                if (active.length > 0) {
+                    if (active[0].date && active[0].date < today) {
+                        console.log(`Focussium: Pulling ${name} from ${active[0].date} to ${today}`);
+                        active[0].date = today;
+                    }
+                    active.slice(1).forEach(d => {
+                        console.log(`Focussium: Merging duplicate ${name}`);
+                        D.tasks = D.tasks.filter(t => t.id !== d.id);
+                    });
+                } else {
+                    const comp = items.filter(t => t.completed && t.completedAt).sort((a, b) => b.completedAt - a.completedAt);
+                    if (comp.length > 0) {
+                        const last = comp[0], d = new Date(last.completedAt);
+                        const lastDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        if (lastDate < today && !D.tasks.some(t => t.text === name && t.date === today)) {
+                            console.log(`Focussium: Summoning fresh ${name} for Today`);
+                            D.tasks.unshift({ ...last, id: 't' + Date.now() + Math.random().toString(36).substr(2, 4), date: today, completed: false, completedAt: null, createdAt: Date.now(), spawned: false, spawnedId: null, subtasks: last.subtasks ? last.subtasks.map(s => ({ ...s, done: false })) : [] });
+                        }
+                    }
+                }
+            });
+            save();
+        }
         function tSb(id, si) { const t = D.tasks.find(x => x.id === id); if (!t?.subtasks?.[si]) return; t.subtasks[si].done = !t.subtasks[si].done; save(); renderTasks(); sfx(S_.ck) }
         function dT(id) { D.tasks = D.tasks.filter(t => t.id !== id); save(); renderTasks(); renderHome(); sfx(S_.dl); toast('Removed') }
 
@@ -3714,10 +3840,24 @@
 
         // HOME
         function renderHome() {
-            const t = td(), tt = D.tasks.filter(x => !x.date || x.date === t), dn = tt.filter(x => x.completed), fm = D.pomo.filter(x => x.date === t).reduce((a, x) => a + x.dur, 0); document.getElementById('n0').textContent = tt.length; document.getElementById('n1').textContent = dn.length; document.getElementById('n2').textContent = fm; document.getElementById('n3').textContent = D.streak || 0;['orbit', 'check', 'flame', 'shield'].forEach((e, i) => document.getElementById('i' + i).innerHTML = em(e, 18)); document.getElementById('e0').innerHTML = em('crystal', 24); document.getElementById('e1').innerHTML = em('spark', 24); document.getElementById('e2').innerHTML = em('lens', 24); document.getElementById('e3').innerHTML = em('pulse', 24); document.getElementById('e4').innerHTML = em('bulb', 24);
-            // Donut
-            const pct = tt.length ? Math.round(dn.length / tt.length * 100) : 0; const circ = 2 * Math.PI * 32; const c = document.getElementById('donutC'); c.style.strokeDasharray = circ; c.style.strokeDashoffset = circ * (1 - pct / 100); document.getElementById('donutPct').textContent = pct + '%';
-            const list = document.getElementById('hL'), pv = tt.filter(x => !x.completed).slice(0, 4); list.innerHTML = pv.length ? pv.map(mkT).join('') : `<div class="empty" style="padding:20px"><p>All clear ${em('zen', 16)}</p></div>`
+            const today = td();
+            const visibleTasks = D.tasks.filter(x => !x.date || x.date <= today || x.completed);
+            const tt = visibleTasks.filter(x => !x.date || x.date === today || (x.date < today && !x.completed));
+            const dn = tt.filter(x => x.completed), fm = D.pomo.filter(x => x.date === today).reduce((a, x) => a + x.dur, 0);
+            document.getElementById('n0').textContent = tt.length;
+            document.getElementById('n1').textContent = dn.length;
+            document.getElementById('n2').textContent = fm;
+            document.getElementById('n3').textContent = D.streak || 0;
+            ['orbit', 'check', 'flame', 'shield'].forEach((e, i) => document.getElementById('i' + i).innerHTML = em(e, 18));
+            ['crystal', 'spark', 'lens', 'pulse', 'bulb'].forEach((e, i) => document.getElementById('e' + i).innerHTML = em(e, 24));
+            const pct = tt.length ? Math.round(dn.length / tt.length * 100) : 0;
+            const circ = 2 * Math.PI * 32;
+            const c = document.getElementById('donutC');
+            c.style.strokeDasharray = circ;
+            c.style.strokeDashoffset = circ * (1 - pct / 100);
+            document.getElementById('donutPct').textContent = pct + '%';
+            const list = document.getElementById('hL'), pv = tt.filter(x => !x.completed).slice(0, 4);
+            list.innerHTML = pv.length ? pv.map((t, i) => mkT(t, i)).join('') : `<div class="empty" style="padding:20px"><p>All clear ${em('zen', 16)}</p></div>`;
         }
 
         // POMODORO
@@ -3766,14 +3906,20 @@
         document.getElementById('dumpIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addDump() } });
 
         // INIT
-        function initApp() { apTh(); document.documentElement.setAttribute('data-accent', D.settings.accent); updClk(); setInterval(updClk, 10000); initP(); renderHome(); renderTasks(); renderDumps(); document.getElementById('xD').value = td() }
+        function initApp() { apTh(); document.documentElement.setAttribute('data-accent', D.settings.accent); updClk(); summon(); setInterval(updClk, 10000); initP(); renderHome(); renderTasks(); renderDumps(); document.getElementById('xD').value = td() }
         document.getElementById('ldL').innerHTML = em('crystal', 48); document.getElementById('liL').innerHTML = em('crystal', 56);
 
         // SERVICE WORKER REGISTRATION
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js?v=2')
-                    .then(reg => console.log('SW Registered', reg))
+                navigator.serviceWorker.register('./sw.js?v=3')
+                    .then(reg => {
+                        console.log('SW Registered v3', reg);
+                        if (localStorage.getItem('force_update')) {
+                            localStorage.removeItem('force_update');
+                            reg.update();
+                        }
+                    })
                     .catch(err => console.log('SW Registration Failed', err));
             });
         }
