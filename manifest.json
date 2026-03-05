@@ -44,14 +44,14 @@
     "screenshots": [
         {
             "src": "./screenshot-desktop.png",
-            "sizes": "1920x1080",
+            "sizes": "640x640",
             "type": "image/png",
             "form_factor": "wide",
             "label": "Focussium Desktop Dashboard"
         },
         {
             "src": "./screenshot-mobile.png",
-            "sizes": "1080x1920",
+            "sizes": "640x640",
             "type": "image/png",
             "form_factor": "narrow",
             "label": "Focussium Mobile Focus Screen"
