@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
     <title>Focussium</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#080808">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Focussium">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -3760,6 +3767,15 @@
         // INIT
         function initApp() { apTh(); document.documentElement.setAttribute('data-accent', D.settings.accent); updClk(); setInterval(updClk, 10000); initP(); renderHome(); renderTasks(); renderDumps(); document.getElementById('xD').value = td() }
         document.getElementById('ldL').innerHTML = em('crystal', 48); document.getElementById('liL').innerHTML = em('crystal', 56);
+
+        // SERVICE WORKER REGISTRATION
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Registration Failed', err));
+            });
+        }
     </script>
 </body>
 
