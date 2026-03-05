@@ -1,9 +1,9 @@
-const CACHE_NAME = 'focussium-v1';
+const CACHE_NAME = 'focussium-v2';
 const ASSETS_TO_CACHE = [
     './index.html',
-    './manifest.json',
-    './icon-192.png',
-    './icon-512.png',
+    './manifest.json?v=2',
+    './icon-192.png?v=2',
+    './icon-512.png?v=2',
     './screenshot-desktop.png',
     './screenshot-mobile.png'
 ];
