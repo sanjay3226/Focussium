@@ -119,8 +119,16 @@
         <header class="header">
             <div class="header-top">
                 <div class="header-left">
-                    <img class="avatar" id="userAvatar" src="" alt="Avatar">
-                    <span class="greeting" id="greeting">Good morning</span>
+                    <div class="avatar-wrapper">
+                        <img class="avatar" id="userAvatar" src="" alt="Avatar">
+                        <div class="user-level-badge" id="userLevelBadge">1</div>
+                    </div>
+                    <div class="header-titles">
+                        <span class="greeting" id="greeting">Good morning</span>
+                        <div class="xp-bar-container" title="Experience Points">
+                            <div class="xp-bar-fill" id="xpBarFill"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="header-right">
                     <button class="header-btn" onclick="Nav.go('dump')" title="Brain Dump" id="headerDumpBtn"></button>
@@ -179,14 +187,17 @@
                     <div class="week-snapshot-header">
                         <div class="week-snapshot-left">
                             <div class="week-snapshot-label">Weekly Score</div>
-                            <div class="week-snapshot-score" id="homeWeekScore">0</div>
+                            <div class="week-snapshot-score-row">
+                                <div class="week-snapshot-score" id="homeWeekScore">0</div>
+                                <div class="week-snapshot-trend" id="homeWeekTrend"></div>
+                            </div>
                         </div>
                         <button class="week-snapshot-link" onclick="Nav.go('report')">
                             <span>Full Report</span>
                             <span id="weekArrowIcon"></span>
                         </button>
                     </div>
-                    <div class="week-mini-bars" id="weekMiniBars"></div>
+                    <div class="week-mini-chart" id="weekMiniChart"></div>
                     <div class="week-insight" id="weekInsight">Start your week strong.</div>
                 </div>
 
@@ -299,6 +310,10 @@
                     </div>
 
                     <div class="pomo-session-dots" id="pomoSessionDots"></div>
+                    
+                    <div class="pomo-live-insight-wrapper">
+                        <div class="pomo-live-insight" id="pomoLiveInsight"></div>
+                    </div>
 
                     <button class="pomo-fullscreen-btn" onclick="Pomo.enterFullscreen()">
                         <span id="pomoFullscreenIcon"></span>
@@ -351,7 +366,7 @@
                         <span class="report-card-icon" id="reportChartIcon0"></span>
                         <span>Tasks Completed</span>
                     </div>
-                    <canvas class="chart-canvas" id="tasksChart"></canvas>
+                    <div class="line-chart-container" id="tasksChart"></div>
                 </div>
 
                 <div class="report-card">
@@ -359,7 +374,7 @@
                         <span class="report-card-icon" id="reportChartIcon1"></span>
                         <span>Focus Minutes</span>
                     </div>
-                    <canvas class="chart-canvas" id="focusChart"></canvas>
+                    <div class="line-chart-container" id="focusChart"></div>
                 </div>
 
                 <!-- AI Insights -->
@@ -534,6 +549,22 @@
                         </div>
                     </div>
                     <div class="accent-buttons" id="accentButtons"></div>
+                    <div class="custom-color-picker" id="customColorPicker">
+                        <div class="custom-color-header">
+                            <div class="custom-color-swatch" id="customColorSwatch"></div>
+                            <span class="custom-color-label">Custom Color</span>
+                        </div>
+                        <div class="custom-color-input-row">
+                            <span class="custom-color-hash">#</span>
+                            <input type="text" class="custom-color-input" id="customHexInput" 
+                                   placeholder="FF5733" maxlength="6" autocomplete="off" 
+                                   spellcheck="false">
+                            <input type="color" class="custom-color-native" id="customColorNative" 
+                                   value="#f5c842" title="Pick from palette">
+                            <button class="custom-color-apply" id="customColorApply" 
+                                    onclick="Settings.applyCustomColor()">Apply</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -648,6 +679,22 @@
             <button class="pomo-ctrl-btn secondary" onclick="Pomo.reset()" id="fsResetBtn"></button>
             <button class="pomo-ctrl-btn primary" onclick="Pomo.toggle()" id="fsPlayBtn"></button>
             <button class="pomo-ctrl-btn secondary" onclick="Pomo.skip()" id="fsSkipBtn"></button>
+        </div>
+    </div>
+
+    <!-- Quick Add (Command Glass) -->
+    <div class="cmd-glass" id="cmdGlass">
+        <div class="cmd-glass-bg" onclick="CommandGlass.close()"></div>
+        <div class="cmd-card">
+            <div class="cmd-header">
+                <span class="cmd-icon" id="cmdIcon"></span>
+                <span class="cmd-title">Quick Add</span>
+                <span class="cmd-badge">Ctrl+K</span>
+            </div>
+            <input type="text" class="cmd-input" id="cmdInput" placeholder="Type a task or thought..." aria-label="Quick action input">
+            <div class="cmd-footer">
+                <span class="cmd-hint">Press <strong>Enter</strong> to save, <strong>Esc</strong> to cancel</span>
+            </div>
         </div>
     </div>
 
