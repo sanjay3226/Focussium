@@ -12,6 +12,7 @@ const State = {
         dumps: [],
         pomo: [],
         achievements: [],
+        rewardsUnlocked: [],
         currentList: 'All',
         streak: 0,
         lastVisit: null,
@@ -27,7 +28,12 @@ const State = {
             focusDur: 25,
             breakDur: 5,
             longDur: 15,
-            sessions: 4
+            sessions: 4,
+            dopamineRewards: [
+                { id: 'rw_match', label: '1 Match', xp: 200, duration: 45 },
+                { id: 'rw_scroll', label: 'Short Scroll', xp: 600, duration: 90 },
+                { id: 'rw_snack', label: 'Snack Break', xp: 1200, duration: 180 }
+            ]
         }
     },
 
@@ -41,6 +47,7 @@ const State = {
     editingTaskId: null,
     saveTimeout: null,
     clockInterval: null,
+    rewardInterval: null,
 
     pomo: {
         running: false,
@@ -643,12 +650,14 @@ const Achievements = {
    GAMIFICATION & LEVELING
 ───────────────────────────────────────────────────────── */
 const Level = {
-    update() {
+    getXP() {
         const totalFocus = State.data.totalFocusMinutes || 0;
         const totalTasks = State.data.totalTasksCompleted || 0;
-        
-        // Base XP formula
-        const xp = (totalFocus * 10) + (totalTasks * 50);
+        return (totalFocus * 10) + (totalTasks * 50);
+    },
+
+    update() {
+        const xp = this.getXP();
         
         // Simple scaling formula: level = Math.floor(Math.sqrt(xp / 100)) + 1
         const level = Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
@@ -668,6 +677,178 @@ const Level = {
 
         const bar = document.getElementById('xpBarFill');
         if (bar) bar.style.width = `${progressPercent}%`;
+
+        Rewards.checkUnlocks(xp);
+        Rewards.renderHome();
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
+   DOPAMINE REWARDS
+───────────────────────────────────────────────────────── */
+const Rewards = {
+    ensureState() {
+        if (!Array.isArray(State.data.settings.dopamineRewards)) {
+            State.data.settings.dopamineRewards = Utils.clone(State.defaults.settings.dopamineRewards);
+        }
+        if (!Array.isArray(State.data.rewardsUnlocked)) {
+            State.data.rewardsUnlocked = [];
+        }
+    },
+
+    isUnlocked(reward, xp = Level.getXP()) {
+        return xp >= reward.xp;
+    },
+
+    checkUnlocks(xp = Level.getXP()) {
+        this.ensureState();
+        let changed = false;
+        State.data.settings.dopamineRewards.forEach(reward => {
+            if (xp >= reward.xp && !State.data.rewardsUnlocked.includes(reward.id)) {
+                State.data.rewardsUnlocked.push(reward.id);
+                Toast.show(`Unlocked: ${reward.label} ✨`);
+                Sound.achievement();
+                changed = true;
+            }
+        });
+        if (changed) Storage.save();
+    },
+
+    renderHome() {
+        this.ensureState();
+        const host = document.getElementById('rewardsVault');
+        if (!host) return;
+
+        const xp = Level.getXP();
+        const rewards = [...State.data.settings.dopamineRewards].sort((a, b) => a.xp - b.xp);
+
+        if (!rewards.length) {
+            host.innerHTML = `
+            <div class="reward-empty">
+                <div class="reward-empty-title">No rewards yet</div>
+                <div class="reward-empty-sub">Add one in Settings → Dopamine Rewards.</div>
+            </div>`;
+            return;
+        }
+
+        host.innerHTML = rewards.map(reward => {
+            const unlocked = this.isUnlocked(reward, xp);
+            const justUnlocked = State.data.rewardsUnlocked.includes(reward.id);
+            const icon = unlocked ? Icons.spark(14) : Icons.shield(14);
+            return `
+            <button class="reward-card ${unlocked ? 'unlocked' : 'locked'} ${justUnlocked ? 'just-unlocked' : ''}" onclick="Rewards.use('${reward.id}')">
+                <div class="reward-card-top">
+                    <span class="reward-icon">${icon}</span>
+                    <span class="reward-xp">${reward.xp} XP</span>
+                </div>
+                <div class="reward-title">${Utils.escape(reward.label)}</div>
+                <div class="reward-sub">${reward.duration}s reward window</div>
+                <div class="reward-state">${unlocked ? 'Use Reward' : `Locked · need ${reward.xp - xp} XP`}</div>
+            </button>`;
+        }).join('');
+    },
+
+    renderSettings() {
+        this.ensureState();
+        const list = document.getElementById('dopamineRewardsList');
+        if (!list) return;
+
+        const rewards = [...State.data.settings.dopamineRewards].sort((a, b) => a.xp - b.xp);
+        list.innerHTML = rewards.map(r => `
+            <div class="dopamine-item">
+                <div class="dopamine-item-main">
+                    <div class="dopamine-item-title">${Utils.escape(r.label)}</div>
+                    <div class="dopamine-item-meta">${r.xp} XP · ${r.duration}s</div>
+                </div>
+                <button class="dopamine-remove" onclick="Rewards.remove('${r.id}')">Remove</button>
+            </div>
+        `).join('');
+    },
+
+    addCustom() {
+        this.ensureState();
+        const labelEl = document.getElementById('rewardLabelInput');
+        const xpEl = document.getElementById('rewardXpInput');
+        const durEl = document.getElementById('rewardDurationInput');
+
+        const label = labelEl.value.trim();
+        const xp = parseInt(xpEl.value, 10);
+        const duration = parseInt(durEl.value, 10);
+
+        if (!label) return Toast.show('Add a reward name');
+        if (!Number.isFinite(xp) || xp < 50) return Toast.show('XP must be at least 50');
+        if (!Number.isFinite(duration) || duration < 5 || duration > 900) return Toast.show('Duration must be 5–900 sec');
+
+        State.data.settings.dopamineRewards.push({
+            id: Utils.generateId('rw'),
+            label,
+            xp,
+            duration
+        });
+        labelEl.value = '';
+        xpEl.value = '';
+        durEl.value = '';
+        Storage.save();
+        this.checkUnlocks();
+        this.renderSettings();
+        this.renderHome();
+        Toast.show('Reward added');
+    },
+
+    remove(id) {
+        this.ensureState();
+        State.data.settings.dopamineRewards = State.data.settings.dopamineRewards.filter(r => r.id !== id);
+        State.data.rewardsUnlocked = State.data.rewardsUnlocked.filter(rid => rid !== id);
+        Storage.save();
+        this.renderSettings();
+        this.renderHome();
+        Toast.show('Reward removed');
+    },
+
+    use(id) {
+        this.ensureState();
+        const reward = State.data.settings.dopamineRewards.find(r => r.id === id);
+        if (!reward) return;
+        const xp = Level.getXP();
+        if (!this.isUnlocked(reward, xp)) {
+            Toast.show(`Locked. Need ${reward.xp - xp} more XP`);
+            return;
+        }
+        this.openViewer(reward);
+    },
+
+    openViewer(reward) {
+        const viewer = document.getElementById('rewardViewer');
+        const time = document.getElementById('rewardViewerTime');
+        const label = document.getElementById('rewardViewerLabel');
+        if (!viewer || !time || !label) return;
+
+        label.textContent = reward.label;
+        viewer.classList.add('on');
+        let left = reward.duration;
+        const render = () => {
+            const m = String(Math.floor(left / 60)).padStart(2, '0');
+            const s = String(left % 60).padStart(2, '0');
+            time.textContent = `${m}:${s}`;
+        };
+        render();
+
+        clearInterval(State.rewardInterval);
+        State.rewardInterval = setInterval(() => {
+            left -= 1;
+            render();
+            if (left <= 0) {
+                this.closeViewer();
+                Toast.show('Reward window complete. Back to focus 💪');
+            }
+        }, 1000);
+    },
+
+    closeViewer() {
+        const viewer = document.getElementById('rewardViewer');
+        if (viewer) viewer.classList.remove('on');
+        clearInterval(State.rewardInterval);
+        State.rewardInterval = null;
     }
 };
 
@@ -1196,6 +1377,7 @@ const Home = {
         this.renderProgress(percent, doneTasks.length, todayTasks.length, focusMin);
         this.renderWeekSnapshot();
         this.renderAchievements();
+        Rewards.renderHome();
         this.renderStats(todayTasks.length, doneTasks.length, focusMin, State.data.streak || 0);
         this.renderTaskPreview(todayTasks);
     },
@@ -2102,6 +2284,8 @@ const Settings = {
             hexInput.value = '';
             picker.classList.remove('active');
         }
+
+        Rewards.renderSettings();
     },
 
     setTheme(theme) {
@@ -2229,6 +2413,10 @@ document.querySelectorAll('.modal').forEach(modal => {
             Sound.close();
         }
     });
+});
+
+document.getElementById('rewardViewer').addEventListener('click', e => {
+    if (e.target.id === 'rewardViewer') Rewards.closeViewer();
 });
 
 /* ─────────────────────────────────────────────────────────
