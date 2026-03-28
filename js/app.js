@@ -22,6 +22,7 @@ const State = {
         settings: {
             theme: 'dark',
             accent: 'royal',
+            customHex: '',
             sound: true,
             focusDur: 25,
             breakDur: 5,
@@ -202,13 +203,104 @@ const Storage = {
    THEME
 ───────────────────────────────────────────────────────── */
 const Theme = {
+    hexToRGB(hex) {
+        hex = hex.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return { r, g, b };
+    },
+
+    lightenHex(hex, amount = 40) {
+        const { r, g, b } = this.hexToRGB(hex);
+        const lr = Math.min(255, r + amount);
+        const lg = Math.min(255, g + amount);
+        const lb = Math.min(255, b + amount);
+        return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+    },
+
+    darkenHex(hex, amount = 30) {
+        const { r, g, b } = this.hexToRGB(hex);
+        const dr = Math.max(0, r - amount);
+        const dg = Math.max(0, g - amount);
+        const db = Math.max(0, b - amount);
+        return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
+    },
+
+    shiftHue(hex, shift = 30) {
+        const { r, g, b } = this.hexToRGB(hex);
+        let h, s, l;
+        const rr = r / 255, gg = g / 255, bb = b / 255;
+        const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+        l = (max + min) / 2;
+        if (max === min) { h = s = 0; }
+        else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            if (max === rr) h = ((gg - bb) / d + (gg < bb ? 6 : 0)) / 6;
+            else if (max === gg) h = ((bb - rr) / d + 2) / 6;
+            else h = ((rr - gg) / d + 4) / 6;
+        }
+        h = ((h * 360 + shift) % 360) / 360;
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1; if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        let nr, ng, nb;
+        if (s === 0) { nr = ng = nb = l; }
+        else {
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+            nr = hue2rgb(p, q, h + 1/3);
+            ng = hue2rgb(p, q, h);
+            nb = hue2rgb(p, q, h - 1/3);
+        }
+        return `#${Math.round(nr*255).toString(16).padStart(2,'0')}${Math.round(ng*255).toString(16).padStart(2,'0')}${Math.round(nb*255).toString(16).padStart(2,'0')}`;
+    },
+
+    applyCustomAccent(hex) {
+        hex = hex.replace('#', '');
+        if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
+        const color = `#${hex}`;
+        const { r, g, b } = this.hexToRGB(color);
+        const lighter = this.lightenHex(color, 40);
+        const darker = this.darkenHex(color, 30);
+        const gradEnd = this.shiftHue(color, 30);
+
+        const root = document.documentElement;
+        root.style.setProperty('--ac', color);
+        root.style.setProperty('--acr', `${r}, ${g}, ${b}`);
+        root.style.setProperty('--acl', lighter);
+        root.style.setProperty('--acd', darker);
+        root.style.setProperty('--acg', `rgba(${r}, ${g}, ${b}, .2)`);
+        root.style.setProperty('--acgr', `linear-gradient(135deg, ${color}, ${gradEnd})`);
+        root.style.setProperty('--acs', `rgba(${r}, ${g}, ${b}, .12)`);
+    },
+
+    clearCustomAccent() {
+        const root = document.documentElement;
+        ['--ac', '--acr', '--acl', '--acd', '--acg', '--acgr', '--acs'].forEach(p => {
+            root.style.removeProperty(p);
+        });
+    },
+
     apply() {
         let theme = State.data.settings.theme;
         if (theme === 'system') {
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.setAttribute('data-accent', State.data.settings.accent);
+
+        if (State.data.settings.accent === 'custom' && State.data.settings.customHex) {
+            document.documentElement.setAttribute('data-accent', 'royal');
+            this.applyCustomAccent(State.data.settings.customHex);
+        } else {
+            this.clearCustomAccent();
+            document.documentElement.setAttribute('data-accent', State.data.settings.accent);
+        }
     }
 };
 
@@ -548,6 +640,38 @@ const Achievements = {
 };
 
 /* ─────────────────────────────────────────────────────────
+   GAMIFICATION & LEVELING
+───────────────────────────────────────────────────────── */
+const Level = {
+    update() {
+        const totalFocus = State.data.totalFocusMinutes || 0;
+        const totalTasks = State.data.totalTasksCompleted || 0;
+        
+        // Base XP formula
+        const xp = (totalFocus * 10) + (totalTasks * 50);
+        
+        // Simple scaling formula: level = Math.floor(Math.sqrt(xp / 100)) + 1
+        const level = Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
+        
+        const xpForCurrentLevel = 100 * Math.pow(level - 1, 2);
+        const xpForNextLevel = 100 * Math.pow(level, 2);
+        
+        const xpInCurrentLevel = xp - xpForCurrentLevel;
+        const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+        const progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
+
+        const badge = document.getElementById('userLevelBadge');
+        if (badge) badge.textContent = level;
+
+        const barContainer = document.querySelector('.xp-bar-container');
+        if (barContainer) barContainer.title = `Level ${level} | ${xp} XP total`;
+
+        const bar = document.getElementById('xpBarFill');
+        if (bar) bar.style.width = `${progressPercent}%`;
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
    TASKS
 ───────────────────────────────────────────────────────── */
 const Tasks = {
@@ -879,6 +1003,7 @@ const Tasks = {
         if (task.completed) {
             State.data.totalTasksCompleted = (State.data.totalTasksCompleted || 0) + 1;
             Achievements.check();
+            Level.update();
         }
 
         Storage.save();
@@ -1090,26 +1215,87 @@ const Home = {
 
     renderWeekSnapshot() {
         const w = Utils.weekData(0);
+        const prevW = Utils.weekData(-1);
         const score = Report.getScore(w);
+        const prevScore = Report.getScore(prevW);
+        const diff = score - prevScore;
 
         document.getElementById('homeWeekScore').textContent = score;
 
-        const max = Math.max(...w.days.map(d => d.tasks + Math.round(d.focus / 25)), 1);
-        document.getElementById('weekMiniBars').innerHTML = w.days.map((d, i) => {
-            const total = d.tasks + Math.round(d.focus / 25);
-            const h = Math.max(6, (total / max) * 48);
-            return `
-            <div class="week-mini-bar-col">
-                <div class="week-mini-bar" style="height:${h}px;animation-delay:${i * 0.05}s"></div>
-                <div class="week-mini-bar-label">${d.name}</div>
-            </div>`;
-        }).join('');
+        // Trend indicator
+        const trendEl = document.getElementById('homeWeekTrend');
+        if (diff > 0) {
+            trendEl.innerHTML = `<span class="trend-up">${Icons.trendUp(11)} +${diff}</span>`;
+        } else if (diff < 0) {
+            trendEl.innerHTML = `<span class="trend-down">${Icons.trendDown(11)} ${diff}</span>`;
+        } else {
+            trendEl.innerHTML = `<span class="trend-flat">— same</span>`;
+        }
+
+        // Mini SVG line chart
+        const values = w.days.map(d => d.tasks + Math.round(d.focus / 25));
+        const max = Math.max(...values, 1);
+        const W = 320, H = 70;
+        const padX = 10, padY = 8;
+        const chartW = W - padX * 2, chartH = H - padY * 2;
+
+        const points = values.map((v, i) => ({
+            x: padX + (i / 6) * chartW,
+            y: padY + chartH - (v / max) * chartH
+        }));
+
+        // Smooth curve path
+        const pathD = points.reduce((acc, p, i) => {
+            if (i === 0) return `M ${p.x} ${p.y}`;
+            const prev = points[i - 1];
+            const cpx = (prev.x + p.x) / 2;
+            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
+        }, '');
+
+        const areaD = `${pathD} L ${points[6].x} ${H} L ${points[0].x} ${H} Z`;
+
+        const css = getComputedStyle(document.documentElement);
+        const ac = css.getPropertyValue('--ac').trim();
+
+        const dotsHTML = points.map((p, i) => `
+            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.5 : 2}" 
+                    fill="${values[i] > 0 ? ac : 'var(--bd)'}" 
+                    class="mini-chart-dot" style="animation-delay:${0.3 + i * 0.06}s"
+                    opacity="${values[i] > 0 ? 1 : 0.4}"/>
+        `).join('');
+
+        const labelsHTML = w.days.map((d, i) => `
+            <text x="${points[i].x}" y="${H + 12}" text-anchor="middle" 
+                  fill="var(--tx4)" font-size="8" font-weight="600" 
+                  font-family="Inter, sans-serif" letter-spacing="0.04em">${d.name}</text>
+        `).join('');
+
+        document.getElementById('weekMiniChart').innerHTML = `
+            <svg viewBox="0 0 ${W} ${H + 16}" class="mini-line-chart" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="miniGlow">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                </defs>
+                <path d="${areaD}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
+                <path d="${pathD}" fill="none" stroke="${ac}" stroke-width="2.5" 
+                      stroke-linecap="round" stroke-linejoin="round" 
+                      filter="url(#miniGlow)" class="mini-chart-line"/>
+                ${dotsHTML}
+                ${labelsHTML}
+            </svg>
+        `;
 
         let insight = 'Start your week strong.';
-        if (score >= 80) insight = 'You are in a beautiful flow state this week.';
-        else if (score >= 60) insight = 'Strong rhythm. Your consistency is paying off.';
-        else if (score >= 35) insight = 'Momentum is building. Keep showing up gently.';
-        else if (score > 0) insight = 'One focused session can change the feel of the day.';
+        if (score >= 80) insight = 'You\'re in a beautiful flow state this week. Keep riding it.';
+        else if (score >= 60) insight = 'Strong rhythm — your consistency is building real momentum.';
+        else if (score >= 35) insight = 'Momentum is building. One more focus block seals the day.';
+        else if (score > 0) insight = 'Every small step counts. One session can shift everything.';
 
         document.getElementById('weekInsight').textContent = insight;
     },
@@ -1145,9 +1331,25 @@ const Home = {
 };
 
 /* ─────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────
    POMODORO
 ───────────────────────────────────────────────────────── */
 const Pomo = {
+    liveInsights: [
+        "Settle in. The hardest part is starting.",
+        "Mute the noise. Find your flow.",
+        "Your future self will thank you for this block of time.",
+        "Breathe. One task at a time.",
+        "Deep work is a superpower. You're building it now.",
+        "Distractions are cheap. Focus is expensive.",
+        "You are exactly where you need to be.",
+        "Let go of perfection. Just make progress.",
+        "Momentum builds silently. Keep pushing.",
+        "Protect this time. The world can wait."
+    ],
+    currentInsightIndex: 0,
+    insightInterval: null,
+
     init() {
         State.pomo.left = State.data.settings.focusDur * 60;
         State.pomo.total = State.pomo.left;
@@ -1155,6 +1357,7 @@ const Pomo = {
         this.updateDisplay();
         this.renderDots();
         this.updatePlayButton(false);
+        this.cycleInsight(true);
     },
 
     setMode(mode) {
@@ -1175,6 +1378,39 @@ const Pomo = {
         State.pomo.total = State.pomo.left;
         this.updateDisplay();
         Sound.click();
+        this.cycleInsight(true);
+    },
+
+    cycleInsight(force = false) {
+        if (State.pomo.mode !== 'focus') {
+            document.getElementById('pomoLiveInsight').classList.remove('show');
+            return;
+        }
+
+        const el = document.getElementById('pomoLiveInsight');
+        
+        if (force) {
+            this.currentInsightIndex = Math.floor(Math.random() * this.liveInsights.length);
+            el.textContent = `"${this.liveInsights[this.currentInsightIndex]}"`;
+            setTimeout(() => el.classList.add('show'), 100);
+            return;
+        }
+
+        // Fade out
+        el.classList.remove('show');
+        
+        setTimeout(() => {
+            let nextIndex;
+            do {
+                nextIndex = Math.floor(Math.random() * this.liveInsights.length);
+            } while (nextIndex === this.currentInsightIndex && this.liveInsights.length > 1);
+            
+            this.currentInsightIndex = nextIndex;
+            el.textContent = `"${this.liveInsights[this.currentInsightIndex]}"`;
+            
+            // Fade in
+            requestAnimationFrame(() => el.classList.add('show'));
+        }, 600);
     },
 
     toggle() {
@@ -1191,9 +1427,17 @@ const Pomo = {
             this.updateRunningState(true);
             Sound.timerStart();
 
+            // Initial force-show when starting play if it was paused
+            this.cycleInsight(true);
+
             State.pomo.interval = setInterval(() => {
                 State.pomo.left--;
                 this.updateDisplay();
+
+                // Rotate insight every 60 seconds
+                if (State.pomo.mode === 'focus' && State.pomo.left % 60 === 0 && State.pomo.left > 0) {
+                    this.cycleInsight();
+                }
 
                 if (State.pomo.left <= 0) {
                     clearInterval(State.pomo.interval);
@@ -1216,6 +1460,10 @@ const Pomo = {
 
     updateRunningState(running) {
         document.getElementById('pomoTimer').classList.toggle('running', running);
+        
+        // Zen mode hides UI elements when focusing
+        const isZenMode = running && State.pomo.mode === 'focus';
+        document.getElementById('app').classList.toggle('focus-zen', isZenMode);
     },
 
     reset() {
@@ -1251,6 +1499,7 @@ const Pomo = {
             Storage.save();
             this.renderDots();
             Achievements.check();
+            Level.update();
             Toast.show('Focus done! 🔥');
 
             if (State.pomo.count >= State.data.settings.sessions) {
@@ -1459,156 +1708,200 @@ const Report = {
         }).join('');
     },
 
-    drawChart(canvasId, values, labels) {
-        const canvas = document.getElementById(canvasId);
-        const dpr = window.devicePixelRatio || 1;
-        const rect = canvas.getBoundingClientRect();
+    drawChart(containerId, values, labels) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-        if (!rect.width || !rect.height) return;
-
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-
-        const ctx = canvas.getContext('2d');
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-
-        const W = rect.width;
-        const H = rect.height;
-        const pad = { t: 10, r: 8, b: 26, l: 30 };
+        const max = Math.max(...values, 1);
+        const W = 400, H = 160;
+        const pad = { t: 20, r: 16, b: 30, l: 36 };
         const chartW = W - pad.l - pad.r;
         const chartH = H - pad.t - pad.b;
-        const max = Math.max(...values, 1);
-        const step = chartW / values.length;
-        const barW = step * 0.5;
 
         const css = getComputedStyle(document.documentElement);
-        const grid = css.getPropertyValue('--chart-grid').trim();
-        const txt = css.getPropertyValue('--chart-text').trim();
         const ac = css.getPropertyValue('--ac').trim();
+        const gridColor = css.getPropertyValue('--chart-grid').trim();
+        const txtColor = css.getPropertyValue('--chart-text').trim();
 
-        ctx.clearRect(0, 0, W, H);
+        const uid = containerId + '_' + Date.now();
 
-        ctx.strokeStyle = grid;
-        ctx.lineWidth = 1;
-        for (let i = 0; i <= 4; i++) {
+        const points = values.map((v, i) => ({
+            x: pad.l + (i / (values.length - 1)) * chartW,
+            y: pad.t + chartH - (v / max) * chartH,
+            val: v
+        }));
+
+        const pathD = points.reduce((acc, p, i) => {
+            if (i === 0) return `M ${p.x} ${p.y}`;
+            const prev = points[i - 1];
+            const cpx = (prev.x + p.x) / 2;
+            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
+        }, '');
+
+        const areaD = `${pathD} L ${points[points.length - 1].x} ${pad.t + chartH} L ${points[0].x} ${pad.t + chartH} Z`;
+
+        const gridLines = Array.from({ length: 5 }, (_, i) => {
             const y = pad.t + chartH * (1 - i / 4);
-            ctx.beginPath();
-            ctx.moveTo(pad.l, y);
-            ctx.lineTo(W - pad.r, y);
-            ctx.stroke();
-        }
+            const val = Math.round(max * i / 4);
+            return `
+                <line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" 
+                      stroke="${gridColor}" stroke-width="1" stroke-dasharray="${i === 0 ? 'none' : '4,4'}"/>
+                <text x="${pad.l - 8}" y="${y + 3}" text-anchor="end" 
+                      fill="${txtColor}" font-size="9" font-family="Inter, sans-serif">${val}</text>
+            `;
+        }).join('');
 
-        ctx.fillStyle = txt;
-        ctx.font = '9px Inter, sans-serif';
-        ctx.textAlign = 'right';
-        for (let i = 0; i <= 4; i++) {
-            const y = pad.t + chartH * (1 - i / 4);
-            ctx.fillText(Math.round(max * i / 4), pad.l - 6, y + 3);
-        }
+        const dotsHTML = points.map((p, i) => `
+            <g class="chart-point" style="animation-delay:${0.4 + i * 0.08}s">
+                <circle cx="${p.x}" cy="${p.y}" r="12" fill="${ac}" opacity="0.08" class="chart-dot-glow"/>
+                <circle cx="${p.x}" cy="${p.y}" r="${p.val > 0 ? 4.5 : 2.5}" 
+                        fill="${p.val > 0 ? '#fff' : 'var(--bg4)'}" 
+                        stroke="${p.val > 0 ? ac : 'var(--bd)'}" stroke-width="2.5"/>
+                ${p.val > 0 ? `<text x="${p.x}" y="${p.y - 12}" text-anchor="middle" 
+                      fill="var(--tx1)" font-size="9" font-weight="700" 
+                      font-family="Inter, sans-serif">${p.val}</text>` : ''}
+            </g>
+        `).join('');
 
-        const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + chartH);
-        grad.addColorStop(0, ac);
-        grad.addColorStop(1, ac + '40');
+        const labelsHTML = points.map((p, i) => `
+            <text x="${p.x}" y="${H - 6}" text-anchor="middle" 
+                  fill="${txtColor}" font-size="9" font-weight="600" 
+                  font-family="Inter, sans-serif" letter-spacing="0.03em">${labels[i]}</text>
+        `).join('');
 
-        values.forEach((v, i) => {
-            const x = pad.l + step * i + (step - barW) / 2;
-            const h = (v / max) * chartH;
-            const y = pad.t + chartH - h;
-
-            ctx.fillStyle = grad;
-            const r = 4;
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + barW - r, y);
-            ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
-            ctx.lineTo(x + barW, pad.t + chartH);
-            ctx.lineTo(x, pad.t + chartH);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.fill();
-
-            if (v > 0) {
-                ctx.fillStyle = css.getPropertyValue('--tx1').trim();
-                ctx.font = 'bold 9px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(v, x + barW / 2, y - 5);
-            }
-
-            ctx.fillStyle = txt;
-            ctx.font = '9px Inter, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(labels[i], x + barW / 2, H - 6);
-        });
+        container.innerHTML = `
+            <svg viewBox="0 0 ${W} ${H}" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <linearGradient id="areaGrad_${uid}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.3"/>
+                        <stop offset="70%" stop-color="${ac}" stop-opacity="0.05"/>
+                        <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="lineGlow_${uid}">
+                        <feGaussianBlur stdDeviation="4" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <linearGradient id="lineGrad_${uid}" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.6"/>
+                        <stop offset="50%" stop-color="${ac}"/>
+                        <stop offset="100%" stop-color="${ac}" stop-opacity="0.6"/>
+                    </linearGradient>
+                </defs>
+                ${gridLines}
+                <path d="${areaD}" fill="url(#areaGrad_${uid})" class="chart-area-fill"/>
+                <path d="${pathD}" fill="none" stroke="url(#lineGrad_${uid})" stroke-width="3" 
+                      stroke-linecap="round" stroke-linejoin="round" 
+                      filter="url(#lineGlow_${uid})" class="chart-line-path"/>
+                ${dotsHTML}
+                ${labelsHTML}
+            </svg>
+        `;
     },
 
     renderInsights(w) {
         const insights = [];
         const score = this.getScore(w);
         const breakdown = this.getScoreBreakdown(w);
+        const prevW = Utils.weekData(State.weekOffset - 1);
+        const prevScore = this.getScore(prevW);
+        const scoreDiff = score - prevScore;
 
         if (!w.totalTasks && !w.totalFocus) {
             insights.push({
                 icon: Icons.spark(12),
-                text: `<strong>No activity yet.</strong> Start with one small task or one 10-minute focus session. Momentum loves a tiny beginning.`
+                text: `<strong>Blank canvas.</strong> This week is wide open. Start with one tiny task — momentum loves a small beginning.`
             });
         } else {
-            if (score >= 80) {
+            if (scoreDiff > 15) {
                 insights.push({
                     icon: Icons.trendUp(12),
-                    text: `<strong>Excellent week.</strong> Your score hit <strong>${score}</strong> — you balanced output, focus, and consistency beautifully.`
+                    text: `<strong>Major surge!</strong> Score jumped <strong>+${scoreDiff}</strong> vs last week. Something clicked — keep doing it.`
+                });
+            } else if (scoreDiff > 0) {
+                insights.push({
+                    icon: Icons.trendUp(12),
+                    text: `<strong>Upward trend.</strong> Score is <strong>+${scoreDiff}</strong> higher than last week. Small gains compound.`
+                });
+            } else if (scoreDiff < -10) {
+                insights.push({
+                    icon: Icons.trendDown(12),
+                    text: `<strong>Dip detected.</strong> Score dropped <strong>${scoreDiff}</strong> vs last week. No judgment — even a short reset flips the trajectory.`
+                });
+            }
+
+            if (score >= 80) {
+                insights.push({
+                    icon: Icons.trophy(12),
+                    text: `<strong>Elite week.</strong> Score of <strong>${score}</strong> — you balanced output, focus, and consistency beautifully.`
                 });
             } else if (score >= 55) {
                 insights.push({
                     icon: Icons.target(12),
-                    text: `<strong>Solid momentum.</strong> A few more protected focus blocks could push this week into elite territory.`
+                    text: `<strong>Solid foundation.</strong> At <strong>${score}</strong>. Two more focus blocks push this into elite territory.`
                 });
-            } else {
+            } else if (score > 0) {
                 insights.push({
                     icon: Icons.spark(12),
-                    text: `<strong>Building momentum.</strong> This week needs one or two protected focus sessions to feel much better.`
+                    text: `<strong>Building.</strong> Score of <strong>${score}</strong>. One or two deep sessions make this week feel much stronger.`
                 });
             }
 
             if (w.bestDay.tasks > 0 || w.bestDay.focus > 0) {
                 insights.push({
                     icon: Icons.fire(12),
-                    text: `<strong>Best day:</strong> <strong>${w.bestDay.name}</strong> with <strong>${w.bestDay.tasks}</strong> tasks and <strong>${w.bestDay.focus}m</strong> focus.`
+                    text: `<strong>Peak: ${w.bestDay.name}</strong> — ${w.bestDay.tasks} task${w.bestDay.tasks !== 1 ? 's' : ''} and ${w.bestDay.focus}m focused. That's your power pattern.`
                 });
             }
 
             if (w.activeDays >= 5) {
                 insights.push({
                     icon: Icons.shield(12),
-                    text: `<strong>Strong consistency.</strong> Active on <strong>${w.activeDays}/7</strong> days — that matters more than one perfect day.`
+                    text: `<strong>${w.activeDays}/7 active days.</strong> Consistency beats intensity. You're proving it daily.`
+                });
+            } else if (w.activeDays >= 3) {
+                insights.push({
+                    icon: Icons.shield(12),
+                    text: `<strong>${w.activeDays}/7 active days.</strong> One more active day this week boosts your rhythm significantly.`
                 });
             }
 
+            if (w.totalFocus > 0 && w.totalTasks > 0) {
+                const ratio = w.totalFocus / w.totalTasks;
+                if (ratio > 30) {
+                    insights.push({ icon: Icons.target(12), text: `<strong>Deep work mode.</strong> High focus-per-task ratio — quality over quantity is a superpower.` });
+                }
+            }
+
             if (breakdown.overdue > 0) {
+                const overdueCount = Math.ceil(breakdown.overdue / 2);
                 insights.push({
                     icon: Icons.trendDown(12),
-                    text: `<strong>Overdue drag.</strong> Clear or reschedule overdue tasks to reduce mental friction.`
+                    text: `<strong>${overdueCount} overdue.</strong> Clear, reschedule, or drop them. Overdue items create invisible mental drag.`
                 });
             }
         }
 
         const tips = [
-            'Done beats perfect. Finish ugly, refine later.',
-            'If a task feels heavy, shrink it until it feels obvious.',
-            'Protect one distraction-free block tomorrow.',
-            'Turn heavy tasks into tiny next steps.',
-            'Celebrate progress, not just outcomes.'
+            'Done beats perfect. Ship it ugly, refine it later.',
+            'If a task feels heavy, split it until each piece feels obvious.',
+            'Protect one distraction-free block tomorrow morning.',
+            'The hardest part is starting. After 2 minutes, momentum takes over.',
+            'Energy management > time management. Work when you\'re sharpest.',
+            'Rest is productive. Recovery fuels tomorrow\'s output.'
         ];
 
         insights.push({
             icon: Icons.spark(12),
-            text: `<em>${tips[Math.floor(Math.random() * tips.length)]}</em>`
+            text: `<em>"${tips[Math.floor(Math.random() * tips.length)]}"</em>`
         });
 
-        document.getElementById('aiInsightsContent').innerHTML = insights.map(i => `
-            <div class="ai-insight-item">
-                <div class="ai-insight-icon">${i.icon}</div>
-                <div class="ai-insight-text">${i.text}</div>
+        document.getElementById('aiInsightsContent').innerHTML = insights.map((ins, idx) => `
+            <div class="ai-insight-item" style="animation-delay:${idx * 0.06}s">
+                <div class="ai-insight-icon">${ins.icon}</div>
+                <div class="ai-insight-text">${ins.text}</div>
             </div>
         `).join('');
     },
@@ -1789,6 +2082,26 @@ const Settings = {
                  onclick="Settings.setAccent('${a.id}')"
                  title="${a.n}"></div>
         `).join('');
+
+        // Update custom color picker state
+        const isCustom = State.data.settings.accent === 'custom';
+        const swatch = document.getElementById('customColorSwatch');
+        const hexInput = document.getElementById('customHexInput');
+        const nativeInput = document.getElementById('customColorNative');
+        const picker = document.getElementById('customColorPicker');
+        
+        if (isCustom && State.data.settings.customHex) {
+            swatch.style.background = `#${State.data.settings.customHex}`;
+            swatch.classList.add('has-color');
+            hexInput.value = State.data.settings.customHex.toUpperCase();
+            nativeInput.value = `#${State.data.settings.customHex}`;
+            picker.classList.add('active');
+        } else {
+            swatch.style.background = '';
+            swatch.classList.remove('has-color');
+            hexInput.value = '';
+            picker.classList.remove('active');
+        }
     },
 
     setTheme(theme) {
@@ -1801,10 +2114,44 @@ const Settings = {
 
     setAccent(accent) {
         State.data.settings.accent = accent;
+        State.data.settings.customHex = '';
         Theme.apply();
         Storage.save();
         this.render();
         Sound.toggle();
+    },
+
+    applyCustomColor() {
+        let hex = document.getElementById('customHexInput').value.trim().replace('#', '');
+        if (!/^[0-9A-Fa-f]{6}$/.test(hex)) {
+            Toast.show('Enter a valid 6-digit hex code');
+            document.getElementById('customHexInput').focus();
+            return;
+        }
+        State.data.settings.accent = 'custom';
+        State.data.settings.customHex = hex;
+        Theme.apply();
+        Storage.save();
+        this.render();
+        Sound.toggle();
+        Toast.show('Custom accent applied ✨');
+    },
+
+    updateCustomSwatch() {
+        const input = document.getElementById('customHexInput');
+        const swatch = document.getElementById('customColorSwatch');
+        let hex = input.value.trim().replace('#', '');
+        if (/^[0-9A-Fa-f]{6}$/.test(hex)) {
+            swatch.style.background = `#${hex}`;
+            swatch.classList.add('has-color');
+        } else if (/^[0-9A-Fa-f]{3}$/.test(hex)) {
+            const expanded = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+            swatch.style.background = `#${expanded}`;
+            swatch.classList.add('has-color');
+        } else {
+            swatch.style.background = '';
+            swatch.classList.remove('has-color');
+        }
     },
 
     toggleSound() {
@@ -1850,6 +2197,28 @@ const Settings = {
     }
 };
 
+/* Custom color picker event listeners */
+document.getElementById('customHexInput').addEventListener('input', () => {
+    Settings.updateCustomSwatch();
+});
+
+document.getElementById('customHexInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') Settings.applyCustomColor();
+});
+
+document.getElementById('customColorNative').addEventListener('input', e => {
+    const hex = e.target.value.replace('#', '');
+    document.getElementById('customHexInput').value = hex.toUpperCase();
+    Settings.updateCustomSwatch();
+});
+
+document.getElementById('customColorNative').addEventListener('change', e => {
+    const hex = e.target.value.replace('#', '');
+    document.getElementById('customHexInput').value = hex.toUpperCase();
+    Settings.updateCustomSwatch();
+    Settings.applyCustomColor();
+});
+
 /* ─────────────────────────────────────────────────────────
    MODALS
 ───────────────────────────────────────────────────────── */
@@ -1861,6 +2230,69 @@ document.querySelectorAll('.modal').forEach(modal => {
         }
     });
 });
+
+/* ─────────────────────────────────────────────────────────
+   COMMAND GLASS (QUICK ADD)
+───────────────────────────────────────────────────────── */
+const CommandGlass = {
+    open() {
+        const glass = document.getElementById('cmdGlass');
+        const input = document.getElementById('cmdInput');
+        
+        glass.classList.add('show');
+        document.getElementById('cmdIcon').innerHTML = Icons.zap(12) || Icons.spark(12);
+        
+        // Slight delay to ensure display: flex is applied before focusing
+        setTimeout(() => input.focus(), 50);
+        Sound.click();
+    },
+
+    close() {
+        const glass = document.getElementById('cmdGlass');
+        glass.classList.remove('show');
+        document.getElementById('cmdInput').value = '';
+        Sound.close();
+    },
+
+    submit() {
+        const input = document.getElementById('cmdInput');
+        const text = input.value.trim();
+        
+        if (!text) return;
+
+        // Simple heuristic: if it starts with "dump ", send to brain dump. Else, add as task.
+        if (text.toLowerCase().startsWith('dump ')) {
+            const dumpText = text.substring(5).trim();
+            if (dumpText) {
+                State.data.dumps.unshift({
+                    id: Utils.id(),
+                    text: dumpText,
+                    ts: Date.now()
+                });
+                Storage.save();
+                Dump.render(); // update if open
+                Toast.show("Brain dump saved");
+            }
+        } else {
+            // Send to Tasks today
+            State.data.tasks.push({
+                id: Utils.id(),
+                text: text,
+                date: Utils.today(),
+                listId: null,
+                completed: false,
+                subtasks: []
+            });
+            Storage.save();
+            Tasks.render();
+            Home.render();
+            Toast.show("Task added to Today");
+        }
+
+        this.close();
+        Sound.click();
+    }
+};
 
 /* ─────────────────────────────────────────────────────────
    KEYBOARD SHORTCUTS
@@ -1881,6 +2313,34 @@ document.getElementById('dumpTextarea').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         Dump.add();
+    }
+});
+
+document.addEventListener('keydown', e => {
+    // Command Glass Toggle (Ctrl+K or Cmd+K)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        const glass = document.getElementById('cmdGlass');
+        if (glass.classList.contains('show')) {
+            CommandGlass.close();
+        } else {
+            CommandGlass.open();
+        }
+    }
+
+    // Escape Command Glass
+    if (e.key === 'Escape') {
+        const glass = document.getElementById('cmdGlass');
+        if (glass.classList.contains('show')) {
+            CommandGlass.close();
+        }
+    }
+});
+
+document.getElementById('cmdInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        CommandGlass.submit();
     }
 });
 
@@ -1905,6 +2365,7 @@ const App = {
         Dump.render();
         Report.render();
         Settings.render();
+        Level.update();
 
         document.getElementById('taskDateInput').value = Utils.today();
         document.getElementById('userEmailDisplay').textContent = State.user?.email || '—';
