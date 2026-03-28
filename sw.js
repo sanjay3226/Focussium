@@ -1,43 +1,35 @@
 const CACHE_NAME = 'focussium-v3';
-const ASSETS_TO_CACHE = [
-    './index.html?v=3',
-    './manifest.json?v=3',
-    './icon-192.png?v=3',
-    './icon-512.png?v=3',
-    './screenshot-desktop.png',
-    './screenshot-mobile.png'
+const ASSETS = [
+    './',
+    './index.html',
+    './css/styles.css',
+    './js/app.js',
+    './js/sounds.js',
+    './js/icons.js',
+    './js/firebase-config.js',
+    './icon-192.png',
+    './icon-512.png'
 ];
 
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
-        })
+self.addEventListener('install', e => {
+    e.waitUntil(
+        caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))
     );
     self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
+self.addEventListener('activate', e => {
+    e.waitUntil(
+        caches.keys().then(keys => {
             return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
+                keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
             );
         })
     );
-    self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request).catch(() => {
-                // Optional: return a fallback page if network fails and not in cache
-            });
-        })
+self.addEventListener('fetch', e => {
+    e.respondWith(
+        caches.match(e.request).then(res => res || fetch(e.request))
     );
 });
