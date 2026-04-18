@@ -201,14 +201,6 @@
                     <div class="week-insight" id="weekInsight">Start your week strong.</div>
                 </div>
 
-                <!-- Achievements Preview -->
-                <div class="achievements-preview" id="achievementsPreview"></div>
-
-                <!-- Dopamine Rewards -->
-                <div class="section-header">
-                    <div class="section-title">Dopamine Rewards</div>
-                </div>
-                <div class="rewards-vault" id="rewardsVault"></div>
 
                 <!-- Quick Stats Grid -->
                 <div class="stats-grid">
@@ -651,19 +643,6 @@
                 </div>
             </div>
 
-            <div class="settings-section">
-                <div class="settings-section-title">Dopamine Rewards</div>
-                <div class="dopamine-builder">
-                    <p class="dopamine-note">Create custom rewards that unlock at specific XP milestones.</p>
-                    <div class="dopamine-fields">
-                        <input class="form-input" id="rewardLabelInput" maxlength="40" placeholder="Reward (e.g. 1 match)">
-                        <input class="form-input" id="rewardXpInput" type="number" min="50" step="50" placeholder="XP required">
-                        <input class="form-input" id="rewardDurationInput" type="number" min="5" max="900" step="5" placeholder="Duration sec">
-                    </div>
-                    <button class="btn-secondary dopamine-add-btn" onclick="Rewards.addCustom()">Add reward</button>
-                    <div class="dopamine-list" id="dopamineRewardsList"></div>
-                </div>
-            </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">Account</div>
@@ -721,15 +700,6 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
-    <!-- Reward Timer Modal -->
-    <div class="reward-viewer" id="rewardViewer">
-        <div class="reward-viewer-card">
-            <div class="reward-viewer-label" id="rewardViewerLabel">Reward</div>
-            <div class="reward-viewer-time" id="rewardViewerTime">00:00</div>
-            <p class="reward-viewer-hint">Enjoy this break. We’ll close it automatically.</p>
-            <button class="btn-primary" onclick="Rewards.closeViewer()">Done</button>
-        </div>
-    </div>
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
