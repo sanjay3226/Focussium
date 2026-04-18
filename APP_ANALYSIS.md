@@ -22,7 +22,7 @@
    - Pre-cache and offline fetch fallback are simple and effective for static assets.
 
 4. **Feature depth is strong for a single-file SPA.**
-   - Tasks, repeat scheduling, dump-to-task conversion, pomodoro, reports, achievements, onboarding, and settings are all integrated.
+   - Tasks, repeat scheduling, dump-to-task conversion, pomodoro, reports, onboarding, and settings are all integrated.
 
 ## 3) Key risks / bottlenecks
 
