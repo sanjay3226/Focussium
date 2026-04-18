@@ -1,4 +1,4 @@
-const CACHE_NAME = 'focussium-v3';
+const CACHE_NAME = 'focussium-v4';
 const ASSETS = [
     './',
     './index.html',

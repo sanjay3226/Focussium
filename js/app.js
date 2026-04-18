@@ -11,8 +11,6 @@ const State = {
         lists: ['My Tasks', 'Work', 'Personal'],
         dumps: [],
         pomo: [],
-        achievements: [],
-        rewardsUnlocked: [],
         currentList: 'All',
         streak: 0,
         lastVisit: null,
@@ -28,12 +26,7 @@ const State = {
             focusDur: 25,
             breakDur: 5,
             longDur: 15,
-            sessions: 4,
-            dopamineRewards: [
-                { id: 'rw_match', label: '1 Match', xp: 200, duration: 45 },
-                { id: 'rw_scroll', label: 'Short Scroll', xp: 600, duration: 90 },
-                { id: 'rw_snack', label: 'Snack Break', xp: 1200, duration: 180 }
-            ]
+            sessions: 4
         }
     },
 
@@ -47,7 +40,6 @@ const State = {
     editingTaskId: null,
     saveTimeout: null,
     clockInterval: null,
-    rewardInterval: null,
 
     pomo: {
         running: false,
@@ -71,17 +63,6 @@ const ACCENTS = [
     { id: 'void', c: '#8c9ab0', n: 'Deep Void' }
 ];
 
-const ACHIEVEMENTS = [
-    { id: 'first_task', name: 'First Step', desc: 'Complete your first task', icon: 'star', check: d => d.totalTasksCompleted >= 1 },
-    { id: 'task_10', name: 'Getting Started', desc: 'Complete 10 tasks', icon: 'zap', check: d => d.totalTasksCompleted >= 10 },
-    { id: 'task_50', name: 'Productive Mind', desc: 'Complete 50 tasks', icon: 'fire', check: d => d.totalTasksCompleted >= 50 },
-    { id: 'task_100', name: 'Task Master', desc: 'Complete 100 tasks', icon: 'trophy', check: d => d.totalTasksCompleted >= 100 },
-    { id: 'focus_60', name: 'Deep Work', desc: 'Focus for 60 minutes total', icon: 'target', check: d => d.totalFocusMinutes >= 60 },
-    { id: 'focus_300', name: 'Flow State', desc: 'Focus for 5 hours total', icon: 'spark', check: d => d.totalFocusMinutes >= 300 },
-    { id: 'streak_3', name: 'Consistency', desc: 'Maintain a 3-day streak', icon: 'shield', check: d => d.streak >= 3 },
-    { id: 'streak_7', name: 'Week Warrior', desc: 'Maintain a 7-day streak', icon: 'crown', check: d => d.streak >= 7 },
-    { id: 'streak_30', name: 'Unstoppable', desc: 'Maintain a 30-day streak', icon: 'trophy', check: d => d.streak >= 30 }
-];
 
 /* ─────────────────────────────────────────────────────────
    UTILITIES
@@ -561,7 +542,6 @@ const Clock = {
 
             State.data.lastVisit = today;
             Tasks.summonRepeats();
-            Achievements.check();
             Storage.save();
         }
     }
@@ -594,60 +574,7 @@ const Nav = {
 };
 
 /* ─────────────────────────────────────────────────────────
-   ACHIEVEMENTS
-───────────────────────────────────────────────────────── */
-const Achievements = {
-    check() {
-        let newAchievement = false;
-
-        ACHIEVEMENTS.forEach(ach => {
-            if (!State.data.achievements.includes(ach.id) && ach.check(State.data)) {
-                State.data.achievements.push(ach.id);
-                newAchievement = true;
-                Toast.show(`🏆 Achievement: ${ach.name}`);
-                Sound.achievement();
-            }
-        });
-
-        if (newAchievement) {
-            Storage.save();
-        }
-    },
-
-    renderPreview() {
-        const unlocked = State.data.achievements.length;
-        const total = ACHIEVEMENTS.length;
-        const recent = ACHIEVEMENTS.filter(a => State.data.achievements.includes(a.id)).slice(-3);
-
-        if (unlocked === 0) {
-            return `
-            <div class="achievements-preview-card">
-                <div class="achievements-preview-icon">${Icons.trophy(24)}</div>
-                <div class="achievements-preview-text">
-                    <div class="achievements-preview-title">Start earning achievements</div>
-                    <div class="achievements-preview-sub">Complete tasks and focus sessions to unlock badges</div>
-                </div>
-            </div>`;
-        }
-
-        return `
-        <div class="achievements-preview-card">
-            <div class="achievements-preview-header">
-                <span>${Icons.trophy(16)} ${unlocked}/${total} Achievements</span>
-            </div>
-            <div class="achievements-preview-badges">
-                ${recent.map(a => `
-                    <div class="achievement-badge" title="${a.name}">
-                        ${Icons[a.icon] ? Icons[a.icon](16) : Icons.star(16)}
-                    </div>
-                `).join('')}
-            </div>
-        </div>`;
-    }
-};
-
-/* ─────────────────────────────────────────────────────────
-   GAMIFICATION & LEVELING
+   LEVELING
 ───────────────────────────────────────────────────────── */
 const Level = {
     getXP() {
@@ -658,13 +585,10 @@ const Level = {
 
     update() {
         const xp = this.getXP();
-        
-        // Simple scaling formula: level = Math.floor(Math.sqrt(xp / 100)) + 1
         const level = Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
-        
+
         const xpForCurrentLevel = 100 * Math.pow(level - 1, 2);
         const xpForNextLevel = 100 * Math.pow(level, 2);
-        
         const xpInCurrentLevel = xp - xpForCurrentLevel;
         const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
         const progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
@@ -677,178 +601,6 @@ const Level = {
 
         const bar = document.getElementById('xpBarFill');
         if (bar) bar.style.width = `${progressPercent}%`;
-
-        Rewards.checkUnlocks(xp);
-        Rewards.renderHome();
-    }
-};
-
-/* ─────────────────────────────────────────────────────────
-   DOPAMINE REWARDS
-───────────────────────────────────────────────────────── */
-const Rewards = {
-    ensureState() {
-        if (!Array.isArray(State.data.settings.dopamineRewards)) {
-            State.data.settings.dopamineRewards = Utils.clone(State.defaults.settings.dopamineRewards);
-        }
-        if (!Array.isArray(State.data.rewardsUnlocked)) {
-            State.data.rewardsUnlocked = [];
-        }
-    },
-
-    isUnlocked(reward, xp = Level.getXP()) {
-        return xp >= reward.xp;
-    },
-
-    checkUnlocks(xp = Level.getXP()) {
-        this.ensureState();
-        let changed = false;
-        State.data.settings.dopamineRewards.forEach(reward => {
-            if (xp >= reward.xp && !State.data.rewardsUnlocked.includes(reward.id)) {
-                State.data.rewardsUnlocked.push(reward.id);
-                Toast.show(`Unlocked: ${reward.label} ✨`);
-                Sound.achievement();
-                changed = true;
-            }
-        });
-        if (changed) Storage.save();
-    },
-
-    renderHome() {
-        this.ensureState();
-        const host = document.getElementById('rewardsVault');
-        if (!host) return;
-
-        const xp = Level.getXP();
-        const rewards = [...State.data.settings.dopamineRewards].sort((a, b) => a.xp - b.xp);
-
-        if (!rewards.length) {
-            host.innerHTML = `
-            <div class="reward-empty">
-                <div class="reward-empty-title">No rewards yet</div>
-                <div class="reward-empty-sub">Add one in Settings → Dopamine Rewards.</div>
-            </div>`;
-            return;
-        }
-
-        host.innerHTML = rewards.map(reward => {
-            const unlocked = this.isUnlocked(reward, xp);
-            const justUnlocked = State.data.rewardsUnlocked.includes(reward.id);
-            const icon = unlocked ? Icons.spark(14) : Icons.shield(14);
-            return `
-            <button class="reward-card ${unlocked ? 'unlocked' : 'locked'} ${justUnlocked ? 'just-unlocked' : ''}" onclick="Rewards.use('${reward.id}')">
-                <div class="reward-card-top">
-                    <span class="reward-icon">${icon}</span>
-                    <span class="reward-xp">${reward.xp} XP</span>
-                </div>
-                <div class="reward-title">${Utils.escape(reward.label)}</div>
-                <div class="reward-sub">${reward.duration}s reward window</div>
-                <div class="reward-state">${unlocked ? 'Use Reward' : `Locked · need ${reward.xp - xp} XP`}</div>
-            </button>`;
-        }).join('');
-    },
-
-    renderSettings() {
-        this.ensureState();
-        const list = document.getElementById('dopamineRewardsList');
-        if (!list) return;
-
-        const rewards = [...State.data.settings.dopamineRewards].sort((a, b) => a.xp - b.xp);
-        list.innerHTML = rewards.map(r => `
-            <div class="dopamine-item">
-                <div class="dopamine-item-main">
-                    <div class="dopamine-item-title">${Utils.escape(r.label)}</div>
-                    <div class="dopamine-item-meta">${r.xp} XP · ${r.duration}s</div>
-                </div>
-                <button class="dopamine-remove" onclick="Rewards.remove('${r.id}')">Remove</button>
-            </div>
-        `).join('');
-    },
-
-    addCustom() {
-        this.ensureState();
-        const labelEl = document.getElementById('rewardLabelInput');
-        const xpEl = document.getElementById('rewardXpInput');
-        const durEl = document.getElementById('rewardDurationInput');
-
-        const label = labelEl.value.trim();
-        const xp = parseInt(xpEl.value, 10);
-        const duration = parseInt(durEl.value, 10);
-
-        if (!label) return Toast.show('Add a reward name');
-        if (!Number.isFinite(xp) || xp < 50) return Toast.show('XP must be at least 50');
-        if (!Number.isFinite(duration) || duration < 5 || duration > 900) return Toast.show('Duration must be 5–900 sec');
-
-        State.data.settings.dopamineRewards.push({
-            id: Utils.generateId('rw'),
-            label,
-            xp,
-            duration
-        });
-        labelEl.value = '';
-        xpEl.value = '';
-        durEl.value = '';
-        Storage.save();
-        this.checkUnlocks();
-        this.renderSettings();
-        this.renderHome();
-        Toast.show('Reward added');
-    },
-
-    remove(id) {
-        this.ensureState();
-        State.data.settings.dopamineRewards = State.data.settings.dopamineRewards.filter(r => r.id !== id);
-        State.data.rewardsUnlocked = State.data.rewardsUnlocked.filter(rid => rid !== id);
-        Storage.save();
-        this.renderSettings();
-        this.renderHome();
-        Toast.show('Reward removed');
-    },
-
-    use(id) {
-        this.ensureState();
-        const reward = State.data.settings.dopamineRewards.find(r => r.id === id);
-        if (!reward) return;
-        const xp = Level.getXP();
-        if (!this.isUnlocked(reward, xp)) {
-            Toast.show(`Locked. Need ${reward.xp - xp} more XP`);
-            return;
-        }
-        this.openViewer(reward);
-    },
-
-    openViewer(reward) {
-        const viewer = document.getElementById('rewardViewer');
-        const time = document.getElementById('rewardViewerTime');
-        const label = document.getElementById('rewardViewerLabel');
-        if (!viewer || !time || !label) return;
-
-        label.textContent = reward.label;
-        viewer.classList.add('on');
-        let left = reward.duration;
-        const render = () => {
-            const m = String(Math.floor(left / 60)).padStart(2, '0');
-            const s = String(left % 60).padStart(2, '0');
-            time.textContent = `${m}:${s}`;
-        };
-        render();
-
-        clearInterval(State.rewardInterval);
-        State.rewardInterval = setInterval(() => {
-            left -= 1;
-            render();
-            if (left <= 0) {
-                this.closeViewer();
-                Toast.show('Reward window complete. Back to focus 💪');
-            }
-        }, 1000);
-    },
-
-    closeViewer() {
-        const viewer = document.getElementById('rewardViewer');
-        if (viewer) viewer.classList.remove('on');
-        clearInterval(State.rewardInterval);
-        State.rewardInterval = null;
     }
 };
 
@@ -1183,7 +935,6 @@ const Tasks = {
 
         if (task.completed) {
             State.data.totalTasksCompleted = (State.data.totalTasksCompleted || 0) + 1;
-            Achievements.check();
             Level.update();
         }
 
@@ -1376,8 +1127,6 @@ const Home = {
 
         this.renderProgress(percent, doneTasks.length, todayTasks.length, focusMin);
         this.renderWeekSnapshot();
-        this.renderAchievements();
-        Rewards.renderHome();
         this.renderStats(todayTasks.length, doneTasks.length, focusMin, State.data.streak || 0);
         this.renderTaskPreview(todayTasks);
     },
@@ -1414,64 +1163,20 @@ const Home = {
             trendEl.innerHTML = `<span class="trend-flat">— same</span>`;
         }
 
-        // Mini SVG line chart
         const values = w.days.map(d => d.tasks + Math.round(d.focus / 25));
         const max = Math.max(...values, 1);
-        const W = 320, H = 70;
-        const padX = 10, padY = 8;
-        const chartW = W - padX * 2, chartH = H - padY * 2;
-
-        const points = values.map((v, i) => ({
-            x: padX + (i / 6) * chartW,
-            y: padY + chartH - (v / max) * chartH
-        }));
-
-        // Smooth curve path
-        const pathD = points.reduce((acc, p, i) => {
-            if (i === 0) return `M ${p.x} ${p.y}`;
-            const prev = points[i - 1];
-            const cpx = (prev.x + p.x) / 2;
-            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
-        }, '');
-
-        const areaD = `${pathD} L ${points[6].x} ${H} L ${points[0].x} ${H} Z`;
-
-        const css = getComputedStyle(document.documentElement);
-        const ac = css.getPropertyValue('--ac').trim();
-
-        const dotsHTML = points.map((p, i) => `
-            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.5 : 2}" 
-                    fill="${values[i] > 0 ? ac : 'var(--bd)'}" 
-                    class="mini-chart-dot" style="animation-delay:${0.3 + i * 0.06}s"
-                    opacity="${values[i] > 0 ? 1 : 0.4}"/>
-        `).join('');
-
-        const labelsHTML = w.days.map((d, i) => `
-            <text x="${points[i].x}" y="${H + 12}" text-anchor="middle" 
-                  fill="var(--tx4)" font-size="8" font-weight="600" 
-                  font-family="Inter, sans-serif" letter-spacing="0.04em">${d.name}</text>
-        `).join('');
-
-        document.getElementById('weekMiniChart').innerHTML = `
-            <svg viewBox="0 0 ${W} ${H + 16}" class="mini-line-chart" preserveAspectRatio="none">
-                <defs>
-                    <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.25"/>
-                        <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
-                    </linearGradient>
-                    <filter id="miniGlow">
-                        <feGaussianBlur stdDeviation="3" result="blur"/>
-                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
-                </defs>
-                <path d="${areaD}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
-                <path d="${pathD}" fill="none" stroke="${ac}" stroke-width="2.5" 
-                      stroke-linecap="round" stroke-linejoin="round" 
-                      filter="url(#miniGlow)" class="mini-chart-line"/>
-                ${dotsHTML}
-                ${labelsHTML}
-            </svg>
-        `;
+        document.getElementById('weekMiniChart').innerHTML = w.days.map((d, i) => {
+            const value = values[i];
+            const width = Math.max(8, Math.round((value / max) * 100));
+            return `
+            <div class="week-mini-bar-row">
+                <div class="week-mini-bar-label">${d.name}</div>
+                <div class="week-mini-bar-track">
+                    <div class="week-mini-bar-fill" style="width:${width}%"></div>
+                </div>
+                <div class="week-mini-bar-value">${value}</div>
+            </div>`;
+        }).join('');
 
         let insight = 'Start your week strong.';
         if (score >= 80) insight = 'You\'re in a beautiful flow state this week. Keep riding it.';
@@ -1482,9 +1187,6 @@ const Home = {
         document.getElementById('weekInsight').textContent = insight;
     },
 
-    renderAchievements() {
-        document.getElementById('achievementsPreview').innerHTML = Achievements.renderPreview();
-    },
 
     renderStats(total, done, focus, streak) {
         const icons = [Icons.tasks(16), Icons.check(16), Icons.fire(16), Icons.shield(16)];
@@ -1512,7 +1214,6 @@ const Home = {
     }
 };
 
-/* ─────────────────────────────────────────────────────────
 /* ─────────────────────────────────────────────────────────
    POMODORO
 ───────────────────────────────────────────────────────── */
@@ -1680,7 +1381,6 @@ const Pomo = {
 
             Storage.save();
             this.renderDots();
-            Achievements.check();
             Level.update();
             Toast.show('Focus done! 🔥');
 
@@ -1895,92 +1595,18 @@ const Report = {
         if (!container) return;
 
         const max = Math.max(...values, 1);
-        const W = 400, H = 160;
-        const pad = { t: 20, r: 16, b: 30, l: 36 };
-        const chartW = W - pad.l - pad.r;
-        const chartH = H - pad.t - pad.b;
-
-        const css = getComputedStyle(document.documentElement);
-        const ac = css.getPropertyValue('--ac').trim();
-        const gridColor = css.getPropertyValue('--chart-grid').trim();
-        const txtColor = css.getPropertyValue('--chart-text').trim();
-
-        const uid = containerId + '_' + Date.now();
-
-        const points = values.map((v, i) => ({
-            x: pad.l + (i / (values.length - 1)) * chartW,
-            y: pad.t + chartH - (v / max) * chartH,
-            val: v
-        }));
-
-        const pathD = points.reduce((acc, p, i) => {
-            if (i === 0) return `M ${p.x} ${p.y}`;
-            const prev = points[i - 1];
-            const cpx = (prev.x + p.x) / 2;
-            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
-        }, '');
-
-        const areaD = `${pathD} L ${points[points.length - 1].x} ${pad.t + chartH} L ${points[0].x} ${pad.t + chartH} Z`;
-
-        const gridLines = Array.from({ length: 5 }, (_, i) => {
-            const y = pad.t + chartH * (1 - i / 4);
-            const val = Math.round(max * i / 4);
+        container.innerHTML = labels.map((label, i) => {
+            const value = values[i];
+            const width = Math.max(8, Math.round((value / max) * 100));
             return `
-                <line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" 
-                      stroke="${gridColor}" stroke-width="1" stroke-dasharray="${i === 0 ? 'none' : '4,4'}"/>
-                <text x="${pad.l - 8}" y="${y + 3}" text-anchor="end" 
-                      fill="${txtColor}" font-size="9" font-family="Inter, sans-serif">${val}</text>
-            `;
+            <div class="simple-chart-row">
+                <div class="simple-chart-label">${label}</div>
+                <div class="simple-chart-track">
+                    <div class="simple-chart-fill" style="width:${width}%"></div>
+                </div>
+                <div class="simple-chart-value">${value}</div>
+            </div>`;
         }).join('');
-
-        const dotsHTML = points.map((p, i) => `
-            <g class="chart-point" style="animation-delay:${0.4 + i * 0.08}s">
-                <circle cx="${p.x}" cy="${p.y}" r="12" fill="${ac}" opacity="0.08" class="chart-dot-glow"/>
-                <circle cx="${p.x}" cy="${p.y}" r="${p.val > 0 ? 4.5 : 2.5}" 
-                        fill="${p.val > 0 ? '#fff' : 'var(--bg4)'}" 
-                        stroke="${p.val > 0 ? ac : 'var(--bd)'}" stroke-width="2.5"/>
-                ${p.val > 0 ? `<text x="${p.x}" y="${p.y - 12}" text-anchor="middle" 
-                      fill="var(--tx1)" font-size="9" font-weight="700" 
-                      font-family="Inter, sans-serif">${p.val}</text>` : ''}
-            </g>
-        `).join('');
-
-        const labelsHTML = points.map((p, i) => `
-            <text x="${p.x}" y="${H - 6}" text-anchor="middle" 
-                  fill="${txtColor}" font-size="9" font-weight="600" 
-                  font-family="Inter, sans-serif" letter-spacing="0.03em">${labels[i]}</text>
-        `).join('');
-
-        container.innerHTML = `
-            <svg viewBox="0 0 ${W} ${H}" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">
-                <defs>
-                    <linearGradient id="areaGrad_${uid}" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.3"/>
-                        <stop offset="70%" stop-color="${ac}" stop-opacity="0.05"/>
-                        <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
-                    </linearGradient>
-                    <filter id="lineGlow_${uid}">
-                        <feGaussianBlur stdDeviation="4" result="blur"/>
-                        <feMerge>
-                            <feMergeNode in="blur"/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                    <linearGradient id="lineGrad_${uid}" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.6"/>
-                        <stop offset="50%" stop-color="${ac}"/>
-                        <stop offset="100%" stop-color="${ac}" stop-opacity="0.6"/>
-                    </linearGradient>
-                </defs>
-                ${gridLines}
-                <path d="${areaD}" fill="url(#areaGrad_${uid})" class="chart-area-fill"/>
-                <path d="${pathD}" fill="none" stroke="url(#lineGrad_${uid})" stroke-width="3" 
-                      stroke-linecap="round" stroke-linejoin="round" 
-                      filter="url(#lineGlow_${uid})" class="chart-line-path"/>
-                ${dotsHTML}
-                ${labelsHTML}
-            </svg>
-        `;
     },
 
     renderInsights(w) {
@@ -2285,7 +1911,6 @@ const Settings = {
             picker.classList.remove('active');
         }
 
-        Rewards.renderSettings();
     },
 
     setTheme(theme) {
@@ -2413,10 +2038,6 @@ document.querySelectorAll('.modal').forEach(modal => {
             Sound.close();
         }
     });
-});
-
-document.getElementById('rewardViewer').addEventListener('click', e => {
-    if (e.target.id === 'rewardViewer') Rewards.closeViewer();
 });
 
 /* ─────────────────────────────────────────────────────────

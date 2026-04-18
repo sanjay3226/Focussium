@@ -107,14 +107,6 @@ const Sound = (() => {
                 tone(494, 0.2, 0.05, 'triangle', 0.1);
                 tone(587, 0.22, 0.05, 'triangle', 0.2);
             });
-        },
-
-        achievement() {
-            play(() => {
-                [523, 659, 784, 1047, 1319].forEach((f, i) => {
-                    tone(f, 0.2, 0.08, 'sine', i * 0.08);
-                });
-            });
         }
     };
 })();
