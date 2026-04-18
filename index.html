@@ -324,62 +324,98 @@
             <section class="page" data-page="report">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconReport"></span>
-                    <h2>Weekly Vibe</h2>
+                    <h2 id="reportPageTitle">Weekly Vibe</h2>
                 </div>
 
-                <!-- Week Navigation -->
-                <div class="week-nav">
-                    <button class="week-nav-btn" onclick="Report.changeWeek(-1)" id="weekPrevBtn"></button>
-                    <span class="week-nav-label" id="weekNavLabel">This Week</span>
-                    <button class="week-nav-btn" onclick="Report.changeWeek(1)" id="weekNextBtn"></button>
+                <div class="report-view-switch" id="reportViewSwitch">
+                    <button class="report-view-btn active" data-view="week" onclick="Report.setView('week')">Week</button>
+                    <button class="report-view-btn" data-view="month" onclick="Report.setView('month')">Month</button>
                 </div>
 
-                <!-- Score Hero -->
-                <div class="score-hero">
-                    <div class="score-hero-main">
-                        <div class="score-hero-label">Productivity Score</div>
-                        <div class="score-hero-value" id="reportScoreValue">0</div>
-                        <div class="score-hero-bar">
-                            <div class="score-hero-fill" id="reportScoreFill"></div>
+                <div class="report-panel week-panel active" id="weekPanel">
+                    <!-- Week Navigation -->
+                    <div class="week-nav">
+                        <button class="week-nav-btn" onclick="Report.changeWeek(-1)" id="weekPrevBtn"></button>
+                        <span class="week-nav-label" id="weekNavLabel">This Week</span>
+                        <button class="week-nav-btn" onclick="Report.changeWeek(1)" id="weekNextBtn"></button>
+                    </div>
+
+                    <!-- Score Hero -->
+                    <div class="score-hero">
+                        <div class="score-hero-main">
+                            <div class="score-hero-label">Productivity Score</div>
+                            <div class="score-hero-value" id="reportScoreValue">0</div>
+                            <div class="score-hero-bar">
+                                <div class="score-hero-fill" id="reportScoreFill"></div>
+                            </div>
                         </div>
+                        <div class="score-breakdown" id="scoreBreakdown"></div>
                     </div>
-                    <div class="score-breakdown" id="scoreBreakdown"></div>
+
+                    <!-- Quick Stats -->
+                    <div class="report-stats" id="reportStats"></div>
+
+                    <!-- Activity Heatmap -->
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <span class="report-card-icon" id="reportHeatIcon"></span>
+                            <span>Activity Map</span>
+                        </div>
+                        <div class="heatmap-grid" id="heatmapGrid"></div>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <span class="report-card-icon" id="reportChartIcon0"></span>
+                            <span>Tasks Completed</span>
+                        </div>
+                        <div class="line-chart-container" id="tasksChart"></div>
+                    </div>
+
+                    <div class="report-card">
+                        <div class="report-card-header">
+                            <span class="report-card-icon" id="reportChartIcon1"></span>
+                            <span>Focus Minutes</span>
+                        </div>
+                        <div class="line-chart-container" id="focusChart"></div>
+                    </div>
                 </div>
 
-                <!-- Quick Stats -->
-                <div class="report-stats" id="reportStats"></div>
-
-                <!-- Activity Heatmap -->
-                <div class="report-card">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportHeatIcon"></span>
-                        <span>Activity Map</span>
+                <div class="report-panel month-panel" id="monthPanel">
+                    <div class="month-nav">
+                        <button class="week-nav-btn" onclick="Report.changeMonth(-1)" id="monthPrevBtn"></button>
+                        <span class="week-nav-label" id="monthRangeLabel">This Month</span>
+                        <button class="week-nav-btn" onclick="Report.changeMonth(1)" id="monthNextBtn"></button>
                     </div>
-                    <div class="heatmap-grid" id="heatmapGrid"></div>
-                </div>
 
-                <!-- Charts -->
-                <div class="report-card">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon0"></span>
-                        <span>Tasks Completed</span>
+                    <!-- Monthly Overview -->
+                    <div class="report-card monthly-card">
+                        <div class="report-card-header">
+                            <span class="report-card-icon" id="reportMonthIcon"></span>
+                            <span id="monthLabel">Monthly Overview</span>
+                        </div>
+                        <div class="month-stats" id="monthStats"></div>
+                        <div class="month-heatmap" id="monthHeatmap"></div>
+                        <div class="month-insight" id="monthInsight">Your month pattern will appear here.</div>
                     </div>
-                    <div class="line-chart-container" id="tasksChart"></div>
-                </div>
 
-                <div class="report-card">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon1"></span>
-                        <span>Focus Minutes</span>
+                    <div class="report-card day-detail-card">
+                        <div class="report-card-header">
+                            <span class="report-card-icon" id="reportDayDetailIcon"></span>
+                            <span id="monthDayDetailTitle">Day Details</span>
+                        </div>
+                        <div class="day-detail-meta" id="dayDetailMeta"></div>
+                        <div class="day-detail-tasks" id="dayDetailTasks"></div>
+                        <div class="day-detail-insight" id="dayDetailInsight"></div>
                     </div>
-                    <div class="line-chart-container" id="focusChart"></div>
                 </div>
 
                 <!-- AI Insights -->
                 <div class="ai-insights-card">
                     <div class="ai-insights-badge">
                         <span id="aiInsightsIcon"></span>
-                        <span>AI Insights</span>
+                        <span id="reportInsightBadge">AI Insights</span>
                     </div>
                     <div class="ai-insights-content" id="aiInsightsContent"></div>
                 </div>

@@ -408,10 +408,14 @@ function injectIcons() {
 
         'weekPrevBtn': () => Icons.chevronLeft(16),
         'weekNextBtn': () => Icons.chevronRight(16),
+        'monthPrevBtn': () => Icons.chevronLeft(16),
+        'monthNextBtn': () => Icons.chevronRight(16),
 
         'reportHeatIcon': () => Icons.heat(16),
         'reportChartIcon0': () => Icons.tasks(16),
         'reportChartIcon1': () => Icons.fire(16),
+        'reportMonthIcon': () => Icons.calendar(16),
+        'reportDayDetailIcon': () => Icons.spark(16),
         'aiInsightsIcon': () => Icons.spark(12),
         'downloadIcon': () => Icons.download(18),
 

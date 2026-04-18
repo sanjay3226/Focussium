@@ -34,6 +34,9 @@ const State = {
     user: null,
     currentPage: 'home',
     weekOffset: 0,
+    monthOffset: 0,
+    reportView: 'week',
+    selectedMonthDate: null,
     selectedRepeat: 'none',
     tempSubtasks: [],
     onboardStep: 0,
@@ -71,6 +74,13 @@ const Utils = {
     today() {
         const n = new Date();
         return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+    },
+
+    dateKeyFromTs(ts) {
+        if (!ts) return null;
+        const d = new Date(ts);
+        if (Number.isNaN(d.getTime())) return null;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     },
 
     escape(str) {
@@ -932,6 +942,7 @@ const Tasks = {
 
         task.completed = !task.completed;
         task.completedAt = task.completed ? Date.now() : null;
+        task.doneDate = task.completed ? Utils.today() : null;
 
         if (task.completed) {
             State.data.totalTasksCompleted = (State.data.totalTasksCompleted || 0) + 1;
@@ -1163,11 +1174,11 @@ const Home = {
             trendEl.innerHTML = `<span class="trend-flat">— same</span>`;
         }
 
-        // Mini SVG line chart
+        // Mini SVG line chart (simplified + calmer visual rhythm)
         const values = w.days.map(d => d.tasks + Math.round(d.focus / 25));
         const max = Math.max(...values, 1);
-        const W = 320, H = 70;
-        const padX = 10, padY = 8;
+        const W = 320, H = 72;
+        const padX = 14, padY = 10;
         const chartW = W - padX * 2, chartH = H - padY * 2;
 
         const points = values.map((v, i) => ({
@@ -1175,21 +1186,19 @@ const Home = {
             y: padY + chartH - (v / max) * chartH
         }));
 
-        // Smooth curve path
-        const pathD = points.reduce((acc, p, i) => {
-            if (i === 0) return `M ${p.x} ${p.y}`;
-            const prev = points[i - 1];
-            const cpx = (prev.x + p.x) / 2;
-            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
-        }, '');
-
-        const areaD = `${pathD} L ${points[6].x} ${H} L ${points[0].x} ${H} Z`;
+        const linePoints = points.map(p => `${p.x},${p.y}`).join(' ');
+        const areaPoints = `${linePoints} ${points[points.length - 1].x},${H - 2} ${points[0].x},${H - 2}`;
 
         const css = getComputedStyle(document.documentElement);
         const ac = css.getPropertyValue('--ac').trim();
 
+        const refLines = [0.25, 0.5, 0.75].map((ratio, idx) => {
+            const y = padY + chartH * ratio;
+            return `<line x1="${padX}" y1="${y}" x2="${W - padX}" y2="${y}" class="mini-chart-ref mini-chart-ref-${idx}"/>`;
+        }).join('');
+
         const dotsHTML = points.map((p, i) => `
-            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.5 : 2}" 
+            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.3 : 2}" 
                     fill="${values[i] > 0 ? ac : 'var(--bd)'}" 
                     class="mini-chart-dot" style="animation-delay:${0.3 + i * 0.06}s"
                     opacity="${values[i] > 0 ? 1 : 0.4}"/>
@@ -1205,18 +1214,14 @@ const Home = {
             <svg viewBox="0 0 ${W} ${H + 16}" class="mini-line-chart" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.25"/>
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.22"/>
                         <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
                     </linearGradient>
-                    <filter id="miniGlow">
-                        <feGaussianBlur stdDeviation="3" result="blur"/>
-                        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                    </filter>
                 </defs>
-                <path d="${areaD}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
-                <path d="${pathD}" fill="none" stroke="${ac}" stroke-width="2.5" 
-                      stroke-linecap="round" stroke-linejoin="round" 
-                      filter="url(#miniGlow)" class="mini-chart-line"/>
+                ${refLines}
+                <polygon points="${areaPoints}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
+                <polyline points="${linePoints}" fill="none" stroke="${ac}" stroke-width="2.5" 
+                      stroke-linecap="round" stroke-linejoin="round" class="mini-chart-line"/>
                 ${dotsHTML}
                 ${labelsHTML}
             </svg>
@@ -1557,6 +1562,19 @@ const Report = {
         Sound.click();
     },
 
+    changeMonth(dir) {
+        State.monthOffset += dir;
+        if (State.monthOffset > 0) State.monthOffset = 0;
+        this.render();
+        Sound.click();
+    },
+
+    setView(view) {
+        State.reportView = view === 'month' ? 'month' : 'week';
+        this.render();
+        Sound.nav();
+    },
+
     render() {
         const w = Utils.weekData(State.weekOffset);
         const dates = Utils.weekDates(State.weekOffset);
@@ -1570,12 +1588,201 @@ const Report = {
                 ? 'This Week'
                 : `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}`;
 
+        this.renderViewMode();
         this.renderScoreHero(w);
         this.renderStats(w);
         this.renderHeatmap(w);
         this.drawChart('tasksChart', w.days.map(d => d.tasks), w.days.map(d => d.name));
         this.drawChart('focusChart', w.days.map(d => d.focus), w.days.map(d => d.name));
+        this.renderMonthOverview();
         this.renderInsights(w);
+    },
+
+    renderViewMode() {
+        document.querySelectorAll('.report-view-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === State.reportView);
+        });
+
+        const weekPanel = document.getElementById('weekPanel');
+        const monthPanel = document.getElementById('monthPanel');
+        const showMonth = State.reportView === 'month';
+
+        weekPanel.classList.toggle('active', !showMonth);
+        monthPanel.classList.toggle('active', showMonth);
+
+        const title = document.getElementById('reportPageTitle');
+        const insightBadge = document.getElementById('reportInsightBadge');
+        if (title) title.textContent = showMonth ? 'Monthly Vibe' : 'Weekly Vibe';
+        if (insightBadge) insightBadge.textContent = showMonth ? 'Pattern Insights' : 'AI Insights';
+    },
+
+    getMonthData(offset = 0) {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+        const days = [];
+        const monthIdx = monthStart.getMonth();
+        const year = monthStart.getFullYear();
+        const count = monthEnd.getDate();
+
+        for (let day = 1; day <= count; day++) {
+            const d = new Date(year, monthIdx, day);
+            const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const completedTasks = State.data.tasks.filter(t => {
+                if (!t.completed || !t.completedAt) return false;
+                return (t.doneDate && t.doneDate === key) || Utils.dateKeyFromTs(t.completedAt) === key;
+            });
+            const tasks = completedTasks.length;
+            const focus = State.data.pomo
+                .filter(p => p.date === key)
+                .reduce((sum, p) => sum + p.dur, 0);
+            const score = tasks + Math.round(focus / 25);
+            days.push({
+                day,
+                weekday: d.getDay(),
+                key,
+                tasks,
+                taskItems: completedTasks,
+                focus,
+                score,
+                isToday: key === Utils.today()
+            });
+        }
+
+        const totalTasks = days.reduce((sum, d) => sum + d.tasks, 0);
+        const totalFocus = days.reduce((sum, d) => sum + d.focus, 0);
+        const activeDays = days.filter(d => d.score > 0).length;
+        const bestScore = Math.max(...days.map(d => d.score), 0);
+        const bestDay = days.find(d => d.score === bestScore && d.score > 0) || null;
+
+        return {
+            year,
+            month: monthIdx,
+            days,
+            totalTasks,
+            totalFocus,
+            activeDays,
+            bestDay,
+            bestScore,
+            startWeekday: monthStart.getDay()
+        };
+    },
+
+    renderMonthOverview() {
+        const m = this.getMonthData(State.monthOffset);
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+
+        document.getElementById('monthLabel').textContent = `${monthNames[m.month]} ${m.year}`;
+        document.getElementById('monthRangeLabel').textContent =
+            State.monthOffset === 0 ? 'This Month' : `${monthNames[m.month]} ${m.year}`;
+
+        const completionRate = m.days.length ? Math.round((m.activeDays / m.days.length) * 100) : 0;
+        document.getElementById('monthStats').innerHTML = `
+            <div class="month-stat-chip">
+                <span class="month-stat-label">Tasks</span>
+                <span class="month-stat-value">${m.totalTasks}</span>
+            </div>
+            <div class="month-stat-chip">
+                <span class="month-stat-label">Focus</span>
+                <span class="month-stat-value">${m.totalFocus}m</span>
+            </div>
+            <div class="month-stat-chip">
+                <span class="month-stat-label">Active days</span>
+                <span class="month-stat-value">${m.activeDays}/${m.days.length}</span>
+            </div>
+            <div class="month-stat-chip">
+                <span class="month-stat-label">Rhythm</span>
+                <span class="month-stat-value">${completionRate}%</span>
+            </div>
+        `;
+
+        const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+            .map(name => `<div class="month-day-head">${name}</div>`)
+            .join('');
+
+        const leadBlanks = Array.from({ length: m.startWeekday }, () =>
+            `<div class="month-day-cell month-day-empty"></div>`).join('');
+
+        const intensityMax = Math.max(m.bestScore, 1);
+        const dayCells = m.days.map(d => {
+            const level = d.score <= 0 ? 0 : Math.min(4, Math.ceil((d.score / intensityMax) * 4));
+            return `
+                <button class="month-day-cell level-${level} ${d.isToday ? 'today' : ''} ${State.selectedMonthDate === d.key ? 'selected' : ''}" onclick="Report.selectMonthDay('${d.key}')" title="${d.key}: ${d.tasks} tasks, ${d.focus} focus min">
+                    <div class="month-day-num">${d.day}</div>
+                    <div class="month-day-meta">${d.tasks} • ${d.focus}m</div>
+                </button>
+            `;
+        }).join('');
+
+        document.getElementById('monthHeatmap').innerHTML = dayHeaders + leadBlanks + dayCells;
+
+        let monthInsight = `You're showing up on ${m.activeDays} days this month.`;
+        if (!m.totalTasks && !m.totalFocus) {
+            monthInsight = 'Fresh month, fresh canvas — one focused session can define your tone.';
+        } else if (completionRate >= 70) {
+            monthInsight = `Beautiful consistency. ${completionRate}% of days were active, and your monthly rhythm is very stable.`;
+        } else if (completionRate >= 45) {
+            monthInsight = `Strong base is forming. Push for 2-3 more active days to lock momentum.`;
+        } else if (m.bestDay) {
+            monthInsight = `Your best day was ${monthNames[m.month]} ${m.bestDay.day} (${m.bestDay.tasks} tasks, ${m.bestDay.focus}m focus). Recreate that setup.`;
+        }
+
+        document.getElementById('monthInsight').textContent = monthInsight;
+
+        if (!State.selectedMonthDate || !m.days.some(d => d.key === State.selectedMonthDate)) {
+            const candidate = m.days.find(d => d.isToday) || m.days.find(d => d.score > 0) || m.days[0];
+            State.selectedMonthDate = candidate?.key || null;
+        }
+        this.renderDayDetails(m);
+    },
+
+    selectMonthDay(dateKey) {
+        State.selectedMonthDate = dateKey;
+        this.renderMonthOverview();
+        Sound.click();
+    },
+
+    renderDayDetails(monthData) {
+        const day = monthData.days.find(d => d.key === State.selectedMonthDate) || monthData.days[0];
+        if (!day) return;
+
+        const pretty = new Date(day.key + 'T00:00:00').toLocaleDateString('en', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        document.getElementById('monthDayDetailTitle').textContent = `Details — ${pretty}`;
+        document.getElementById('dayDetailMeta').innerHTML = `
+            <div class="day-detail-chip"><strong>${day.tasks}</strong><span>completed tasks</span></div>
+            <div class="day-detail-chip"><strong>${day.focus}m</strong><span>focus time</span></div>
+            <div class="day-detail-chip"><strong>${day.score}</strong><span>activity score</span></div>
+        `;
+
+        if (!day.taskItems.length) {
+            document.getElementById('dayDetailTasks').innerHTML = `
+                <div class="day-detail-empty">No completed tasks on this date yet.</div>
+            `;
+        } else {
+            document.getElementById('dayDetailTasks').innerHTML = day.taskItems.slice(0, 6).map(t => `
+                <div class="day-detail-task">
+                    <span class="day-detail-dot"></span>
+                    <div class="day-detail-task-main">
+                        <span>${Utils.escape(t.text)}</span>
+                        ${t.completedAt ? `<small>${new Date(t.completedAt).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })}</small>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let detailInsight = 'Gentle momentum. Keep stacking small wins.';
+        if (day.focus >= 90) detailInsight = 'Deep-work day. Protect this pattern on your next big-priority day.';
+        else if (day.tasks >= 5) detailInsight = 'Great execution day — your task throughput was excellent.';
+        else if (!day.tasks && !day.focus) detailInsight = 'Recovery day. Consider a 10-minute reboot session tomorrow.';
+
+        document.getElementById('dayDetailInsight').textContent = detailInsight;
     },
 
     renderScoreHero(w) {
