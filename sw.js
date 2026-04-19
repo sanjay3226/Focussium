@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.04.19.2';
+const APP_VERSION = '2026.04.19.3';
 const CACHE_NAME = `focussium-${APP_VERSION}`;
 const ASSETS = [
     './',
@@ -31,6 +31,8 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+    if (e.request.method !== 'GET') return;
+
     if (e.request.mode === 'navigate') {
         e.respondWith(
             fetch(e.request)
@@ -44,7 +46,32 @@ self.addEventListener('fetch', e => {
         return;
     }
 
+    const reqUrl = new URL(e.request.url);
+    const isSameOrigin = reqUrl.origin === self.location.origin;
+
+    if (!isSameOrigin) {
+        return;
+    }
+
     e.respondWith(
-        caches.match(e.request).then(res => res || fetch(e.request))
+        caches.match(e.request).then(cached => {
+            const networkFetch = fetch(e.request)
+                .then(res => {
+                    if (res && res.status === 200) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+                    }
+                    return res;
+                })
+                .catch(() => cached);
+
+            return cached || networkFetch;
+        })
     );
+});
+
+self.addEventListener('message', e => {
+    if (e.data && e.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });

@@ -2618,7 +2618,33 @@ window.addEventListener('load', () => {
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW registered', reg))
+            .then(reg => {
+                console.log('SW registered', reg);
+
+                if (reg.waiting) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    if (!newWorker) return;
+
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                });
+
+                let hasRefreshed = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (hasRefreshed) return;
+                    hasRefreshed = true;
+                    window.location.reload();
+                });
+
+                setInterval(() => reg.update(), 60 * 1000);
+            })
             .catch(err => console.log('SW failed', err));
     }
 });
