@@ -2702,7 +2702,7 @@ body {
 
 .report-mode-switch {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
     margin-bottom: 10px;
     position: relative;
@@ -2740,7 +2740,7 @@ body {
 
 .report-mode-metrics {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
     position: relative;
     z-index: 1;
@@ -3048,6 +3048,8 @@ body {
 }
 
 .heatmap-day {
+    appearance: none;
+    width: 100%;
     padding: 12px 8px;
     border-radius: 14px;
     text-align: center;
@@ -3107,6 +3109,12 @@ body {
     width: 100%;
     height: 160px;
     position: relative;
+}
+
+.heatmap-day.selected {
+    border-color: var(--ac);
+    box-shadow: 0 0 0 1px rgba(var(--acr), .35), 0 10px 22px rgba(var(--acr), .2);
+    animation: selectedPulse .5s cubic-bezier(.16, 1, .3, 1);
 }
 
 .monthly-card {
@@ -3169,6 +3177,8 @@ body {
 }
 
 .month-day-cell {
+    appearance: none;
+    width: 100%;
     min-height: 50px;
     border-radius: 10px;
     border: 1px solid var(--bd);
@@ -3215,6 +3225,12 @@ body {
     box-shadow: 0 0 0 1px rgba(var(--acr), .35), 0 8px 16px rgba(var(--acr), .16);
 }
 
+.month-day-cell.selected {
+    border-color: var(--ac);
+    box-shadow: 0 0 0 1px rgba(var(--acr), .4), 0 12px 20px rgba(var(--acr), .2);
+    transform: translateY(-1px);
+}
+
 .month-insight {
     font-size: .74rem;
     color: var(--tx2);
@@ -3223,6 +3239,119 @@ body {
     border: 1px solid rgba(var(--acr), .18);
     border-radius: 12px;
     padding: 10px 12px;
+}
+
+.report-day-detail-card {
+    border-color: rgba(var(--acr), .24);
+    background: linear-gradient(145deg, rgba(var(--acr), .09), rgba(var(--acr), .02)), var(--bg2);
+}
+
+.day-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.day-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(var(--acr), .2);
+    background: rgba(var(--acr), .08);
+    color: var(--tx2);
+    font-size: .62rem;
+    font-weight: 700;
+}
+
+.day-meta-pill svg {
+    width: 12px;
+    height: 12px;
+}
+
+.day-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.day-detail-kpi {
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid var(--bd);
+    background: var(--bg3);
+}
+
+.day-detail-kpi-label {
+    font-size: .53rem;
+    color: var(--tx3);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.day-detail-kpi-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--tx1);
+    font-family: "DM Serif Display", Georgia, serif;
+}
+
+.day-detail-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.day-detail-col {
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    background: var(--bg3);
+    padding: 10px;
+}
+
+.day-detail-col-title {
+    font-size: .6rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--tx3);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.day-detail-item {
+    font-size: .73rem;
+    color: var(--tx2);
+    padding: 7px 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid transparent;
+    animation: fadeUp .28s cubic-bezier(.16, 1, .3, 1) backwards;
+}
+
+.day-detail-item.done {
+    background: rgba(58, 201, 138, .12);
+    border-color: rgba(58, 201, 138, .2);
+}
+
+.day-detail-item.pending {
+    background: rgba(255, 180, 69, .11);
+    border-color: rgba(255, 180, 69, .25);
+}
+
+.day-detail-empty {
+    font-size: .68rem;
+    color: var(--tx4);
+    padding: 8px 0;
+}
+
+@keyframes selectedPulse {
+    0% { transform: scale(.98); }
+    100% { transform: scale(1); }
 }
 
 .line-chart-svg {
@@ -4400,5 +4529,13 @@ body {
 
     .report-mode-metrics .report-mode-chip:last-child {
         grid-column: span 2;
+    }
+
+    .day-detail-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .day-detail-list {
+        grid-template-columns: 1fr;
     }
 }
