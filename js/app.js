@@ -40,6 +40,7 @@ const State = {
     editingTaskId: null,
     saveTimeout: null,
     clockInterval: null,
+    reportMode: 'week',
 
     pomo: {
         running: false,
@@ -1551,9 +1552,17 @@ const Report = {
         Sound.click();
     },
 
+    setMode(mode) {
+        if (!['week', 'month'].includes(mode)) mode = 'week';
+        State.reportMode = mode;
+        this.render();
+        Sound.click();
+    },
+
     render() {
         const w = Utils.weekData(State.weekOffset);
         const dates = Utils.weekDates(State.weekOffset);
+        const m = this.getMonthData(0);
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         const start = new Date(dates[0] + 'T00:00:00');
@@ -1564,13 +1573,76 @@ const Report = {
                 ? 'This Week'
                 : `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}`;
 
+        this.renderModePanel(w, m);
+        this.applyModeVisibility();
         this.renderScoreHero(w);
         this.renderStats(w);
         this.renderHeatmap(w);
-        this.drawChart('tasksChart', w.days.map(d => d.tasks), w.days.map(d => d.name));
-        this.drawChart('focusChart', w.days.map(d => d.focus), w.days.map(d => d.name));
+        this.drawChart('tasksChart', w.days.map(d => d.tasks), w.days.map(d => d.name), 'tasks');
+        this.drawChart('focusChart', w.days.map(d => d.focus), w.days.map(d => d.name), 'focus');
         this.renderMonthOverview();
-        this.renderInsights(w);
+        this.renderInsights(w, m);
+    },
+
+    applyModeVisibility() {
+        const mode = State.reportMode || 'week';
+        const reportPage = document.querySelector('.page[data-page="report"]');
+        if (!reportPage) return;
+        reportPage.setAttribute('data-report-mode', mode);
+
+        document.querySelectorAll('.report-mode-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(
+            mode === 'month' ? 'reportModeMonthBtn' : 'reportModeWeekBtn'
+        );
+        if (activeBtn) activeBtn.classList.add('active');
+    },
+
+    renderModePanel(w, m) {
+        const mode = State.reportMode || 'week';
+        const monthDays = m.days.length || 1;
+        const monthRhythm = Math.round((m.activeDays / monthDays) * 100);
+        const weekRhythm = Math.round((w.activeDays / 7) * 100);
+        const avgDailyFocus = Math.round(m.totalFocus / monthDays);
+        const weeklyAvgTasks = (w.totalTasks / 7).toFixed(1);
+        const weeklyAvgFocus = Math.round(w.totalFocus / 7);
+        const monthBest = m.bestDay ? `Day ${m.bestDay.day}` : '—';
+        const monthConsistency = `${m.activeDays}/${monthDays}`;
+
+        let insight = `Weekly mode: ${w.totalTasks} tasks, ${w.totalFocus}m focus, and ${weekRhythm}% activity rhythm this week.`;
+        if (mode === 'month') insight = `Monthly mode: ${m.totalTasks} tasks, ${m.totalFocus}m focus, and ${monthRhythm}% activity rhythm this month.`;
+
+        document.getElementById('reportModeInsight').textContent = insight;
+
+        const weekChips = [
+            { label: 'Weekly Score', value: `${this.getScore(w)}` },
+            { label: 'Tasks Done', value: `${w.totalTasks}` },
+            { label: 'Focus Time', value: `${w.totalFocus}m` },
+            { label: 'Active Days', value: `${w.activeDays}/7` },
+            { label: 'Avg Tasks/Day', value: `${weeklyAvgTasks}` },
+            { label: 'Avg Focus/Day', value: `${weeklyAvgFocus}m` },
+            { label: 'Best Day', value: `${w.bestDay.name}` },
+            { label: 'Streak', value: `${State.data.streak || 0}` }
+        ];
+
+        const monthChips = [
+            { label: 'Month Tasks', value: `${m.totalTasks}` },
+            { label: 'Month Focus', value: `${m.totalFocus}m` },
+            { label: 'Rhythm', value: `${monthRhythm}%` },
+            { label: 'Active Days', value: `${monthConsistency}` },
+            { label: 'Avg Focus/Day', value: `${avgDailyFocus}m` },
+            { label: 'Best Day', value: monthBest },
+            { label: 'Best Score', value: `${m.bestScore || 0}` },
+            { label: 'Today', value: `${Utils.today().slice(8)}` }
+        ];
+
+        const visible = mode === 'month' ? monthChips : weekChips;
+
+        document.getElementById('reportModeMetrics').innerHTML = visible.map((chip, idx) => `
+            <div class="report-mode-chip" style="animation-delay:${0.05 + idx * 0.05}s">
+                <div class="report-mode-chip-label">${chip.label}</div>
+                <div class="report-mode-chip-value">${chip.value}</div>
+            </div>
+        `).join('');
     },
 
     getMonthData(offset = 0) {
@@ -1658,7 +1730,7 @@ const Report = {
         const dayCells = m.days.map(d => {
             const level = d.score <= 0 ? 0 : Math.min(4, Math.ceil((d.score / intensityMax) * 4));
             return `
-                <div class="month-day-cell level-${level} ${d.isToday ? 'today' : ''}" title="${d.key}: ${d.tasks} tasks, ${d.focus} focus min">
+                <div class="month-day-cell level-${level} ${d.isToday ? 'today' : ''}" title="${d.key}: ${d.tasks} tasks, ${d.focus} focus min" onclick="Report.openDayDetails('${d.key}')">
                     <div class="month-day-num">${d.day}</div>
                     <div class="month-day-meta">${d.tasks} • ${d.focus}m</div>
                 </div>
@@ -1738,7 +1810,7 @@ const Report = {
         }).join('');
     },
 
-    drawChart(containerId, values, labels) {
+    drawChart(containerId, values, labels, metric = 'tasks') {
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -1752,6 +1824,9 @@ const Report = {
         const ac = css.getPropertyValue('--ac').trim();
         const gridColor = css.getPropertyValue('--chart-grid').trim();
         const txtColor = css.getPropertyValue('--chart-text').trim();
+        const pointColor = metric === 'focus' ? 'rgba(255,255,255,.96)' : '#ffffff';
+        const avg = Math.round(values.reduce((sum, v) => sum + v, 0) / (values.length || 1));
+        const avgY = pad.t + chartH - (avg / max) * chartH;
 
         const uid = containerId + '_' + Date.now();
 
@@ -1770,6 +1845,12 @@ const Report = {
 
         const areaD = `${pathD} L ${points[points.length - 1].x} ${pad.t + chartH} L ${points[0].x} ${pad.t + chartH} Z`;
 
+        const bars = points.map((p, i) => {
+            const h = (values[i] / max) * chartH;
+            const y = pad.t + chartH - h;
+            return `<rect class="chart-bar" x="${p.x - 8}" y="${y}" width="16" height="${h}" rx="8" style="animation-delay:${0.22 + i * 0.06}s"/>`;
+        }).join('');
+
         const gridLines = Array.from({ length: 5 }, (_, i) => {
             const y = pad.t + chartH * (1 - i / 4);
             const val = Math.round(max * i / 4);
@@ -1785,7 +1866,7 @@ const Report = {
             <g class="chart-point" style="animation-delay:${0.4 + i * 0.08}s">
                 <circle cx="${p.x}" cy="${p.y}" r="12" fill="${ac}" opacity="0.08" class="chart-dot-glow"/>
                 <circle cx="${p.x}" cy="${p.y}" r="${p.val > 0 ? 4.5 : 2.5}" 
-                        fill="${p.val > 0 ? '#fff' : 'var(--bg4)'}" 
+                        fill="${p.val > 0 ? pointColor : 'var(--bg4)'}" 
                         stroke="${p.val > 0 ? ac : 'var(--bd)'}" stroke-width="2.5"/>
                 ${p.val > 0 ? `<text x="${p.x}" y="${p.y - 12}" text-anchor="middle" 
                       fill="var(--tx1)" font-size="9" font-weight="700" 
@@ -1821,7 +1902,9 @@ const Report = {
                     </linearGradient>
                 </defs>
                 ${gridLines}
+                <line x1="${pad.l}" y1="${avgY}" x2="${W - pad.r}" y2="${avgY}" class="chart-avg-line"/>
                 <path d="${areaD}" fill="url(#areaGrad_${uid})" class="chart-area-fill"/>
+                ${bars}
                 <path d="${pathD}" fill="none" stroke="url(#lineGrad_${uid})" stroke-width="3" 
                       stroke-linecap="round" stroke-linejoin="round" 
                       filter="url(#lineGlow_${uid})" class="chart-line-path"/>
@@ -1831,13 +1914,56 @@ const Report = {
         `;
     },
 
-    renderInsights(w) {
+    getDayStats(dateKey) {
+        const tasksDone = State.data.tasks.filter(t => t.completed && (t.doneDate === dateKey || (t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === dateKey)));
+        const tasksPlanned = State.data.tasks.filter(t => t.date === dateKey);
+        const focusSessions = State.data.pomo.filter(p => p.date === dateKey);
+        const focusMinutes = focusSessions.reduce((sum, s) => sum + s.dur, 0);
+        return {
+            tasksDone,
+            tasksPlanned,
+            focusSessions,
+            focusMinutes,
+            completionRate: tasksPlanned.length ? Math.round((tasksDone.length / tasksPlanned.length) * 100) : (tasksDone.length ? 100 : 0)
+        };
+    },
+
+    openDayDetails(dateKey) {
+        const stats = this.getDayStats(dateKey);
+        const dt = new Date(`${dateKey}T00:00:00`);
+        const title = dt.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        document.getElementById('dayDetailTitle').textContent = title;
+        document.getElementById('dayDetailSubtitle').textContent = `Quick snapshot for ${dateKey}`;
+        document.getElementById('dayDetailGrid').innerHTML = `
+            <div class="day-detail-chip"><span>Tasks done</span><strong>${stats.tasksDone.length}</strong></div>
+            <div class="day-detail-chip"><span>Tasks planned</span><strong>${stats.tasksPlanned.length}</strong></div>
+            <div class="day-detail-chip"><span>Focus mins</span><strong>${stats.focusMinutes}m</strong></div>
+            <div class="day-detail-chip"><span>Focus sessions</span><strong>${stats.focusSessions.length}</strong></div>
+            <div class="day-detail-chip"><span>Completion</span><strong>${stats.completionRate}%</strong></div>
+            <div class="day-detail-chip"><span>Output score</span><strong>${stats.tasksDone.length + Math.round(stats.focusMinutes / 25)}</strong></div>
+        `;
+
+        const topTasks = stats.tasksDone.slice(0, 3).map(t => Utils.escape(t.text)).join(', ');
+        document.getElementById('dayDetailNotes').innerHTML = topTasks
+            ? `<strong>Completed highlights:</strong> ${topTasks}`
+            : `No completed task highlights yet for this day.`;
+
+        document.getElementById('dayDetailModal').classList.add('on');
+        Sound.click();
+    },
+
+    renderInsights(w, m) {
         const insights = [];
+        const mode = State.reportMode || 'week';
         const score = this.getScore(w);
         const breakdown = this.getScoreBreakdown(w);
         const prevW = Utils.weekData(State.weekOffset - 1);
         const prevScore = this.getScore(prevW);
         const scoreDiff = score - prevScore;
+        const monthDays = m.days.length || 1;
+        const monthRhythm = Math.round((m.activeDays / monthDays) * 100);
+        const monthAvgFocus = Math.round(m.totalFocus / monthDays);
 
         if (!w.totalTasks && !w.totalFocus) {
             insights.push({
@@ -1911,6 +2037,27 @@ const Report = {
                     icon: Icons.trendDown(12),
                     text: `<strong>${overdueCount} overdue.</strong> Clear, reschedule, or drop them. Overdue items create invisible mental drag.`
                 });
+            }
+        }
+
+        if (mode === 'month') {
+            if (!m.totalTasks && !m.totalFocus) {
+                insights.push({
+                    icon: Icons.spark(12),
+                    text: `<strong>Month reset ready.</strong> Start with one high-signal task tomorrow morning to shape the whole month arc.`
+                });
+            } else {
+                insights.push({
+                    icon: Icons.target(12),
+                    text: `<strong>Monthly rhythm:</strong> ${monthRhythm}% active days with ${monthAvgFocus}m average focus per day.`
+                });
+
+                if (m.bestDay) {
+                    insights.push({
+                        icon: Icons.fire(12),
+                        text: `<strong>Monthly peak:</strong> Day ${m.bestDay.day} delivered ${m.bestDay.tasks} tasks + ${m.bestDay.focus}m focus.`
+                    });
+                }
             }
         }
 
