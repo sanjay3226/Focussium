@@ -327,15 +327,26 @@
                     <h2>Weekly Vibe</h2>
                 </div>
 
+                <!-- Report Mode Panel -->
+                <div class="report-mode-panel">
+                    <div class="report-mode-switch">
+                        <button class="report-mode-btn active" id="reportModeWeekBtn" onclick="Report.setMode('week')">Week</button>
+                        <button class="report-mode-btn" id="reportModeMonthBtn" onclick="Report.setMode('month')">Month</button>
+                        <button class="report-mode-btn" id="reportModeBlendBtn" onclick="Report.setMode('blend')">Blend</button>
+                    </div>
+                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum and monthly rhythm, side by side.</div>
+                    <div class="report-mode-metrics" id="reportModeMetrics"></div>
+                </div>
+
                 <!-- Week Navigation -->
-                <div class="week-nav">
+                <div class="week-nav report-week-only">
                     <button class="week-nav-btn" onclick="Report.changeWeek(-1)" id="weekPrevBtn"></button>
                     <span class="week-nav-label" id="weekNavLabel">This Week</span>
                     <button class="week-nav-btn" onclick="Report.changeWeek(1)" id="weekNextBtn"></button>
                 </div>
 
                 <!-- Score Hero -->
-                <div class="score-hero">
+                <div class="score-hero report-week-only">
                     <div class="score-hero-main">
                         <div class="score-hero-label">Productivity Score</div>
                         <div class="score-hero-value" id="reportScoreValue">0</div>
@@ -347,10 +358,10 @@
                 </div>
 
                 <!-- Quick Stats -->
-                <div class="report-stats" id="reportStats"></div>
+                <div class="report-stats report-week-only" id="reportStats"></div>
 
                 <!-- Activity Heatmap -->
-                <div class="report-card">
+                <div class="report-card report-week-only">
                     <div class="report-card-header">
                         <span class="report-card-icon" id="reportHeatIcon"></span>
                         <span>Activity Map</span>
@@ -359,7 +370,7 @@
                 </div>
 
                 <!-- Charts -->
-                <div class="report-card">
+                <div class="report-card report-week-only">
                     <div class="report-card-header">
                         <span class="report-card-icon" id="reportChartIcon0"></span>
                         <span>Tasks Completed</span>
@@ -367,7 +378,7 @@
                     <div class="line-chart-container" id="tasksChart"></div>
                 </div>
 
-                <div class="report-card">
+                <div class="report-card report-week-only">
                     <div class="report-card-header">
                         <span class="report-card-icon" id="reportChartIcon1"></span>
                         <span>Focus Minutes</span>
@@ -376,7 +387,7 @@
                 </div>
 
                 <!-- Monthly Overview -->
-                <div class="report-card monthly-card">
+                <div class="report-card monthly-card report-month-only">
                     <div class="report-card-header">
                         <span class="report-card-icon" id="reportMonthIcon"></span>
                         <span id="monthLabel">Monthly Overview</span>
