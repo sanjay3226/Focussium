@@ -84,7 +84,7 @@ img {
     --nav-bg: rgba(5, 5, 5, .92);
     --modal-bg: rgba(0, 0, 0, .6);
     --chart-grid: rgba(255, 255, 255, .06);
-    --chart-text: #635f59;
+    --chart-text: #9a958f;
     --surface: linear-gradient(145deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, 0));
 }
 
@@ -111,7 +111,7 @@ img {
     --nav-bg: rgba(245, 243, 240, .95);
     --modal-bg: rgba(0, 0, 0, .25);
     --chart-grid: rgba(0, 0, 0, .06);
-    --chart-text: #a19b94;
+    --chart-text: #6b665f;
     --surface: linear-gradient(145deg, rgba(255, 255, 255, .9), rgba(255, 255, 255, .5));
 }
 
@@ -2732,7 +2732,7 @@ body {
 .report-mode-insight {
     font-size: .73rem;
     line-height: 1.5;
-    color: var(--tx2);
+    color: var(--tx1);
     margin-bottom: 10px;
     position: relative;
     z-index: 1;
@@ -2758,7 +2758,7 @@ body {
     font-size: .53rem;
     text-transform: uppercase;
     letter-spacing: .06em;
-    color: var(--tx4);
+    color: var(--tx2);
     font-weight: 700;
     margin-bottom: 4px;
 }
@@ -2816,7 +2816,7 @@ body {
 .week-nav-label {
     font-size: .82rem;
     font-weight: 600;
-    color: var(--tx2);
+    color: var(--tx1);
 }
 
 .score-hero {
@@ -2993,7 +2993,7 @@ body {
 
 .report-stat-label {
     font-size: .55rem;
-    color: var(--tx3);
+    color: var(--tx2);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .05em;
@@ -3085,7 +3085,7 @@ body {
 
 .heatmap-day-name {
     font-size: .55rem;
-    color: var(--tx4);
+    color: var(--tx2);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .06em;
@@ -3170,7 +3170,7 @@ body {
 .month-day-head {
     text-align: center;
     font-size: .55rem;
-    color: var(--tx4);
+    color: var(--tx2);
     text-transform: uppercase;
     letter-spacing: .05em;
     font-weight: 700;
@@ -3209,7 +3209,7 @@ body {
 
 .month-day-meta {
     font-size: .47rem;
-    color: var(--tx4);
+    color: var(--tx2);
     line-height: 1.2;
 }
 
@@ -3345,7 +3345,7 @@ body {
 
 .day-detail-empty {
     font-size: .68rem;
-    color: var(--tx4);
+    color: var(--tx2);
     padding: 8px 0;
 }
 
