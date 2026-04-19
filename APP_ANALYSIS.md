@@ -1,104 +1,106 @@
-# Focussium App Analysis (March 28, 2026)
+# Focussium App Analysis (April 19, 2026)
 
-## 1) High-level architecture
+## 1) Executive summary
 
-- **Single-page app** with one large orchestration file (`js/app.js`) handling state, storage, auth, rendering, navigation, reporting, and timers.
-- **Client-only persistence** plus optional cloud sync:
-  - Local persistence via `localStorage` key `focussium_v2_data`.
-  - Firestore sync when authenticated.
-- **PWA support** via `manifest.json` and `sw.js` with static asset pre-cache.
-- **External dependencies loaded from CDN** (`jspdf`, Firebase compat SDKs).
+Focussium is a feature-rich, single-page productivity PWA with strong UX depth and solid local-first behavior, but it is currently carrying significant maintainability and security-hardening debt due to monolithic front-end architecture and inline-script patterns.
 
-## 2) What is strong today
+**Overall score: 7.2 / 10**
+- **Feature completeness / UX:** 8.7
+- **Offline readiness:** 7.8
+- **Code maintainability:** 5.6
+- **Security hardening:** 6.3
 
-1. **Escaping strategy is present in key user-content render paths.**
-   - `Utils.escape()` is used before writing task, note, list, subtask, and dump text into HTML templates.
-   - This materially reduces straightforward XSS risk for normal text fields.
+## 2) Architecture snapshot
 
-2. **Clear state defaults + safe parse fallback.**
-   - Storage layer merges parsed data with defaults and has parse-failure fallback, helping with corrupted local data recovery.
+- **App type:** Client-rendered SPA with multi-page feel via section toggling and in-file modules (`Nav`, `Tasks`, `Pomo`, `Report`, etc.) in a single script file.
+- **Core code footprint:**
+  - `js/app.js`: **2418 lines**
+  - `css/styles.css`: **4270 lines**
+  - `index.html`: **727 lines**
+- **Persistence model:**
+  - Local: `localStorage` (`focussium_v2_data`)
+  - Remote: Firestore sync for authenticated users
+- **PWA model:** Static pre-cache in service worker (`focussium-v5`) + fallback-to-network.
 
-3. **Good baseline PWA behavior.**
-   - Pre-cache and offline fetch fallback are simple and effective for static assets.
+## 3) What is working well
 
-4. **Feature depth is strong for a single-file SPA.**
-   - Tasks, repeat scheduling, dump-to-task conversion, pomodoro, reports, onboarding, and settings are all integrated.
+1. **Strong product breadth in one deployable bundle**
+   - Includes auth/onboarding, task management, recurring logic, brain dump capture, pomodoro timer, reporting, achievements/gamification, and settings personalization.
 
-## 3) Key risks / bottlenecks
+2. **Reasonable defensive data handling at load**
+   - Storage load merges defaults and parsed content, lowering break risk from partially corrupt local state.
 
-### A. Security hardening gaps (highest priority)
+3. **Offline-first baseline is practical**
+   - Core shell assets are pre-cached and old caches are cleaned on activate.
 
-1. **No CSP and inline event handlers across markup.**
-   - `index.html` relies heavily on `onclick="..."` attributes.
-   - This makes modern strict CSP rollout harder (`unsafe-inline` pressure).
+4. **Escaping helper is present and reusable**
+   - `Utils.escape()` exists and appears intended for user-generated text rendering paths.
 
-2. **Firebase project config is fully public in client bundle.**
-   - Public Firebase config itself is normal, but the app relies on backend security rules to prevent abuse.
-   - If rules are permissive, the current front-end would allow broad read/write from copied client code.
+## 4) Key issues and risks (prioritized)
 
-3. **No Subresource Integrity (SRI) on CDN scripts.**
-   - Third-party scripts are loaded directly via URL without integrity checks.
+### P0 — Security hardening gap: inline handlers + CSP incompatibility
 
-### B. Maintainability / scalability
+- The markup relies heavily on inline event handlers (e.g., `onclick="..."`) throughout major screens.
+- This blocks strict CSP adoption without `unsafe-inline`, reducing protection against script injection classes of issues.
 
-1. **Monolithic app file (`js/app.js`).**
-   - The single file is large and owns most app concerns.
-   - This increases change risk and slows onboarding/testing.
+**Recommendation:** Incrementally migrate to delegated `addEventListener` bindings and ship `Content-Security-Policy-Report-Only` first.
 
-2. **Heavy template-string rendering + full `innerHTML` replacement.**
-   - Many views rebuild full sections; this is simple but can become expensive as data grows.
+### P0 — Single-file app orchestration risk (`js/app.js`)
 
-3. **Sparse error telemetry.**
-   - Several catch blocks intentionally swallow detail or only `console.log`.
-   - Harder to debug user-specific production failures.
+- One large file controls state, domain logic, UI rendering, and side effects.
+- Raises regression risk, slows onboarding, and complicates testability.
 
-### C. Data / product behavior concerns
+**Recommendation:** Extract modules in-place without framework migration:
+- `state.js`, `storage.js`, `auth.js`, `tasks.js`, `dump.js`, `pomo.js`, `report.js`, `ui.js`.
 
-1. **Local-first data key is versioned (`focussium_v2_data`) without explicit migrations.**
-   - Large future schema changes may require migration logic.
+### P1 — Supply-chain and script integrity concerns
 
-2. **Cache strategy is cache-first for all requests in `fetch`.**
-   - Good offline baseline, but can serve stale app code/content until cache version bump.
+- Third-party scripts are loaded via CDN, and no SRI pinning is in place.
+- Firebase keys being present client-side is normal, but correctness depends on strict backend Security Rules.
 
-## 4) Prioritized improvement plan
+**Recommendation:** Add SRI on CDN assets and formally audit Firestore/Auth rules.
 
-### Phase 1 (security + reliability, 1–2 days)
+### P1 — Cache strategy may serve stale code
 
-- Add a **CSP roadmap**:
-  - Start with `Content-Security-Policy-Report-Only`.
-  - Migrate inline handlers to `addEventListener` so strict CSP is feasible.
-- Validate/lock down **Firestore Security Rules** and Auth Rules.
-- Add **SRI** for `jspdf` and pin/monitor third-party script versions.
-- Improve catch blocks with structured error messages and (optional) remote logging.
+- `fetch` handler is cache-first for all requests (`cache -> network`).
+- This is simple, but risks stale shell behavior after deploys if cache bumps are missed.
 
-### Phase 2 (architecture, 2–5 days)
+**Recommendation:** Use stale-while-revalidate for app shell or network-first for HTML.
 
-- Split `js/app.js` into modules:
-  - `state`, `storage`, `auth`, `tasks`, `dump`, `pomo`, `report`, `ui/core`.
-- Introduce a small render utility layer to reduce repetitive `innerHTML` patterns.
-- Add schema version + migration step during storage load.
+### P2 — Observability is minimal
 
-### Phase 3 (quality/performance, ongoing)
+- Error catches are often silent or low-context.
+- Hard to diagnose real-world sync/auth/report failures.
 
-- Add smoke tests for core flows:
+**Recommendation:** Add lightweight structured logging (even console-grouped telemetry first) and optional remote error sink.
+
+## 5) Delivery roadmap
+
+### Phase 1 (1–2 days): hardening without UX change
+
+- Introduce CSP in report-only mode.
+- Add SRI + pinned CDN versions.
+- Verify Firestore Security Rules for least privilege.
+- Improve error surfaces in auth/sync/report paths.
+
+### Phase 2 (2–5 days): modularization for velocity
+
+- Split `js/app.js` by concern while preserving current UI.
+- Isolate pure utilities for unit testing.
+- Add schema version/migration path in storage loader.
+
+### Phase 3 (ongoing): quality/performance
+
+- Add end-to-end smoke checks for:
   - auth bootstrap
   - create/edit/complete task
-  - dump to task
-  - pomodoro start/complete
-  - report generation download
-- Consider stale-while-revalidate behavior for selected requests.
+  - dump->task conversion
+  - pomodoro complete cycle
+  - report generation
+- Revisit service worker strategy for safer fresh deploy behavior.
 
-## 5) Quick scorecard
+## 6) Evidence references used in this analysis
 
-- **UX / feature completeness:** 8.5/10
-- **Security hardening:** 6/10 (good escaping, needs CSP/rules/SRI discipline)
-- **Maintainability:** 5.5/10 (monolith pressure)
-- **Offline/PWA readiness:** 7.5/10
-- **Overall:** **7.0/10**
-
-## 6) Concrete evidence references
-
-- Rendering + escaping helpers and local storage: `js/app.js`
-- Inline event-heavy DOM in markup + CDN scripts: `index.html`
-- Firebase initialization + Firestore persistence setup: `js/firebase-config.js`
-- Service worker cache strategy: `sw.js`
+- App scale and orchestration concentration: `js/app.js`, `css/styles.css`, `index.html`
+- Firebase client setup and Firestore persistence enablement: `js/firebase-config.js`
+- Cache behavior and cache-versioning approach: `sw.js`
