@@ -34,13 +34,15 @@ const State = {
     user: null,
     currentPage: 'home',
     weekOffset: 0,
+    monthOffset: 0,
+    selectedReportDate: null,
     selectedRepeat: 'none',
     tempSubtasks: [],
     onboardStep: 0,
     editingTaskId: null,
     saveTimeout: null,
     clockInterval: null,
-    reportMode: 'blend',
+    reportMode: 'week',
 
     pomo: {
         running: false,
@@ -1552,8 +1554,18 @@ const Report = {
         Sound.click();
     },
 
+    changeMonth(dir) {
+        State.monthOffset += dir;
+        if (State.monthOffset > 0) State.monthOffset = 0;
+        this.render();
+        Sound.click();
+    },
+
     setMode(mode) {
         State.reportMode = mode;
+        if (!State.selectedReportDate) {
+            State.selectedReportDate = Utils.today();
+        }
         this.render();
         Sound.click();
     },
@@ -1561,7 +1573,7 @@ const Report = {
     render() {
         const w = Utils.weekData(State.weekOffset);
         const dates = Utils.weekDates(State.weekOffset);
-        const m = this.getMonthData(0);
+        const m = this.getMonthData(State.monthOffset);
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         const start = new Date(dates[0] + 'T00:00:00');
@@ -1572,6 +1584,15 @@ const Report = {
                 ? 'This Week'
                 : `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}`;
 
+        document.getElementById('monthNavLabel').textContent =
+            State.monthOffset === 0
+                ? `${months[m.month]} ${m.year}`
+                : `${months[m.month]} ${m.year}`;
+
+        if (!State.selectedReportDate) {
+            State.selectedReportDate = Utils.today();
+        }
+
         this.renderModePanel(w, m);
         this.applyModeVisibility();
         this.renderScoreHero(w);
@@ -1579,37 +1600,35 @@ const Report = {
         this.renderHeatmap(w);
         this.drawChart('tasksChart', w.days.map(d => d.tasks), w.days.map(d => d.name), 'tasks');
         this.drawChart('focusChart', w.days.map(d => d.focus), w.days.map(d => d.name), 'focus');
-        this.renderMonthOverview();
+        this.renderMonthOverview(m);
+        this.renderDayDetails(w, m);
         this.renderInsights(w, m);
     },
 
     applyModeVisibility() {
-        const mode = State.reportMode || 'blend';
+        const mode = State.reportMode || 'week';
         const reportPage = document.querySelector('.page[data-page="report"]');
         if (!reportPage) return;
         reportPage.setAttribute('data-report-mode', mode);
 
         document.querySelectorAll('.report-mode-btn').forEach(btn => btn.classList.remove('active'));
-        const activeBtn = document.getElementById(
-            mode === 'week' ? 'reportModeWeekBtn' :
-            mode === 'month' ? 'reportModeMonthBtn' : 'reportModeBlendBtn'
-        );
+        const activeBtn = document.getElementById(mode === 'month' ? 'reportModeMonthBtn' : 'reportModeWeekBtn');
         if (activeBtn) activeBtn.classList.add('active');
     },
 
     renderModePanel(w, m) {
-        const mode = State.reportMode || 'blend';
+        const mode = State.reportMode || 'week';
         const monthDays = m.days.length || 1;
         const monthRhythm = Math.round((m.activeDays / monthDays) * 100);
         const weekRhythm = Math.round((w.activeDays / 7) * 100);
         const avgDailyFocus = Math.round(m.totalFocus / monthDays);
-        const monthScoreProxy = Math.min(100, Math.round((m.totalTasks * 2) + (m.totalFocus / 10) + (monthRhythm * 0.3)));
-        const blendScore = Math.round((this.getScore(w) * 0.65) + (monthScoreProxy * 0.35));
+        const weekAvgFocus = Math.round(w.totalFocus / 7);
+        const selected = this.getDateDigest(State.selectedReportDate, w, m);
 
-        let insight = 'Weekly momentum and monthly rhythm, side by side.';
-        if (mode === 'week') insight = `Weekly mode: ${w.totalTasks} tasks done, ${w.totalFocus} focus minutes, and ${weekRhythm}% active-day rhythm.`;
-        if (mode === 'month') insight = `Monthly mode: ${m.totalTasks} tasks, ${m.totalFocus} focus minutes, and ${monthRhythm}% active-day rhythm across ${monthDays} days.`;
-        if (mode === 'blend') insight = `Blend mode: you are balancing short-term execution with long-term consistency. Blended score: ${blendScore}.`;
+        let insight = `Weekly mode: ${w.totalTasks} tasks done, ${w.totalFocus} focus minutes, ${weekRhythm}% rhythm. Tap a day to drill in.`;
+        if (mode === 'month') {
+            insight = `Monthly mode: ${m.totalTasks} tasks, ${m.totalFocus} focus minutes, ${monthRhythm}% rhythm across ${monthDays} days.`;
+        }
 
         document.getElementById('reportModeInsight').textContent = insight;
 
@@ -1617,16 +1636,17 @@ const Report = {
             { label: 'Weekly Score', value: `${this.getScore(w)}` },
             { label: 'Week Focus', value: `${w.totalFocus}m` },
             { label: 'Week Rhythm', value: `${weekRhythm}%` },
+            { label: 'Week Avg / Day', value: `${weekAvgFocus}m` },
             { label: 'Month Tasks', value: `${m.totalTasks}` },
             { label: 'Month Focus', value: `${m.totalFocus}m` },
-            { label: 'Avg Focus / Day', value: `${avgDailyFocus}m` }
+            { label: 'Month Rhythm', value: `${monthRhythm}%` },
+            { label: 'Avg Focus / Day', value: `${avgDailyFocus}m` },
+            { label: 'Selected Day', value: selected ? `${selected.tasks}T • ${selected.focus}m` : 'None' }
         ];
 
         const visible = mode === 'week'
-            ? chips.slice(0, 3)
-            : mode === 'month'
-                ? chips.slice(3)
-                : chips;
+            ? chips.slice(0, 5)
+            : chips.slice(4);
 
         document.getElementById('reportModeMetrics').innerHTML = visible.map((chip, idx) => `
             <div class="report-mode-chip" style="animation-delay:${0.05 + idx * 0.05}s">
@@ -1648,7 +1668,11 @@ const Report = {
         for (let day = 1; day <= count; day++) {
             const d = new Date(year, monthIdx, day);
             const key = `${year}-${String(monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const tasks = State.data.tasks.filter(t => t.completed && t.doneDate === key).length;
+            const tasks = State.data.tasks.filter(t =>
+                t.completed &&
+                t.completedAt &&
+                new Date(t.completedAt).toISOString().split('T')[0] === key
+            ).length;
             const focus = State.data.pomo
                 .filter(p => p.date === key)
                 .reduce((sum, p) => sum + p.dur, 0);
@@ -1683,8 +1707,7 @@ const Report = {
         };
     },
 
-    renderMonthOverview() {
-        const m = this.getMonthData(0);
+    renderMonthOverview(m) {
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -1721,10 +1744,10 @@ const Report = {
         const dayCells = m.days.map(d => {
             const level = d.score <= 0 ? 0 : Math.min(4, Math.ceil((d.score / intensityMax) * 4));
             return `
-                <div class="month-day-cell level-${level} ${d.isToday ? 'today' : ''}" title="${d.key}: ${d.tasks} tasks, ${d.focus} focus min">
+                <button class="month-day-cell level-${level} ${d.isToday ? 'today' : ''} ${State.selectedReportDate === d.key ? 'selected' : ''}" onclick="Report.selectDate('${d.key}')" title="${d.key}: ${d.tasks} tasks, ${d.focus} focus min">
                     <div class="month-day-num">${d.day}</div>
                     <div class="month-day-meta">${d.tasks} • ${d.focus}m</div>
-                </div>
+                </button>
             `;
         }).join('');
 
@@ -1791,14 +1814,98 @@ const Report = {
             const total = d.tasks + Math.round(d.focus / 25);
             const active = total > 0;
             const isBest = total === best && total > 0;
+            const selected = State.selectedReportDate === d.date;
 
             return `
-            <div class="heatmap-day ${active ? 'active' : ''} ${isBest ? 'best' : ''}">
+            <button class="heatmap-day ${active ? 'active' : ''} ${isBest ? 'best' : ''} ${selected ? 'selected' : ''}" onclick="Report.selectDate('${d.date}')">
                 <div class="heatmap-day-name">${d.name}</div>
                 <div class="heatmap-day-value">${d.tasks}</div>
                 <div class="heatmap-day-sub">${d.focus}m</div>
-            </div>`;
+            </button>`;
         }).join('');
+    },
+
+    selectDate(dateKey) {
+        State.selectedReportDate = dateKey;
+        this.render();
+        Sound.click();
+    },
+
+    getDateDigest(dateKey, w, m) {
+        if (!dateKey) return null;
+        const weekDay = w.days.find(d => d.date === dateKey);
+        const monthDay = m.days.find(d => d.key === dateKey);
+        return {
+            key: dateKey,
+            tasks: weekDay ? weekDay.tasks : (monthDay ? monthDay.tasks : 0),
+            focus: weekDay ? weekDay.focus : (monthDay ? monthDay.focus : 0)
+        };
+    },
+
+    renderDayDetails(w, m) {
+        const selected = this.getDateDigest(State.selectedReportDate, w, m) || { key: Utils.today(), tasks: 0, focus: 0 };
+        State.selectedReportDate = selected.key;
+
+        const dateObj = new Date(`${selected.key}T00:00:00`);
+        const label = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        document.getElementById('reportDayLabel').textContent = `Day Details — ${label}`;
+
+        const completedTasks = State.data.tasks
+            .filter(t => t.completed && t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === selected.key)
+            .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
+        const openDue = State.data.tasks
+            .filter(t => !t.completed && t.date === selected.key);
+        const focusSessions = State.data.pomo
+            .filter(p => p.date === selected.key);
+
+        const focusByMode = focusSessions.reduce((acc, s) => {
+            acc[s.mode || 'focus'] = (acc[s.mode || 'focus'] || 0) + s.dur;
+            return acc;
+        }, {});
+
+        document.getElementById('dayDetailMeta').innerHTML = `
+            <span class="day-meta-pill"><span>${Icons.calendar(10)}</span>${selected.key}</span>
+            <span class="day-meta-pill"><span>${Icons.check(10)}</span>${completedTasks.length} completed</span>
+            <span class="day-meta-pill"><span>${Icons.clock(10)}</span>${selected.focus} focus min</span>
+            <span class="day-meta-pill"><span>${Icons.tasks(10)}</span>${openDue.length} due pending</span>
+        `;
+
+        document.getElementById('dayDetailGrid').innerHTML = `
+            <div class="day-detail-kpi">
+                <div class="day-detail-kpi-label">Completed Tasks</div>
+                <div class="day-detail-kpi-value">${completedTasks.length}</div>
+            </div>
+            <div class="day-detail-kpi">
+                <div class="day-detail-kpi-label">Pending (Due That Day)</div>
+                <div class="day-detail-kpi-value">${openDue.length}</div>
+            </div>
+            <div class="day-detail-kpi">
+                <div class="day-detail-kpi-label">Focus Sessions</div>
+                <div class="day-detail-kpi-value">${focusSessions.length}</div>
+            </div>
+            <div class="day-detail-kpi">
+                <div class="day-detail-kpi-label">Deep Focus Minutes</div>
+                <div class="day-detail-kpi-value">${focusByMode.focus || 0}m</div>
+            </div>
+        `;
+
+        const completedHtml = completedTasks.length
+            ? completedTasks.slice(0, 6).map(t => `<div class="day-detail-item done">${Utils.escape(t.text)}</div>`).join('')
+            : `<div class="day-detail-empty">No completed tasks logged for this day.</div>`;
+        const pendingHtml = openDue.length
+            ? openDue.slice(0, 4).map(t => `<div class="day-detail-item pending">${Utils.escape(t.text)}</div>`).join('')
+            : `<div class="day-detail-empty">No pending tasks due that day.</div>`;
+
+        document.getElementById('dayDetailList').innerHTML = `
+            <div class="day-detail-col">
+                <div class="day-detail-col-title">What got done</div>
+                ${completedHtml}
+            </div>
+            <div class="day-detail-col">
+                <div class="day-detail-col-title">Still open</div>
+                ${pendingHtml}
+            </div>
+        `;
     },
 
     drawChart(containerId, values, labels, metric = 'tasks') {
@@ -1907,7 +2014,7 @@ const Report = {
 
     renderInsights(w, m) {
         const insights = [];
-        const mode = State.reportMode || 'blend';
+        const mode = State.reportMode || 'week';
         const score = this.getScore(w);
         const breakdown = this.getScoreBreakdown(w);
         const prevW = Utils.weekData(State.weekOffset - 1);
@@ -1992,7 +2099,7 @@ const Report = {
             }
         }
 
-        if (mode !== 'week') {
+        if (mode === 'month') {
             if (!m.totalTasks && !m.totalFocus) {
                 insights.push({
                     icon: Icons.spark(12),
@@ -2011,14 +2118,6 @@ const Report = {
                     });
                 }
             }
-        }
-
-        if (mode === 'blend') {
-            const blendScore = Math.round((score * 0.65) + (monthRhythm * 0.35));
-            insights.push({
-                icon: Icons.shield(12),
-                text: `<strong>Blend signal:</strong> Weekly execution and monthly consistency combine to <strong>${blendScore}</strong>/100.`
-            });
         }
 
         const tips = [

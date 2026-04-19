@@ -332,9 +332,8 @@
                     <div class="report-mode-switch">
                         <button class="report-mode-btn active" id="reportModeWeekBtn" onclick="Report.setMode('week')">Week</button>
                         <button class="report-mode-btn" id="reportModeMonthBtn" onclick="Report.setMode('month')">Month</button>
-                        <button class="report-mode-btn" id="reportModeBlendBtn" onclick="Report.setMode('blend')">Blend</button>
                     </div>
-                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum and monthly rhythm, side by side.</div>
+                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum in detail with daily drill-down.</div>
                     <div class="report-mode-metrics" id="reportModeMetrics"></div>
                 </div>
 
@@ -343,6 +342,13 @@
                     <button class="week-nav-btn" onclick="Report.changeWeek(-1)" id="weekPrevBtn"></button>
                     <span class="week-nav-label" id="weekNavLabel">This Week</span>
                     <button class="week-nav-btn" onclick="Report.changeWeek(1)" id="weekNextBtn"></button>
+                </div>
+
+                <!-- Month Navigation -->
+                <div class="week-nav report-month-only">
+                    <button class="week-nav-btn" onclick="Report.changeMonth(-1)" id="monthPrevBtn"></button>
+                    <span class="week-nav-label" id="monthNavLabel">This Month</span>
+                    <button class="week-nav-btn" onclick="Report.changeMonth(1)" id="monthNextBtn"></button>
                 </div>
 
                 <!-- Score Hero -->
@@ -395,6 +401,17 @@
                     <div class="month-stats" id="monthStats"></div>
                     <div class="month-heatmap" id="monthHeatmap"></div>
                     <div class="month-insight" id="monthInsight">Your month pattern will appear here.</div>
+                </div>
+
+                <!-- Day Drilldown -->
+                <div class="report-card report-day-detail-card">
+                    <div class="report-card-header">
+                        <span class="report-card-icon" id="reportDayIcon"></span>
+                        <span id="reportDayLabel">Day Details</span>
+                    </div>
+                    <div class="day-detail-meta" id="dayDetailMeta"></div>
+                    <div class="day-detail-grid" id="dayDetailGrid"></div>
+                    <div class="day-detail-list" id="dayDetailList"></div>
                 </div>
 
                 <!-- AI Insights -->
