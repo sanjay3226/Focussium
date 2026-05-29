@@ -1,97 +1,214 @@
-# Focussium Repository Analysis (April 19, 2026)
+# Focussium — App Analysis & Architecture Reference
 
-## 1) Executive summary
+> **Version:** 2026.05.29 · **Analysis depth:** Full codebase review
 
-Focussium is a polished single-page productivity Progressive Web App (PWA) with strong UX scope (tasks, brain dump, focus timer, reporting, onboarding, and theming), backed by local-first persistence and optional Firebase sync. The product direction is strong, but the codebase is currently concentrated in a few large files, which raises long-term maintenance and testing risk.
+---
 
-**Overall score: 7.5 / 10**
-- **Product/UX completeness:** 8.8
-- **Offline/PWA readiness:** 8.0
-- **Code maintainability:** 5.9
-- **Security hardening posture:** 6.5
+## Executive Summary
 
-## 2) Repository structure snapshot
+Focussium is a **production-quality single-page PWA** delivering five interconnected productivity flows in a sub-100KB no-framework JavaScript codebase. The app demonstrates strong UX discipline (glassmorphism, custom audio synthesis, SVG animation), practical offline-first architecture, and a clean module-pattern code structure that remains tractable without a framework.
 
-- `index.html` (738 lines): contains nearly the full app shell and most UI surface markup.
-- `css/styles.css` (4404 lines): comprehensive style system for all screens/components.
-- `js/app.js` (2525 lines): main app logic, state management, feature modules, bootstrapping.
-- `js/firebase-config.js` (18 lines): Firebase initialization and Firestore persistence enablement.
-- `sw.js` (50 lines): service worker lifecycle + asset caching strategy.
+| Dimension | Score | Notes |
+|---|---|---|
+| **Product / UX completeness** | 9.2 / 10 | Five full features, rich animations, zero placeholder states |
+| **Offline / PWA readiness** | 9.0 / 10 | Versioned SW cache, stale-while-revalidate, app shortcuts |
+| **Code maintainability** | 6.5 / 10 | Large single files; module-object pattern is clean but non-modular |
+| **Performance** | 8.5 / 10 | No framework overhead; Web Audio API, SVG, CSS animations are efficient |
+| **Security posture** | 7.0 / 10 | Firebase config is standard-safe; Firestore rules should be reviewed |
+| **Accessibility** | 7.5 / 10 | ARIA labels present; keyboard nav partially implemented |
 
-The current architecture is a classic “single-bundle SPA” with in-file module objects (`State`, `Storage`, `Tasks`, `Pomo`, `Report`, etc.).
+---
 
-## 3) Strengths
+## Repository Snapshot
 
-1. **Feature depth in a lightweight deployment model**
-   - The app covers daily planning, focus execution, and retrospective reporting in one cohesive UX flow.
+```
+Focussium/
+  index.html           ~900 lines   App shell, all page markup, inline nav
+  css/styles.css      ~6500 lines   Full design system, all components
+  js/app.js           ~3900 lines   All feature logic (State, Tasks, Pomo, Report…)
+  js/sounds.js          ~520 lines  Web Audio API synthesiser engine
+  js/icons.js           ~380 lines  Inline SVG icon library
+  js/firebase-config.js  ~20 lines  Firebase init + Firestore persistence
+  sw.js                  ~80 lines  Service worker (versioned cache + SWR)
+  manifest.json          ~50 lines  PWA manifest (shortcuts, icons, screenshots)
+```
 
-2. **Clear domain separation inside one file**
-   - Even though `js/app.js` is large, major capabilities are segmented into named module objects (`Auth`, `Tasks`, `Dump`, `Pomo`, `Report`, `Settings`, `App`), which keeps mental mapping tractable.
+---
 
-3. **Practical local-first behavior**
-   - Data is loaded from `localStorage` and merged with defaults, then optionally synced to Firestore with debounced remote saves.
+## Module Architecture
 
-4. **Reasonable PWA baseline**
-   - Versioned cache keys, pre-cache asset manifest, stale cache cleanup on activate, and offline fallback for navigation are all present.
+### State Shape
 
-## 4) Key risks and improvement opportunities
+```js
+State = {
+  data: {
+    tasks: { [listId]: { name, items: [{ id, text, done, order }] } },
+    dump:  [{ id, text, ts, tags }],
+    log:   { [YYYY-MM-DD]: { tasks, focus, mood, vibe } },
+    xp:    { total, level, streak },
+    settings: {
+      theme, accent, sound, soundPalette,
+      sessions, focusMin, shortMin, longMin,
+      ambientSound, ambientVol, taskOrder
+    }
+  },
+  pomo: { running, mode, secondsLeft, count, interval },
+  weekOffset: 0,
+  monthOffset: 0,
+  reportMode: 'week'
+}
+```
 
-### P0 — Maintainability bottleneck from file concentration
+### Module Dependency Map
 
-- `js/app.js` and `css/styles.css` dominate implementation footprint.
-- Any cross-cutting change (new task metadata, report logic, settings migration) likely touches several distant sections in one file.
+```
+App.init()
+  ├── Auth        → Firebase Auth listener → loads/creates user doc
+  │     └── State / Storage
+  ├── Nav         → page routing, transitions
+  ├── Tasks       → CRUD, drag-and-drop, list management
+  ├── Dump        → brain dump, auto-tagging, clearing
+  ├── Pomo        → timer state machine, ambient audio dispatch
+  │     └── Sound (sounds.js) → Web Audio API
+  ├── Report      → weekly/monthly analytics, SVG chart render, PDF export
+  ├── Level       → XP calc, level-up modal, confetti
+  ├── Settings    → theme/accent switching, session config
+  └── CommandGlass → quick-add modal (Ctrl+K)
+```
 
-**Recommendation:** split by concern without changing framework:
-- `state/`, `features/tasks/`, `features/pomo/`, `features/report/`, `ui/`, `platform/storage/`.
+---
 
-### P0 — Inline event handlers limit hardening
+## Audio Engine
 
-- `index.html` uses many inline `onclick` handlers across core flows.
-- This pattern complicates adoption of a strict CSP that excludes `unsafe-inline`.
+`js/sounds.js` implements a **full FM synthesis engine** using the Web Audio API with zero external dependencies:
 
-**Recommendation:** migrate progressively to delegated listeners and explicit event wiring during `App.init()`.
+| Sound | Technique |
+|---|---|
+| `rain` | Brown noise buffer + lowpass BiquadFilter + LFO (0.12 Hz) on cutoff |
+| `waves` | Brown noise + lowpass + slow stereo panner oscillator (0.06 Hz) |
+| `binaural` | Two sine oscillators (160 Hz / 165 Hz) → 5 Hz binaural beat → L/R panners |
+| `brown` | Raw brown noise buffer + heavy lowpass (250 Hz) |
+| UI sounds | FM synthesis (`synth()`) with configurable freq, modFreq, modAmt, pitchSweep |
 
-### P1 — Service worker caching tradeoffs
+**Volume chain:** `ambientVolumeNode.gain = slider_value/100 × 0.35`
 
-- Non-navigation requests are cache-first (`cache -> network`), which is great for resilience but can retain stale assets when cache versioning is missed.
+---
 
-**Recommendation:** keep current navigation strategy, but consider stale-while-revalidate for static assets and add release checklist enforcement for `APP_VERSION` updates.
+## Chart System
 
-### P1 — Limited runtime observability
+`Report.drawChart()` renders **SVG line charts** directly into the DOM:
 
-- Several catch paths intentionally swallow or minimize error context.
+- **Path algorithm:** Cubic bezier with 0.4 tension (smooth, not sharp)
+- **Elements:** Area gradient fill, glowing line path, dot points with labels, avg dashed line, grid
+- **Animation:** `lineDrawIn` stroke-dashoffset keyframe draw-on, `scaleIn` for dots, `barRise` for bars
+- **Filters:** `feGaussianBlur` glow on line path and dot highlights
+- **Responsive:** `viewBox="0 0 400 160"` with `preserveAspectRatio="xMidYMid meet"` — scales cleanly
 
-**Recommendation:** standardize an internal `logError(context, error)` utility and optionally add remote error capture behind user opt-in.
+---
 
-### P2 — Auth/config operational sensitivity
+## PWA Architecture
 
-- Firebase client config is correctly public client-side, but effective security depends on Firestore/Auth rules quality.
+```
+Install → Cache: index.html, styles.css, app.js, sounds.js, icons.js, firebase-config.js, icons
 
-**Recommendation:** add a short `SECURITY.md` documenting expected Firebase rules posture and deployment checks.
+Fetch strategy:
+  navigate requests  → Network-first → fallback to cached index.html
+  same-origin assets → Cache-first → background revalidation (stale-while-revalidate)
+  cross-origin       → Pass-through (Firebase, Google Fonts CDN)
+```
 
-## 5) Suggested phased roadmap
+Cache version: `focussium-2026.05.29.1` — must be bumped on each deploy.
 
-### Phase 1 (low risk, 1–2 days)
-- Add linting + formatting automation (ESLint/Prettier).
-- Introduce minimal architecture docs (`docs/architecture.md`, state shape, module boundaries).
-- Add smoke checks for core happy paths.
+---
 
-### Phase 2 (medium effort, 3–7 days)
-- Extract `Storage`, `Tasks`, `Pomo`, `Report` into separate files while preserving behavior.
-- Add schema versioning for persisted state and migration guards.
+## Design System Reference
 
-### Phase 3 (hardening, ongoing)
-- Replace inline handlers with programmatic listeners.
-- Introduce report-only CSP, then enforceable CSP.
-- Improve cache update ergonomics and release process consistency.
+### Colour Tokens
 
-## 6) Evidence used
+| Token | Role |
+|---|---|
+| `--bg0 → --bg4` | Background depth (darkest to lightest surface) |
+| `--tx1 → --tx3` | Text (primary → muted → subtle) |
+| `--ac` | Accent colour (changes with palette selection) |
+| `--acr` | Accent as `R,G,B` triplet for `rgba()` |
+| `--acg` | Accent glow (used in box-shadow, filter) |
+| `--acgr` | Accent gradient (linear-gradient) |
+| `--acs` | Accent soft (low-opacity tint for backgrounds) |
+| `--bd` | Border default |
+| `--bds` | Border subtle |
+| `--ok` / `--err` | Success / error semantic colours |
 
-- Repository/file footprint and architecture concentration:
-  - `js/app.js`
-  - `css/styles.css`
-  - `index.html`
-- PWA cache/version logic and fetch strategy:
-  - `sw.js`
-- Firebase initialization and persistence behavior:
-  - `js/firebase-config.js`
+### Available Accent Palettes
+
+`royal` (indigo) · `ocean` (teal) · `ember` (orange) · `sakura` (pink) · `sage` (green) · `aurora` (violet) · `gold` (amber) · `mono` (neutral)
+
+### Z-Index Stack
+
+| Layer | Z-index |
+|---|---|
+| Base pages | 1 |
+| Navigation (bottom-nav) | 100 |
+| FAB button | 200 |
+| Modals | 500 |
+| Toast notifications | 600 |
+| Login screen | 8000 |
+| Fullscreen pomo | 9999 |
+| Loading screen | 9999 |
+
+---
+
+## Known Issues & Improvement Areas
+
+### 🔴 P0 — Maintainability
+- `app.js` (~3900 lines) and `styles.css` (~6500 lines) are single-file giants
+- **Recommendation:** Split by feature into `js/features/tasks.js`, `js/features/pomo.js`, etc.
+
+### 🟡 P1 — Inline Handlers
+- `index.html` uses inline `onclick` attributes throughout
+- Blocks strict CSP (`unsafe-inline` required)
+- **Recommendation:** Move to delegated `addEventListener` in `App.init()`
+
+### 🟡 P1 — Schema Versioning
+- No migration guard for `localStorage` state shape changes
+- A schema version bump can silently corrupt existing user data
+- **Recommendation:** Add `state.schemaVersion` + migration function
+
+### 🟢 P2 — Error Observability
+- Many `catch` blocks silently swallow errors
+- **Recommendation:** Centralise with `logError(context, err)` utility
+
+### 🟢 P2 — Accessibility
+- Tab navigation between pages needs keyboard trap handling in modals
+- Focus management on route transitions is absent
+- **Recommendation:** Add `focus-trap` on modal open, restore on close
+
+---
+
+## Performance Profile
+
+| Metric | Estimate |
+|---|---|
+| First Contentful Paint | ~0.8s (cached) / ~1.5s (cold) |
+| JS parse time | ~35ms (no framework overhead) |
+| CSS size (gzipped) | ~28KB |
+| JS total size (gzipped) | ~55KB |
+| Web Audio latency | ~5-10ms (native AudioContext) |
+| localStorage ops | Debounced 500ms after any state change |
+
+---
+
+## Deployment Checklist
+
+```
+☐ Bump APP_VERSION in sw.js (format: YYYY.MM.DD.N)
+☐ Verify manifest.json icon paths resolve (192, 512)
+☐ Test offline mode: disable network, reload, check full functionality
+☐ Test PWA install prompt on Chrome Android & iOS Safari
+☐ Verify Firebase Firestore rules restrict to auth.uid
+☐ Check safe-area-inset padding on iPhone notch devices
+☐ Run Lighthouse PWA audit (target: 95+)
+```
+
+---
+
+*Generated: May 2026 · Maintained by [@sanjay3226](https://github.com/sanjay3226)*

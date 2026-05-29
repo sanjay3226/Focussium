@@ -1,24 +1,64 @@
 {
-    "name": "Focussium",
+    "name": "Focussium — Zen Productivity",
     "short_name": "Focussium",
-    "description": "Your zen productivity space",
+    "description": "Your zen productivity space — Pomodoro focus timer, task management, brain dump, weekly vibe reports, and ambient soundscapes. Works offline as a PWA.",
     "start_url": "./index.html",
+    "scope": "./",
     "display": "standalone",
-    "background_color": "#050505",
-    "theme_color": "#050505",
-    "orientation": "portrait",
+    "background_color": "#050508",
+    "theme_color": "#050508",
+    "orientation": "portrait-primary",
+    "lang": "en",
+    "categories": ["productivity", "lifestyle"],
     "icons": [
         {
             "src": "icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
         },
         {
             "src": "icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Focussium Home Dashboard"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Focus Timer",
+            "short_name": "Focus",
+            "description": "Start a Pomodoro focus session",
+            "url": "./index.html#focus",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Quick Task",
+            "short_name": "Task",
+            "description": "Add a new task quickly",
+            "url": "./index.html#tasks",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
         }
     ]
 }

@@ -3,18 +3,42 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    <title>Focussium</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
+    <meta name="description" content="Focussium — Your zen productivity space. Pomodoro focus timer, task management, brain dump, weekly vibe reports & ambient soundscapes. Works offline.">
+    <meta name="keywords" content="productivity, pomodoro, focus timer, task manager, PWA, offline, zen">
+    <meta name="color-scheme" content="dark">
+    <title>Focussium — Zen Productivity Space</title>
 
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#050508" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#050508">
+
+    <!-- Apple Mobile -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Focussium">
-    <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="shortcut icon" href="icon-192.png">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Focussium — Zen Productivity Space">
+    <meta property="og:description" content="Your zen productivity space. Focus timer, tasks, brain dump & weekly vibe reports.">
+    <meta property="og:image" content="icon-512.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Focussium">
+    <meta name="twitter:image" content="icon-512.png">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -23,6 +47,8 @@
 </head>
 
 <body>
+    <canvas class="particle-canvas" id="particleCanvas"></canvas>
+    
     <!-- Loading Screen -->
     <div class="ld-scr" id="loadingScreen">
         <img class="ld-logo" id="loadingLogo" src="icon-512.png" alt="Focussium Logo">
@@ -148,6 +174,16 @@
                     <h2>Dashboard</h2>
                 </div>
 
+                <!-- Daily Quote Card -->
+                <div class="daily-quote-card" id="dailyQuoteCard" style="display: none;">
+                    <div class="quote-sparkle" id="quoteSparkleIcon"></div>
+                    <div class="quote-content">
+                        <p class="quote-text" id="dailyQuoteText">"Loading your zen space..."</p>
+                        <p class="quote-author" id="dailyQuoteAuthor">— Focussium</p>
+                    </div>
+                </div>
+
+
                 <!-- Today's Progress Ring -->
                 <div class="progress-card">
                     <div class="progress-ring-container">
@@ -228,7 +264,7 @@
 
                 <!-- Up Next -->
                 <div class="section-header">
-                    <div class="section-title">Up Next</div>
+                    <div class="section-title">Up Next <span style="font-size:0.65rem; font-weight:600; color:var(--tx3); margin-left:6px; opacity:0.8;">• Custom Order</span></div>
                     <button class="section-link" onclick="Nav.go('tasks')">View all</button>
                 </div>
                 <div class="tasks-container" id="homeTasksPreview"></div>
@@ -247,6 +283,7 @@
                 </div>
 
                 <div class="tabs-container" id="taskTabs"></div>
+                <div class="task-tools-bar" id="taskToolsBar"></div>
                 <div class="tasks-container" id="tasksContainer"></div>
             </section>
 
@@ -264,6 +301,23 @@
                 </div>
 
                 <div class="dumps-container" id="dumpsContainer"></div>
+
+                <!-- Daily HSL Vibe Logger -->
+                <div class="mood-logger-card">
+                    <div class="mood-logger-header">
+                        <span class="mood-logger-icon" id="moodLoggerIcon"></span>
+                        <span style="font-weight: 700;">Daily Energy Vibe</span>
+                    </div>
+                    <p class="mood-logger-subtitle">Log your current mental frequency to trace focus trends over the week.</p>
+                    <div class="mood-selectors" id="moodSelectors">
+                        <button class="mood-btn calm" onclick="Dump.logMood('calm')" title="Calm Zen">🧘 Calm</button>
+                        <button class="mood-btn high" onclick="Dump.logMood('high')" title="High Energy">⚡ Sparked</button>
+                        <button class="mood-btn flow" onclick="Dump.logMood('flow')" title="Deep Flow">🌊 Flow</button>
+                        <button class="mood-btn tired" onclick="Dump.logMood('tired')" title="Resting">💤 Resting</button>
+                        <button class="mood-btn clouded" onclick="Dump.logMood('clouded')" title="Overwhelmed">☁️ Clouded</button>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Focus Page -->
@@ -313,6 +367,23 @@
                         <div class="pomo-live-insight" id="pomoLiveInsight"></div>
                     </div>
 
+                    <!-- Sleek Ambient Focus Atmosphere (Compact Inline Row) -->
+                    <div class="ambient-compact-row">
+                        <div class="ambient-icons-group">
+                            <button class="ambient-icon-btn active" data-sound="none" onclick="Pomo.setAmbient('none')" title="Silence">🔇</button>
+                            <button class="ambient-icon-btn" data-sound="rain" onclick="Pomo.setAmbient('rain')" title="Rainfall 🌧️">🌧️</button>
+                            <button class="ambient-icon-btn" data-sound="waves" onclick="Pomo.setAmbient('waves')" title="Ocean Waves 🌊">🌊</button>
+                            <button class="ambient-icon-btn" data-sound="binaural" onclick="Pomo.setAmbient('binaural')" title="Binaural 🧘">🧘</button>
+                            <button class="ambient-icon-btn" data-sound="brown" onclick="Pomo.setAmbient('brown')" title="Deep Hum 📿">📿</button>
+                        </div>
+                        <div class="ambient-slider-container">
+                            <span class="ambient-slider-icon" id="ambientVolIcon"></span>
+                            <input type="range" class="ambient-slider-premium" id="ambientVolumeSlider" min="0" max="100" value="40" style="--val:40%" oninput="this.style.setProperty('--val',this.value+'%');Pomo.setAmbientVolume(this.value)">
+                        </div>
+                    </div>
+
+
+
                     <button class="pomo-fullscreen-btn" onclick="Pomo.enterFullscreen()">
                         <span id="pomoFullscreenIcon"></span>
                         <span>Focus Mode</span>
@@ -351,13 +422,28 @@
                     <button class="week-nav-btn" onclick="Report.changeMonth(1)" id="monthNextBtn"></button>
                 </div>
 
-                <!-- Score Hero -->
+                <!-- Productivity Score Hero Gauge -->
                 <div class="score-hero report-week-only">
                     <div class="score-hero-main">
-                        <div class="score-hero-label">Productivity Score</div>
-                        <div class="score-hero-value" id="reportScoreValue">0</div>
-                        <div class="score-hero-bar">
-                            <div class="score-hero-fill" id="reportScoreFill"></div>
+                        <div class="score-hero-label">Weekly Productivity Vibe</div>
+                        <div class="vibe-gauge-wrapper">
+                            <svg class="vibe-gauge-svg" viewBox="0 0 140 140">
+                                <defs>
+                                    <linearGradient id="vibeGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="var(--ac)" />
+                                        <stop offset="100%" stop-color="var(--acl)" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="vibe-gauge-bg" cx="70" cy="70" r="60" />
+                                <circle class="vibe-gauge-fill" cx="70" cy="70" r="60" id="reportVibeGaugeCircle" />
+                            </svg>
+                            <div class="vibe-gauge-inner">
+                                <div class="vibe-gauge-score" id="reportScoreValue">0</div>
+                                <div class="vibe-gauge-label">Score</div>
+                            </div>
+                        </div>
+                        <div class="text-center" style="text-align: center;">
+                            <div class="vibe-rating-title" id="reportVibeTitle">Resting Flow</div>
                         </div>
                     </div>
                     <div class="score-breakdown" id="scoreBreakdown"></div>
@@ -367,52 +453,69 @@
                 <div class="report-stats report-week-only" id="reportStats"></div>
 
                 <!-- Activity Heatmap -->
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportHeatIcon"></span>
-                        <span>Activity Map</span>
+                <div class="report-card report-week-only expanded" id="reportCardHeatmap">
+                    <div class="report-card-header" onclick="Report.toggleCollapse('reportCardHeatmap')">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportHeatIcon"></span>
+                            <span>Activity Map</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportHeatChevron"></span>
                     </div>
-                    <div class="heatmap-grid" id="heatmapGrid"></div>
+                    <div class="report-card-body">
+                        <div class="heatmap-grid" id="heatmapGrid"></div>
+                    </div>
                 </div>
 
                 <!-- Charts -->
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon0"></span>
-                        <span>Tasks Completed</span>
+                <div class="report-card report-week-only expanded" id="reportCardAnalytics">
+                    <div class="report-card-header" onclick="Report.toggleCollapse('reportCardAnalytics')">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportChartIcon0"></span>
+                            <span>Productivity Analytics</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportAnalyticsChevron"></span>
                     </div>
-                    <div class="line-chart-container" id="tasksChart"></div>
-                </div>
-
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon1"></span>
-                        <span>Focus Minutes</span>
+                    <div class="report-card-body">
+                        <div class="chart-tabs">
+                            <button class="chart-tab-btn active" id="chartTabTasksBtn" onclick="Report.setChartTab('tasks')">Tasks Done</button>
+                            <button class="chart-tab-btn" id="chartTabFocusBtn" onclick="Report.setChartTab('focus')">Focus Minutes</button>
+                        </div>
+                        <div class="line-chart-container" id="analyticsChart"></div>
                     </div>
-                    <div class="line-chart-container" id="focusChart"></div>
                 </div>
 
                 <!-- Monthly Overview -->
-                <div class="report-card monthly-card report-month-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportMonthIcon"></span>
-                        <span id="monthLabel">Monthly Overview</span>
+                <div class="report-card monthly-card report-month-only expanded" id="reportCardMonth">
+                    <div class="report-card-header" onclick="Report.toggleCollapse('reportCardMonth')">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportMonthIcon"></span>
+                            <span id="monthLabel">Monthly Overview</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportMonthChevron"></span>
                     </div>
-                    <div class="month-stats" id="monthStats"></div>
-                    <div class="month-heatmap" id="monthHeatmap"></div>
-                    <div class="month-insight" id="monthInsight">Your month pattern will appear here.</div>
+                    <div class="report-card-body">
+                        <div class="month-stats" id="monthStats"></div>
+                        <div class="month-heatmap" id="monthHeatmap"></div>
+                        <div class="month-insight" id="monthInsight">Your month pattern will appear here.</div>
+                    </div>
                 </div>
 
                 <!-- Day Drilldown -->
-                <div class="report-card report-day-detail-card">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportDayIcon"></span>
-                        <span id="reportDayLabel">Day Details</span>
+                <div class="report-card report-day-detail-card expanded" id="reportCardDayDetail">
+                    <div class="report-card-header" onclick="Report.toggleCollapse('reportCardDayDetail')">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportDayIcon"></span>
+                            <span id="reportDayLabel">Day Details</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportDayChevron"></span>
                     </div>
-                    <div class="day-detail-meta" id="dayDetailMeta"></div>
-                    <div class="day-detail-grid" id="dayDetailGrid"></div>
-                    <div class="day-detail-list" id="dayDetailList"></div>
+                    <div class="report-card-body">
+                        <div class="day-detail-meta" id="dayDetailMeta"></div>
+                        <div class="day-detail-grid" id="dayDetailGrid"></div>
+                        <div class="day-detail-list" id="dayDetailList"></div>
+                    </div>
                 </div>
+
 
                 <!-- AI Insights -->
                 <div class="ai-insights-card">
@@ -433,36 +536,36 @@
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
-            <button class="nav-item active" data-page="home" onclick="Nav.go('home')">
+            <button class="nav-item active" data-page="home" onclick="Nav.go('home')" aria-label="Home dashboard">
                 <span class="nav-icon" id="navIconHome"></span>
                 <span class="nav-label">Home</span>
             </button>
-            <button class="nav-item" data-page="tasks" onclick="Nav.go('tasks')">
+            <button class="nav-item" data-page="tasks" onclick="Nav.go('tasks')" aria-label="Tasks">
                 <span class="nav-icon" id="navIconTasks"></span>
                 <span class="nav-label">Tasks</span>
             </button>
-            <button class="nav-item" data-page="dump" onclick="Nav.go('dump')">
+            <button class="nav-item" data-page="dump" onclick="Nav.go('dump')" aria-label="Brain dump">
                 <span class="nav-icon" id="navIconDump"></span>
                 <span class="nav-label">Dump</span>
             </button>
-            <button class="nav-item" data-page="focus" onclick="Nav.go('focus')">
+            <button class="nav-item" data-page="focus" onclick="Nav.go('focus')" aria-label="Focus timer">
                 <span class="nav-icon" id="navIconFocus"></span>
                 <span class="nav-label">Focus</span>
             </button>
-            <button class="nav-item" data-page="report" onclick="Nav.go('report')">
+            <button class="nav-item" data-page="report" onclick="Nav.go('report')" aria-label="Weekly report">
                 <span class="nav-icon" id="navIconReport"></span>
                 <span class="nav-label">Vibe</span>
             </button>
         </nav>
 
         <!-- FAB -->
-        <button class="fab" id="fabButton" onclick="Tasks.openAddModal()">
+        <button class="fab" id="fabButton" onclick="Tasks.openAddModal()" aria-label="Add new task">
             <span id="fabIcon"></span>
         </button>
     </div>
 
     <!-- Add Task Modal -->
-    <div class="modal" id="addTaskModal">
+    <div class="modal" id="addTaskModal" role="dialog" aria-modal="true" aria-label="Task editor">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
             <div class="modal-title" id="taskModalTitle">New Task</div>
@@ -553,7 +656,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
+    <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
             <div class="modal-title">Settings</div>
@@ -603,6 +706,18 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="settings-row column">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon" id="settingsAvatarIcon"></div>
+                        <div class="settings-row-text">
+                            <h4>Profile Avatar</h4>
+                            <p>Unlock custom VIP personas</p>
+                        </div>
+                    </div>
+                    <div class="avatar-buttons" id="avatarButtons"></div>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="Settings.handleAvatarUpload(event)">
+                </div>
             </div>
 
             <div class="settings-section">
@@ -616,6 +731,15 @@
                         </div>
                     </div>
                     <div class="toggle" id="soundToggle" onclick="Settings.toggleSound()"></div>
+                </div>
+                <div class="settings-row column" id="soundPaletteRow">
+                    <div class="settings-row-left">
+                        <div class="settings-row-text">
+                            <h4>Sound Palette</h4>
+                            <p id="soundPaletteDesc">Zen Chimes or Retro Synth</p>
+                        </div>
+                    </div>
+                    <div class="palette-buttons" id="paletteButtonsContainer"></div>
                 </div>
             </div>
 
@@ -737,11 +861,31 @@
     </div>
 
     <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Celebration Canvas -->
+    <canvas class="celebration-canvas" id="celebrationCanvas"></canvas>
+
+    <!-- Level Up Modal -->
+    <div class="modal level-up-modal" id="levelUpModal" role="dialog" aria-modal="true" aria-label="Level Up Celebration">
+        <div class="level-up-card">
+            <div class="level-up-glow"></div>
+            <div class="level-up-ribbon">LEVEL UP</div>
+            <div class="level-up-badge-wrapper">
+                <div class="level-up-badge" id="levelUpBadgeVal">1</div>
+            </div>
+            <h2 class="level-up-title" id="levelUpTitleText">Rank Up!</h2>
+            <p class="level-up-subtitle" id="levelUpSubText">You reached Level 2</p>
+            <div class="level-up-unlocked-card">
+                <div class="unlocked-label">UNLOCKED REWARD</div>
+                <div class="unlocked-item" id="levelUpUnlockText">Custom Theme Accent</div>
+            </div>
+            <button class="level-up-btn" onclick="Level.claimVibe()">Claim Vibe</button>
+        </div>
+    </div>
 
 
     <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
