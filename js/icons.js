@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
-   FOCUSSIUM v2 PRO — CUSTOM SVG ICONS
-═══════════════════════════════════════════════════════════ */
+   FOCUSSIUM v3 PRO — CUSTOM SVG ICONS
+   ═══════════════════════════════════════════════════════════ */
 
 const Icons = {
     logo(size = 48) {
@@ -159,7 +159,7 @@ const Icons = {
     play(size = 26) {
         return `
         <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5.2C8 4.5 8.8 4.1 9.4 4.5L18.5 10.3C19.1 10.7 19.1 11.6 18.5 12L9.4 17.8C8.8 18.2 8 17.8 8 17.1V5.2Z"/>
+            <path d="M8 5.2C8 4.5 8.8 4.1 9.4 4.5L18.5 10.3C19.1 10.7 19.1 11.6 18.5 12L9.4 17.8C8.8 18.2 8 17.1V5.2Z"/>
         </svg>`;
     },
 
@@ -218,6 +218,33 @@ const Icons = {
             <path d="M9 18L15 12L9 6"/>
         </svg>`;
     },
+
+    chevronDown(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9L12 15L18 9"/>
+        </svg>`;
+    },
+
+    info(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16V12"/>
+            <path d="M12 8H12.01"/>
+        </svg>`;
+    },
+
+    volume(size = 14) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>`;
+    },
+
+
 
     arrowRight(size = 12) {
         return `
@@ -369,6 +396,24 @@ const Icons = {
         <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
             <path d="M2 8L6 18H18L22 8L16 12L12 4L8 12L2 8Z"/>
         </svg>`;
+    },
+
+    lock(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>`;
+    },
+
+    medal(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 21s2.5-3 4-3 4 3 4 3"/>
+            <path d="M12 2v6"/>
+            <circle cx="12" cy="12" r="3"/>
+        </svg>`;
     }
 };
 
@@ -427,6 +472,7 @@ function injectIcons() {
         'settingsThemeIcon': () => Icons.user(16),
         'settingsAccentIcon': () => Icons.palette(16),
         'settingsSoundIcon': () => Icons.sound(16),
+        'settingsAvatarIcon': () => Icons.user(16),
 
         'onboardEmoji0': () => Icons.logo(64),
         'onboardEmoji1': () => Icons.user(64),

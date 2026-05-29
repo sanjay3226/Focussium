@@ -1,10 +1,33 @@
-/* ═══════════════════════════════════════════════════════════
-   FOCUSSIUM v2 PRO — MAIN APPLICATION
+﻿/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM v2 PRO — MAIN APPLICATION (ENHANCED)
 ═══════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────
+   CONFIGURATION & GAME RANKS
+   ───────────────────────────────────────────────────────── */
+const CONFIG = {
+    CLOCK_INTERVAL: 1000,
+    SAVE_DEBOUNCE: 1200,
+    TOAST_DURATION: 2600,
+    UNDO_DURATION: 4000,
+    TASK_ANIMATION_STAGGER: 0.04,
+    XP_PER_FOCUS_MINUTE: 10,
+    XP_PER_TASK: 50,
+    RANKS: {
+        1: { title: "Novice Flow 🧘", unlock: "Start your zen focus." },
+        2: { title: "Habit Builder 🏗️", unlock: "Cyber Neon & Aura Sunset accents!" },
+        3: { title: "Focus Disciple 📿", unlock: "Vibrant Retro Synth sound palette!" },
+        4: { title: "Productivity Elite ⚡", unlock: "4 Animated VIP Avatars in settings!" },
+        5: { title: "Zen Master 🪷", unlock: "Custom Color Swatch hex input!" },
+        6: { title: "Time Whisperer ⏳", unlock: "Mystic Nebula accent theme!" },
+        7: { title: "Deep Explorer 🌌", unlock: "Golden Celestial Aura decoration!" },
+        8: { title: "Zen Deity 👑", unlock: "Infinite Golden Aura & Elite Status!" }
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
    STATE
-───────────────────────────────────────────────────────── */
+   ───────────────────────────────────────────────────────── */
 const State = {
     defaults: {
         tasks: [],
@@ -18,11 +41,14 @@ const State = {
         onboarded: false,
         totalTasksCompleted: 0,
         totalFocusMinutes: 0,
+        level: 1,
         settings: {
             theme: 'dark',
             accent: 'royal',
             customHex: '',
             sound: true,
+            soundPalette: 'zen',
+            avatar: 'default',
             focusDur: 25,
             breakDur: 5,
             longDur: 15,
@@ -71,6 +97,85 @@ const ACCENTS = [
    UTILITIES
 ───────────────────────────────────────────────────────── */
 const Utils = {
+    async loadDailyQuote() {
+        const textEl = document.getElementById('dailyQuoteText');
+        const authEl = document.getElementById('dailyQuoteAuthor');
+        const sparkEl = document.getElementById('quoteSparkleIcon');
+        const bannerEl = document.getElementById('dailyQuoteCard');
+        if (!textEl || !authEl) return;
+
+        if (sparkEl) sparkEl.innerHTML = Icons.spark(16);
+        if (bannerEl) bannerEl.style.display = 'flex';
+
+        // Offline Fallback
+        const fallbackQuotes = [
+            { text: "Your mind is for having ideas, not holding them.", author: "David Allen" },
+            { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+            { text: "Focus is a matter of deciding what things you're not going to do.", author: "John Carmack" },
+            { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+            { text: "Do not seek to follow in the footsteps of the wise. Seek what they sought.", author: "Basho" },
+            { text: "Quiet the mind and the soul will speak.", author: "Ma Jaya Sati Bhagavati" },
+            { text: "Flow is the state of being completely involved in an activity for its own sake.", author: "Mihaly Csikszentmihalyi" },
+            { text: "Amateurs sit and wait for inspiration, the rest of us just get up and go to work.", author: "Stephen King" },
+            { text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca" },
+            { text: "You must be the change you wish to see in the world.", author: "Mahatma Gandhi" }
+        ];
+
+        const setQuote = (q) => {
+            textEl.innerHTML = `"${q.text}"`;
+            authEl.textContent = `— ${q.author || 'Unknown'}`;
+        };
+
+        try {
+            // Check cache
+            let cached = localStorage.getItem('focussium_quotes_cache');
+            let quotes = null;
+            if (cached) {
+                try {
+                    quotes = JSON.parse(cached);
+                } catch(e) {}
+            }
+
+            if (!quotes || !quotes.length) {
+                // Fetch from dummyjson first
+                const res = await fetch('https://dummyjson.com/quotes?limit=150');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.quotes && data.quotes.length) {
+                        quotes = data.quotes.map(q => ({ text: q.quote, author: q.author }));
+                    }
+                }
+                
+                // Fallback to type.fit if dummyjson fails
+                if (!quotes) {
+                    const res2 = await fetch('https://type.fit/api/quotes');
+                    if (res2.ok) {
+                        const data2 = await res2.json();
+                        if (data2 && data2.length) {
+                            quotes = data2.map(q => ({ text: q.text, author: q.author }));
+                        }
+                    }
+                }
+
+                if (quotes && quotes.length) {
+                    localStorage.setItem('focussium_quotes_cache', JSON.stringify(quotes));
+                }
+            }
+
+            if (quotes && quotes.length) {
+                const dayIndex = Math.floor(Date.now() / 86400000) % quotes.length;
+                setQuote(quotes[dayIndex]);
+            } else {
+                const dayIndex = Math.floor(Date.now() / 86400000) % fallbackQuotes.length;
+                setQuote(fallbackQuotes[dayIndex]);
+            }
+        } catch (e) {
+            console.error('Error fetching quotes:', e);
+            const dayIndex = Math.floor(Date.now() / 86400000) % fallbackQuotes.length;
+            setQuote(fallbackQuotes[dayIndex]);
+        }
+    },
+
     today() {
         const n = new Date();
         return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
@@ -97,6 +202,30 @@ const Utils = {
     generateId(prefix = 'id') {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     },
+
+    /** Returns a priority weight for sorting (lower = higher priority) */
+    priorityWeight(p) {
+        const weights = { high: 0, medium: 1, low: 2, none: 3 };
+        return weights[p] ?? 3;
+    },
+
+    /** Sort tasks: overdue first, then respect manual drag and drop order */
+    sortTasks(tasks) {
+        const today = this.today();
+        return [...tasks].sort((a, b) => {
+            const aOverdue = a.date && a.date < today && !a.completed ? 1 : 0;
+            const bOverdue = b.date && b.date < today && !b.completed ? 1 : 0;
+            if (bOverdue !== aOverdue) return bOverdue - aOverdue;
+            
+            // Respect manual reordering by comparing index in State.data.tasks
+            const aIdx = State.data.tasks.findIndex(t => t.id === a.id);
+            const bIdx = State.data.tasks.findIndex(t => t.id === b.id);
+            if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+            
+            return this.priorityWeight(a.priority) - this.priorityWeight(b.priority);
+        });
+    },
+
 
     weekDates(offset = 0) {
         const now = new Date();
@@ -145,6 +274,13 @@ const Utils = {
 };
 
 /* ─────────────────────────────────────────────────────────
+   ERROR HANDLER
+───────────────────────────────────────────────────────── */
+function handleError(context, error) {
+    console.warn(`[Focussium] ${context}:`, error);
+}
+
+/* ─────────────────────────────────────────────────────────
    STORAGE
 ───────────────────────────────────────────────────────── */
 const Storage = {
@@ -158,7 +294,8 @@ const Storage = {
                     ...parsed,
                     settings: { ...State.defaults.settings, ...(parsed.settings || {}) }
                 };
-            } catch {
+            } catch (e) {
+                handleError('Failed to parse local data', e);
                 return Utils.clone(State.defaults);
             }
         }
@@ -178,7 +315,8 @@ const Storage = {
         try {
             await FB.db.collection('users').doc(State.user.uid).set(Utils.clone(State.data));
             indicator.className = 'sync-indicator';
-        } catch {
+        } catch (e) {
+            handleError('Firestore save failed', e);
             indicator.className = 'sync-indicator error';
         }
     },
@@ -186,7 +324,7 @@ const Storage = {
     save() {
         this.saveLocal();
         clearTimeout(State.saveTimeout);
-        State.saveTimeout = setTimeout(() => this.saveRemote(), 1200);
+        State.saveTimeout = setTimeout(() => this.saveRemote(), CONFIG.SAVE_DEBOUNCE);
     }
 };
 
@@ -300,16 +438,39 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 });
 
 /* ─────────────────────────────────────────────────────────
-   TOAST
+   TOAST (with Undo support)
 ───────────────────────────────────────────────────────── */
 const Toast = {
     timeout: null,
+    undoTimeout: null,
+
     show(msg) {
         const el = document.getElementById('toast');
-        el.textContent = msg;
+        el.innerHTML = msg;
+        el.classList.remove('has-undo');
         el.classList.add('show');
         clearTimeout(this.timeout);
-        this.timeout = setTimeout(() => el.classList.remove('show'), 2600);
+        clearTimeout(this.undoTimeout);
+        this.timeout = setTimeout(() => el.classList.remove('show'), CONFIG.TOAST_DURATION);
+    },
+
+    showUndo(msg, undoFn) {
+        const el = document.getElementById('toast');
+        el.innerHTML = `<span>${msg}</span><button class="toast-undo-btn" id="toastUndoBtn">Undo</button>`;
+        el.classList.add('show', 'has-undo');
+        clearTimeout(this.timeout);
+        clearTimeout(this.undoTimeout);
+
+        const btn = document.getElementById('toastUndoBtn');
+        btn.onclick = () => {
+            clearTimeout(this.undoTimeout);
+            el.classList.remove('show', 'has-undo');
+            undoFn();
+        };
+
+        this.undoTimeout = setTimeout(() => {
+            el.classList.remove('show', 'has-undo');
+        }, CONFIG.UNDO_DURATION);
     }
 };
 
@@ -386,7 +547,8 @@ const Auth = {
             await FB.auth.signOut();
             State.data = Utils.clone(State.defaults);
             localStorage.removeItem('focussium_v2_data');
-        } catch {
+        } catch (e) {
+            handleError('Sign out failed', e);
             Toast.show('Sign out failed');
         }
     },
@@ -409,11 +571,14 @@ const Auth = {
                     } else {
                         State.data = Storage.load();
                     }
-                } catch {
+                } catch (e) {
+                    handleError('Firestore load failed, using local', e);
                     State.data = Storage.load();
                 }
 
-                document.getElementById('userAvatar').src = user.photoURL || '';
+                // Avatar with premium fallback/VIP display
+                Settings.applyAvatarDisplay();
+
                 document.getElementById('userEmailDisplay').textContent = user.email || '';
                 document.getElementById('loginScreen').classList.remove('show');
 
@@ -530,6 +695,13 @@ const Clock = {
         this.checkStreak();
     },
 
+    /** Starts the clock with 1-second updates for accuracy */
+    start() {
+        this.update();
+        if (State.clockInterval) clearInterval(State.clockInterval);
+        State.clockInterval = setInterval(() => this.update(), CONFIG.CLOCK_INTERVAL);
+    },
+
     checkStreak() {
         const today = Utils.today();
         if (State.data.lastVisit !== today) {
@@ -551,7 +723,175 @@ const Clock = {
 };
 
 /* ─────────────────────────────────────────────────────────
-   NAVIGATION
+   LEVELING, CONFETTI & DEITY GLOW ENGINE
+   ───────────────────────────────────────────────────────── */
+const Confetti = {
+    canvas: null,
+    ctx: null,
+    particles: [],
+    animationId: null,
+
+    init() {
+        this.canvas = document.getElementById('celebrationCanvas');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        window.addEventListener('resize', () => this.resize());
+        this.resize();
+    },
+
+    resize() {
+        if (this.canvas) {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        }
+    },
+
+    start() {
+        this.init();
+        if (!this.canvas) return;
+        this.particles = [];
+        const colors = [
+            getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#f5c842',
+            getComputedStyle(document.documentElement).getPropertyValue('--acl').trim() || '#ffdd6b',
+            '#ff5757', '#3dd9b8', '#9d6eff', '#00e5ff'
+        ];
+
+        for (let i = 0; i < 150; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height - this.canvas.height,
+                r: Math.random() * 5 + 4,
+                d: Math.random() * this.canvas.height,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.random() * 10 - 5,
+                tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                tiltAngle: 0,
+                speedY: Math.random() * 3 + 2,
+                speedX: Math.random() * 2 - 1
+            });
+        }
+
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        this.draw();
+    },
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        let active = false;
+
+        this.particles.forEach((p, idx) => {
+            p.tiltAngle += p.tiltAngleIncremental;
+            p.y += p.speedY;
+            p.x += p.speedX + Math.sin(p.tiltAngle) * 0.5;
+            p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+
+            if (p.y < this.canvas.height + p.r * 2) {
+                active = true;
+            }
+
+            this.ctx.beginPath();
+            this.ctx.lineWidth = p.r;
+            this.ctx.strokeStyle = p.color;
+            this.ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+            this.ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+            this.ctx.stroke();
+        });
+
+        if (active) {
+            this.animationId = requestAnimationFrame(() => this.draw());
+        } else {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    }
+};
+
+const Level = {
+    getXP() {
+        const totalFocus = State.data.totalFocusMinutes || 0;
+        const totalTasks = State.data.totalTasksCompleted || 0;
+        return (totalFocus * CONFIG.XP_PER_FOCUS_MINUTE) + (totalTasks * CONFIG.XP_PER_TASK);
+    },
+
+    getCurrentLevel() {
+        const xp = this.getXP();
+        return Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
+    },
+
+    update() {
+        const xp = this.getXP();
+        const level = this.getCurrentLevel();
+
+        const xpForCurrentLevel = 100 * Math.pow(level - 1, 2);
+        const xpForNextLevel = 100 * Math.pow(level, 2);
+        const xpInCurrentLevel = xp - xpForCurrentLevel;
+        const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
+        const progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
+
+        // Sync level and trigger celebration if level increased
+        if (State.data.level === undefined) {
+            State.data.level = level;
+        } else if (level > State.data.level && State.data.onboarded) {
+            this.celebrate(level);
+            State.data.level = level;
+            Storage.save();
+        } else if (level < State.data.level) {
+            State.data.level = level;
+            Storage.save();
+        }
+
+        const badge = document.getElementById('userLevelBadge');
+        if (badge) badge.textContent = level;
+
+        const wrapper = document.querySelector('.avatar-wrapper');
+        if (wrapper) {
+            wrapper.classList.toggle('level-8-plus', level >= 8);
+        }
+
+        const barContainer = document.querySelector('.xp-bar-container');
+        if (barContainer) {
+            barContainer.title = `Level ${level} | ${xp} XP | ${Math.ceil(xpNeededForNext - xpInCurrentLevel)} XP to Level ${level + 1}`;
+        }
+
+        const bar = document.getElementById('xpBarFill');
+        if (bar) bar.style.width = `${progressPercent}%`;
+
+        // Proactively update Settings display ifSettings is defined
+        if (window.Settings && typeof Settings.render === 'function') {
+            Settings.renderAccents();
+            Settings.renderAvatars();
+            Settings.renderSoundPalette();
+        }
+    },
+
+    celebrate(newLvl) {
+        Sound.levelUp();
+        Confetti.start();
+
+        const rank = CONFIG.RANKS[newLvl] || { title: "Focused Creator 💫", unlock: "New customization rewards!" };
+
+        const modal = document.getElementById('levelUpModal');
+        const badgeVal = document.getElementById('levelUpBadgeVal');
+        const titleText = document.getElementById('levelUpTitleText');
+        const subText = document.getElementById('levelUpSubText');
+        const unlockText = document.getElementById('levelUpUnlockText');
+
+        if (badgeVal) badgeVal.textContent = newLvl;
+        if (titleText) titleText.textContent = rank.title;
+        if (subText) subText.textContent = `You reached Level ${newLvl}!`;
+        if (unlockText) unlockText.textContent = rank.unlock;
+
+        if (modal) modal.classList.add('on');
+    },
+
+    claimVibe() {
+        const modal = document.getElementById('levelUpModal');
+        if (modal) modal.classList.remove('on');
+        Sound.click();
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
+   NAVIGATION (with badge support)
 ───────────────────────────────────────────────────────── */
 const Nav = {
     go(page) {
@@ -573,39 +913,40 @@ const Nav = {
         if (page === 'tasks') Tasks.render();
         if (page === 'dump') Dump.render();
         if (page === 'report') Report.render();
+
+        this.updateBadges();
+    },
+
+    /** Updates nav item badges with pending counts */
+    updateBadges() {
+        const pendingTasks = Tasks.getVisibleToday().filter(t => !t.completed).length;
+        const pendingDumps = State.data.dumps.length;
+
+        this._setBadge('navIconTasks', pendingTasks);
+        this._setBadge('navIconDump', pendingDumps);
+    },
+
+    _setBadge(parentId, count) {
+        const parent = document.getElementById(parentId)?.closest('.nav-item');
+        if (!parent) return;
+        let badge = parent.querySelector('.nav-badge');
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'nav-badge';
+                parent.appendChild(badge);
+            }
+            badge.textContent = count > 99 ? '99+' : count;
+        } else if (badge) {
+            badge.remove();
+        }
     }
 };
 
 /* ─────────────────────────────────────────────────────────
    LEVELING
 ───────────────────────────────────────────────────────── */
-const Level = {
-    getXP() {
-        const totalFocus = State.data.totalFocusMinutes || 0;
-        const totalTasks = State.data.totalTasksCompleted || 0;
-        return (totalFocus * 10) + (totalTasks * 50);
-    },
 
-    update() {
-        const xp = this.getXP();
-        const level = Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
-
-        const xpForCurrentLevel = 100 * Math.pow(level - 1, 2);
-        const xpForNextLevel = 100 * Math.pow(level, 2);
-        const xpInCurrentLevel = xp - xpForCurrentLevel;
-        const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
-        const progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
-
-        const badge = document.getElementById('userLevelBadge');
-        if (badge) badge.textContent = level;
-
-        const barContainer = document.querySelector('.xp-bar-container');
-        if (barContainer) barContainer.title = `Level ${level} | ${xp} XP total`;
-
-        const bar = document.getElementById('xpBarFill');
-        if (bar) bar.style.width = `${progressPercent}%`;
-    }
-};
 
 /* ─────────────────────────────────────────────────────────
    TASKS
@@ -657,7 +998,19 @@ const Tasks = {
         }
 
         let subtasksHTML = '';
+        let subtasksProgressHTML = '';
         if (task.subtasks?.length) {
+            const doneCount = task.subtasks.filter(s => s.done).length;
+            const percent = Math.round((doneCount / task.subtasks.length) * 100);
+            
+            subtasksProgressHTML = `
+            <div class="task-steps-progress" title="${doneCount}/${task.subtasks.length} steps completed">
+                <div class="task-steps-progress-bar">
+                    <div class="task-steps-progress-fill" style="width: ${percent}%"></div>
+                </div>
+                <span class="task-steps-progress-text">${doneCount}/${task.subtasks.length} steps</span>
+            </div>`;
+
             subtasksHTML = `<div class="task-subtasks">` +
                 task.subtasks.map((s, idx) => `
                     <div class="task-subtask">
@@ -671,16 +1024,30 @@ const Tasks = {
         }
 
         const priorityClass = task.priority && task.priority !== 'none' ? `priority-${task.priority}` : '';
+        const hasDetails = task.notes || task.subtasks?.length;
+        const expandChevronHTML = hasDetails ? `<span class="task-expand-chevron">${Icons.chevronDown(10)}</span>` : '';
 
         return `
-        <div class="task-item ${priorityClass} ${task.completed ? 'completed' : ''}" data-id="${task.id}" style="animation-delay:${index * 0.04}s">
+        <div class="task-item ${priorityClass} ${task.completed ? 'completed' : ''}" 
+             data-id="${task.id}" 
+             draggable="true" 
+             ondragstart="Tasks.dragStart(event, '${task.id}')"
+             ondragover="Tasks.dragOver(event)"
+             ondragleave="Tasks.dragLeave(event)"
+             ondrop="Tasks.dragDrop(event, '${task.id}')"
+             ondragend="Tasks.dragEnd(event)"
+             style="animation-delay:${index * CONFIG.TASK_ANIMATION_STAGGER}s">
             <div class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="Tasks.toggle('${task.id}')">
                 ${Icons.check(12)}
             </div>
-            <div class="task-content" onclick="Tasks.openEdit('${task.id}')">
-                <div class="task-title">${Utils.escape(task.text)}</div>
+            <div class="task-content" onclick="Tasks.toggleExpand(event, '${task.id}')">
+                <div class="task-title-row" style="display:flex; align-items:center; justify-content:space-between; gap: 8px;">
+                    <div class="task-title">${Utils.escape(task.text)}</div>
+                    ${expandChevronHTML}
+                </div>
                 ${task.notes ? `<div class="task-notes">${Utils.escape(task.notes)}</div>` : ''}
                 <div class="task-meta">${metaHTML}</div>
+                ${subtasksProgressHTML}
                 ${subtasksHTML}
             </div>
             <div class="task-actions">
@@ -692,6 +1059,82 @@ const Tasks = {
                 </button>
             </div>
         </div>`;
+    },
+
+    dragStart(e, id) {
+        e.dataTransfer.setData('text/plain', id);
+        e.currentTarget.classList.add('dragging');
+        setTimeout(() => {
+            const el = document.querySelector(`.task-item[data-id="${id}"]`);
+            if (el) el.style.opacity = '0.3';
+        }, 0);
+    },
+
+    dragOver(e) {
+        e.preventDefault();
+        const taskItem = e.currentTarget.closest('.task-item');
+        if (taskItem && !taskItem.classList.contains('dragging')) {
+            taskItem.classList.add('drag-over');
+        }
+    },
+
+    dragLeave(e) {
+        const taskItem = e.currentTarget.closest('.task-item');
+        if (taskItem) {
+            taskItem.classList.remove('drag-over');
+        }
+    },
+
+    dragDrop(e, targetId) {
+        e.preventDefault();
+        const id = e.dataTransfer.getData('text/plain');
+        if (id === targetId) return;
+
+        const tasks = State.data.tasks;
+        const dragIndex = tasks.findIndex(t => t.id === id);
+        const targetIndex = tasks.findIndex(t => t.id === targetId);
+
+        if (dragIndex !== -1 && targetIndex !== -1) {
+            const [draggedTask] = tasks.splice(dragIndex, 1);
+            tasks.splice(targetIndex, 0, draggedTask);
+            Storage.save();
+            Tasks.render();
+            // Sync dashboard tasks too
+            if (document.getElementById('homeTasksPreview')) {
+                const todayTasks = Tasks.getVisibleToday();
+                Home.renderTaskPreview(todayTasks);
+            }
+            Sound.click();
+        }
+    },
+
+    dragEnd(e) {
+        const dragging = document.querySelector('.task-item.dragging');
+        if (dragging) {
+            dragging.classList.remove('dragging');
+            dragging.style.opacity = '';
+        }
+        document.querySelectorAll('.task-item.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+        });
+    },
+
+    toggleExpand(e, taskId) {
+        if (e.target.closest('.task-checkbox') || e.target.closest('.subtask-checkbox') || e.target.closest('.task-actions') || e.target.closest('.task-action-btn')) {
+            return;
+        }
+
+        const taskItem = document.querySelector(`.task-item[data-id="${taskId}"]`);
+        if (!taskItem) return;
+
+        const hasDetails = taskItem.querySelector('.task-notes') || taskItem.querySelector('.task-subtasks');
+        if (hasDetails) {
+            e.stopPropagation();
+            taskItem.classList.toggle('expanded');
+            Sound.click();
+        } else {
+            this.openEdit(taskId);
+        }
     },
 
     render() {
@@ -719,25 +1162,76 @@ const Tasks = {
             ? todayTasks
             : todayTasks.filter(t => t.list === State.data.currentList);
 
+        const activeFilter = State.data.settings?.taskFilter || 'all';
+        const totalCount = filtered.length;
+        const completedCount = filtered.filter(t => t.completed).length;
+        const pct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+
+        const toolsBar = document.getElementById('taskToolsBar');
+        if (toolsBar) {
+            toolsBar.innerHTML = `
+            <div class="task-progress-kpi">
+                <span class="task-progress-kpi-text">${completedCount}/${totalCount} Done</span>
+                <div class="task-progress-kpi-bar-container">
+                    <div class="task-progress-kpi-bar-fill" style="width: ${pct}%"></div>
+                </div>
+                <span class="task-progress-kpi-pct">${pct}%</span>
+            </div>
+            <div class="task-filter-group">
+                <button class="task-filter-btn ${activeFilter === 'all' ? 'active' : ''}" onclick="Tasks.setFilter('all')">All</button>
+                <button class="task-filter-btn ${activeFilter === 'pending' ? 'active' : ''}" onclick="Tasks.setFilter('pending')">Pending</button>
+                <button class="task-filter-btn ${activeFilter === 'high' ? 'active' : ''}" onclick="Tasks.setFilter('high')">High 🔥</button>
+            </div>`;
+        }
+
+        let renderTasks = filtered;
+        if (activeFilter === 'pending') {
+            renderTasks = filtered.filter(t => !t.completed);
+        } else if (activeFilter === 'high') {
+            renderTasks = filtered.filter(t => t.priority === 'high');
+        }
+
         const container = document.getElementById('tasksContainer');
 
-        if (!filtered.length) {
+        if (!renderTasks.length) {
+            const hour = new Date().getHours();
+            let emptyMsg = 'Nothing here yet.<br>Tap + to add something meaningful.';
+            if (hour < 10) emptyMsg = 'Fresh morning, fresh start.<br>Tap + to set your intentions.';
+            else if (hour < 14) emptyMsg = 'Afternoon\'s wide open.<br>Tap + to capture what matters.';
+            else if (hour < 20) emptyMsg = 'Evening clarity.<br>Tap + to plan tomorrow.';
+            else emptyMsg = 'Night owl mode.<br>Tap + to dump tomorrow\'s thoughts.';
             container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">${Icons.tasks(56)}</div>
-                <p>Nothing here yet.<br>Tap + to add something meaningful.</p>
+                <p>${emptyMsg}</p>
             </div>`;
             return;
         }
 
-        const openTasks = filtered.filter(t => !t.completed);
-        const doneTasks = filtered.filter(t => t.completed);
+        const openTasks = Utils.sortTasks(renderTasks.filter(t => !t.completed));
+        const doneTasks = renderTasks.filter(t => t.completed);
 
-        container.innerHTML = [...openTasks, ...doneTasks].map((t, i) => this.taskHTML(t, i)).join('');
+        let hintHTML = '';
+        if (openTasks.length > 1) {
+            hintHTML = `
+            <div class="sorting-hint">
+                ${Icons.info(11)} Drag tasks to reorder manually (Overdue items stay pinned on top).
+            </div>`;
+        }
+
+        container.innerHTML = hintHTML + [...openTasks, ...doneTasks].map((t, i) => this.taskHTML(t, i)).join('');
     },
 
     setList(list) {
         State.data.currentList = list;
+        Storage.save();
+        this.render();
+        Sound.click();
+    },
+
+    setFilter(filter) {
+        if (!State.data.settings) State.data.settings = {};
+        State.data.settings.taskFilter = filter;
         Storage.save();
         this.render();
         Sound.click();
@@ -919,6 +1413,7 @@ const Tasks = {
         document.getElementById('addTaskModal').classList.remove('on');
         this.render();
         Home.render();
+        Nav.updateBadges();
         Sound.success();
     },
 
@@ -929,6 +1424,7 @@ const Tasks = {
         }
     },
 
+    /** Toggle task completion — correctly adjusts XP in both directions */
     toggle(id) {
         const task = State.data.tasks.find(t => t.id === id);
         if (!task) return;
@@ -938,24 +1434,35 @@ const Tasks = {
 
         if (task.completed) {
             State.data.totalTasksCompleted = (State.data.totalTasksCompleted || 0) + 1;
-            Level.update();
+        } else {
+            // Decrement XP when un-completing a task
+            State.data.totalTasksCompleted = Math.max(0, (State.data.totalTasksCompleted || 0) - 1);
         }
+        Level.update();
 
         Storage.save();
 
         if (task.completed) {
             Sound.success();
             const el = document.querySelector(`[data-id="${id}"]`);
-            if (el) el.classList.add('completing');
+            if (el) {
+                el.classList.add('completing');
+                const rect = el.getBoundingClientRect();
+                if (window.Particles) {
+                    Particles.spawnExplosion(rect.left + 24, rect.top + 24, 25);
+                }
+            }
             setTimeout(() => {
                 this.render();
                 Home.render();
+                Nav.updateBadges();
                 if (State.currentPage === 'report') Report.render();
             }, 350);
         } else {
             Sound.click();
             this.render();
             Home.render();
+            Nav.updateBadges();
             if (State.currentPage === 'report') Report.render();
         }
     },
@@ -970,14 +1477,30 @@ const Tasks = {
         Sound.click();
     },
 
+    /** Remove task with undo support */
     remove(id) {
+        const removedTask = State.data.tasks.find(t => t.id === id);
         State.data.tasks = State.data.tasks.filter(t => t.id !== id);
         Storage.save();
         this.render();
         Home.render();
+        Nav.updateBadges();
         if (State.currentPage === 'report') Report.render();
         Sound.delete();
-        Toast.show('Task removed');
+
+        if (removedTask) {
+            Toast.showUndo('Task removed', () => {
+                State.data.tasks.unshift(removedTask);
+                Storage.save();
+                this.render();
+                Home.render();
+                Nav.updateBadges();
+                Sound.success();
+                Toast.show('Task restored');
+            });
+        } else {
+            Toast.show('Task removed');
+        }
     },
 
     summonRepeats() {
@@ -1043,12 +1566,15 @@ const Dump = {
         ta.value = '';
         Storage.save();
         this.render();
+        Nav.updateBadges();
         Sound.success();
         Toast.show('Thought captured');
     },
 
     render() {
         const container = document.getElementById('dumpsContainer');
+
+        this.updateMoodUI();
 
         if (!State.data.dumps.length) {
             container.innerHTML = `
@@ -1066,7 +1592,7 @@ const Dump = {
                 dt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' });
 
             return `
-            <div class="dump-card" style="animation-delay:${i * 0.04}s">
+            <div class="dump-card" style="animation-delay:${i * CONFIG.TASK_ANIMATION_STAGGER}s">
                 <div class="dump-text">${Utils.escape(d.text)}</div>
                 <div class="dump-footer">
                     <span class="dump-time">${time}</span>
@@ -1077,6 +1603,47 @@ const Dump = {
                 </div>
             </div>`;
         }).join('');
+    },
+
+    updateMoodUI() {
+        const icon = document.getElementById('moodLoggerIcon');
+        if (icon) icon.innerHTML = Icons.spark(12);
+
+        if (!State.data.moods) State.data.moods = [];
+        const today = Utils.today();
+        const todayMood = State.data.moods.find(m => m.date === today)?.mood || '';
+
+        document.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.classList.contains(todayMood));
+        });
+    },
+
+    logMood(moodType) {
+        if (!State.data.moods) State.data.moods = [];
+        const today = Utils.today();
+        const existingIndex = State.data.moods.findIndex(m => m.date === today);
+
+        const moodEntry = {
+            date: today,
+            time: new Date().toLocaleTimeString(),
+            mood: moodType
+        };
+
+        if (existingIndex !== -1) {
+            State.data.moods[existingIndex] = moodEntry;
+        } else {
+            State.data.moods.push(moodEntry);
+        }
+
+        Storage.save();
+        this.updateMoodUI();
+        Sound.success();
+        Toast.show(`Vibe logged: ${moodType.toUpperCase()}!`);
+        
+        // Render changes on vibe page too
+        if (document.getElementById('reportCardDayDetail')) {
+            Report.render();
+        }
     },
 
     toTask(id) {
@@ -1103,6 +1670,7 @@ const Dump = {
         this.render();
         Tasks.render();
         Home.render();
+        Nav.updateBadges();
         Sound.success();
         Toast.show('Converted to task');
     },
@@ -1111,6 +1679,7 @@ const Dump = {
         State.data.dumps = State.data.dumps.filter(d => d.id !== id);
         Storage.save();
         this.render();
+        Nav.updateBadges();
         Sound.delete();
     }
 };
@@ -1156,7 +1725,6 @@ const Home = {
 
         document.getElementById('homeWeekScore').textContent = score;
 
-        // Trend indicator
         const trendEl = document.getElementById('homeWeekTrend');
         if (diff > 0) {
             trendEl.innerHTML = `<span class="trend-up">${Icons.trendUp(11)} +${diff}</span>`;
@@ -1166,7 +1734,6 @@ const Home = {
             trendEl.innerHTML = `<span class="trend-flat">— same</span>`;
         }
 
-        // Mini SVG line chart (simplified + calmer visual rhythm)
         const values = w.days.map(d => d.tasks + Math.round(d.focus / 25));
         const max = Math.max(...values, 1);
         const W = 320, H = 72;
@@ -1240,7 +1807,7 @@ const Home = {
     },
 
     renderTaskPreview(todayTasks) {
-        const preview = todayTasks.filter(t => !t.completed).slice(0, 4);
+        const preview = Utils.sortTasks(todayTasks.filter(t => !t.completed)).slice(0, 4);
         const container = document.getElementById('homeTasksPreview');
 
         if (!preview.length) {
@@ -1256,8 +1823,7 @@ const Home = {
 };
 
 /* ─────────────────────────────────────────────────────────
-/* ─────────────────────────────────────────────────────────
-   POMODORO
+   POMODORO (with browser notifications)
 ───────────────────────────────────────────────────────── */
 const Pomo = {
     liveInsights: [
@@ -1283,6 +1849,57 @@ const Pomo = {
         this.renderDots();
         this.updatePlayButton(false);
         this.cycleInsight(true);
+        this.initAmbientUI();
+    },
+
+    initAmbientUI() {
+        const icon = document.getElementById('ambientVolIcon');
+        if (icon) icon.innerHTML = Icons.volume(12);
+
+        if (!State.data.settings) State.data.settings = {};
+        const sound = State.data.settings.ambientSound || 'none';
+        const vol = State.data.settings.ambientVol !== undefined ? State.data.settings.ambientVol : 40;
+
+        document.querySelectorAll('.ambient-icon-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.sound === sound);
+        });
+
+        const slider = document.getElementById('ambientVolumeSlider');
+        if (slider) {
+            slider.value = vol;
+            slider.style.setProperty('--val', vol + '%');
+        }
+    },
+
+    setAmbient(type) {
+        if (!State.data.settings) State.data.settings = {};
+        State.data.settings.ambientSound = type;
+        Storage.save();
+
+        document.querySelectorAll('.ambient-icon-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.sound === type);
+        });
+
+        if (State.pomo.running) {
+            const vol = State.data.settings.ambientVol !== undefined ? State.data.settings.ambientVol : 40;
+            Sound.startAmbient(type, vol / 100);
+        } else if (type === 'none') {
+            Sound.stopAmbient();
+        }
+        Sound.click();
+    },
+
+    setAmbientVolume(val) {
+        if (!State.data.settings) State.data.settings = {};
+        State.data.settings.ambientVol = parseInt(val);
+        Storage.save();
+
+        Sound.setAmbientVolume(parseInt(val) / 100);
+
+        const slider = document.getElementById('ambientVolumeSlider');
+        if (slider) {
+            slider.style.setProperty('--val', val + '%');
+        }
     },
 
     setMode(mode) {
@@ -1321,7 +1938,6 @@ const Pomo = {
             return;
         }
 
-        // Fade out
         el.classList.remove('show');
         
         setTimeout(() => {
@@ -1333,7 +1949,6 @@ const Pomo = {
             this.currentInsightIndex = nextIndex;
             el.textContent = `"${this.liveInsights[this.currentInsightIndex]}"`;
             
-            // Fade in
             requestAnimationFrame(() => el.classList.add('show'));
         }, 600);
     },
@@ -1344,6 +1959,7 @@ const Pomo = {
             State.pomo.running = false;
             this.updatePlayButton(false);
             this.updateRunningState(false);
+            Sound.stopAmbient();
         } else {
             if (State.pomo.left <= 0) this.setMode(State.pomo.mode);
 
@@ -1352,14 +1968,17 @@ const Pomo = {
             this.updateRunningState(true);
             Sound.timerStart();
 
-            // Initial force-show when starting play if it was paused
+            // Auto start ambient noise
+            const sound = State.data.settings?.ambientSound || 'none';
+            const vol = State.data.settings?.ambientVol !== undefined ? State.data.settings.ambientVol : 40;
+            Sound.startAmbient(sound, vol / 100);
+
             this.cycleInsight(true);
 
             State.pomo.interval = setInterval(() => {
                 State.pomo.left--;
                 this.updateDisplay();
 
-                // Rotate insight every 60 seconds
                 if (State.pomo.mode === 'focus' && State.pomo.left % 60 === 0 && State.pomo.left > 0) {
                     this.cycleInsight();
                 }
@@ -1369,6 +1988,7 @@ const Pomo = {
                     State.pomo.running = false;
                     this.updatePlayButton(false);
                     this.updateRunningState(false);
+                    Sound.stopAmbient();
                     this.done();
                 }
             }, 1000);
@@ -1386,7 +2006,6 @@ const Pomo = {
     updateRunningState(running) {
         document.getElementById('pomoTimer').classList.toggle('running', running);
         
-        // Zen mode hides UI elements when focusing
         const isZenMode = running && State.pomo.mode === 'focus';
         document.getElementById('app').classList.toggle('focus-zen', isZenMode);
     },
@@ -1397,6 +2016,7 @@ const Pomo = {
         this.updatePlayButton(false);
         this.updateRunningState(false);
         this.setMode(State.pomo.mode);
+        Sound.stopAmbient();
         Sound.click();
     },
 
@@ -1405,11 +2025,13 @@ const Pomo = {
         State.pomo.running = false;
         this.updatePlayButton(false);
         this.updateRunningState(false);
+        Sound.stopAmbient();
         this.done();
     },
 
     done() {
         Sound.timerDone();
+        this.sendNotification();
 
         if (State.pomo.mode === 'focus') {
             State.pomo.count++;
@@ -1475,16 +2097,50 @@ const Pomo = {
 
     enterFullscreen() {
         document.getElementById('fullscreenPomo').classList.add('on');
-        try { document.documentElement.requestFullscreen(); } catch { }
+        try { document.documentElement.requestFullscreen(); } catch (e) {}
+        // Escape key exits fullscreen pomo
+        if (!Pomo._escListener) {
+            Pomo._escListener = (e) => { if (e.key === 'Escape') Pomo.exitFullscreen(); };
+            document.addEventListener('keydown', Pomo._escListener);
+        }
         Sound.click();
     },
 
     exitFullscreen() {
         document.getElementById('fullscreenPomo').classList.remove('on');
-        try {
-            if (document.fullscreenElement) document.exitFullscreen();
-        } catch { }
+        try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+        if (Pomo._escListener) {
+            document.removeEventListener('keydown', Pomo._escListener);
+            Pomo._escListener = null;
+        }
         Sound.click();
+    },
+
+    /** Request browser notification permission on first use */
+    requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    },
+
+    /** Send browser notification when timer completes */
+    sendNotification() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        try {
+            const labels = { focus: '🔥 Focus session complete!', break: '☕ Break is over!', long: '🌟 Long break done!' };
+            const body = State.pomo.mode === 'focus'
+                ? `Great work! You completed ${State.data.settings.focusDur} minutes of deep focus.`
+                : 'Time to get back to work!';
+            new Notification(labels[State.pomo.mode] || 'Timer done!', {
+                body,
+                icon: 'icon-192.png',
+                badge: 'icon-192.png',
+                tag: 'focussium-pomo',
+                silent: false
+            });
+        } catch (e) {
+            handleError('Notification failed', e);
+        }
     }
 };
 
@@ -1498,6 +2154,14 @@ document.addEventListener('keydown', e => {
    REPORT
 ───────────────────────────────────────────────────────── */
 const Report = {
+    toggleCollapse(cardId) {
+        const card = document.getElementById(cardId);
+        if (card) {
+            card.classList.toggle('expanded');
+            Sound.click();
+        }
+    },
+
     getScore(w) {
         const weekTasks = State.data.tasks.filter(t => {
             if (!t.date) return true;
@@ -1570,6 +2234,25 @@ const Report = {
         Sound.click();
     },
 
+    setChartTab(tab) {
+        State.reportChartTab = tab;
+        
+        const btnTasks = document.getElementById('chartTabTasksBtn');
+        const btnFocus = document.getElementById('chartTabFocusBtn');
+        if (btnTasks && btnFocus) {
+            btnTasks.classList.toggle('active', tab === 'tasks');
+            btnFocus.classList.toggle('active', tab === 'focus');
+        }
+
+        const w = Utils.weekData(State.weekOffset);
+        if (tab === 'tasks') {
+            this.drawChart('analyticsChart', w.days.map(d => d.tasks), w.days.map(d => d.name), 'tasks');
+        } else {
+            this.drawChart('analyticsChart', w.days.map(d => d.focus), w.days.map(d => d.name), 'focus');
+        }
+        Sound.click();
+    },
+
     render() {
         const w = Utils.weekData(State.weekOffset);
         const dates = Utils.weekDates(State.weekOffset);
@@ -1593,16 +2276,27 @@ const Report = {
             State.selectedReportDate = Utils.today();
         }
 
+        if (!State.reportChartTab) {
+            State.reportChartTab = 'tasks';
+        }
+
         this.renderModePanel(w, m);
         this.applyModeVisibility();
         this.renderScoreHero(w);
         this.renderStats(w);
         this.renderHeatmap(w);
-        this.drawChart('tasksChart', w.days.map(d => d.tasks), w.days.map(d => d.name), 'tasks');
-        this.drawChart('focusChart', w.days.map(d => d.focus), w.days.map(d => d.name), 'focus');
+        
+        this.setChartTab(State.reportChartTab);
+
         this.renderMonthOverview(m);
         this.renderDayDetails(w, m);
         this.renderInsights(w, m);
+
+        const chevrons = ['reportHeatChevron', 'reportAnalyticsChevron', 'reportMonthChevron', 'reportDayChevron'];
+        chevrons.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = Icons.chevronDown(12);
+        });
     },
 
     applyModeVisibility() {
@@ -1772,7 +2466,25 @@ const Report = {
         const breakdown = this.getScoreBreakdown(w);
 
         document.getElementById('reportScoreValue').textContent = score;
-        document.getElementById('reportScoreFill').style.width = `${score}%`;
+
+        const circle = document.getElementById('reportVibeGaugeCircle');
+        if (circle) {
+            const r = 60;
+            const circ = 2 * Math.PI * r;
+            circle.style.strokeDasharray = circ;
+            circle.style.strokeDashoffset = circ * (1 - score / 100);
+        }
+
+        const titleEl = document.getElementById('reportVibeTitle');
+        if (titleEl) {
+            let vibe = "Resting Flow";
+            if (score >= 90) vibe = "Transcendental Flow 👑";
+            else if (score >= 75) vibe = "Elite Momentum ⚡";
+            else if (score >= 55) vibe = "Active Rhythm 🔥";
+            else if (score >= 35) vibe = "Rising Focus 📈";
+            
+            titleEl.textContent = vibe;
+        }
 
         document.getElementById('scoreBreakdown').innerHTML = `
             <div class="score-breakdown-item">
@@ -1848,26 +2560,42 @@ const Report = {
 
         const dateObj = new Date(`${selected.key}T00:00:00`);
         const label = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-        document.getElementById('reportDayLabel').textContent = `Day Details — ${label}`;
+        document.getElementById('reportDayLabel').textContent = `Day Spotlight — ${label}`;
 
-        const completedTasks = State.data.tasks
-            .filter(t => t.completed && t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === selected.key)
-            .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
-        const openDue = State.data.tasks
-            .filter(t => !t.completed && t.date === selected.key);
-        const focusSessions = State.data.pomo
-            .filter(p => p.date === selected.key);
+        const completedTasks = State.data.tasks.filter(t => 
+            t.completed && t.completedAt && 
+            new Date(t.completedAt).toISOString().split('T')[0] === selected.key
+        ).sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0));
 
-        const focusByMode = focusSessions.reduce((acc, s) => {
-            acc[s.mode || 'focus'] = (acc[s.mode || 'focus'] || 0) + s.dur;
-            return acc;
-        }, {});
+        const openDue = State.data.tasks.filter(t => !t.completed && t.date === selected.key);
+
+        const focusSessions = State.data.pomo.filter(p => p.date === selected.key);
+
+        const todayMoodEntry = (State.data.moods || []).find(m => m.date === selected.key);
+        let moodHTML = '';
+        if (todayMoodEntry) {
+            const moodMap = {
+                calm: { label: 'Calm Zen', emoji: '🧘', color: '#2ec4b6' },
+                high: { label: 'Sparked Energy', emoji: '⚡', color: '#ff9f1c' },
+                flow: { label: 'Deep Flow State', emoji: '🌊', color: 'var(--ac)' },
+                tired: { label: 'Restful Recovery', emoji: '💤', color: '#9d6eff' },
+                clouded: { label: 'Clouded Mind', emoji: '☁️', color: '#8c9ab0' }
+            };
+            const mapping = moodMap[todayMoodEntry.mood] || { label: todayMoodEntry.mood, emoji: '✨', color: 'var(--ac)' };
+            
+            moodHTML = `
+            <span class="day-meta-pill" style="border-color: ${mapping.color}">
+                <span class="mood-indicator-dot ${todayMoodEntry.mood}"></span>
+                ${mapping.emoji} ${mapping.label}
+            </span>`;
+        }
 
         document.getElementById('dayDetailMeta').innerHTML = `
             <span class="day-meta-pill"><span>${Icons.calendar(10)}</span>${selected.key}</span>
-            <span class="day-meta-pill"><span>${Icons.check(10)}</span>${completedTasks.length} completed</span>
-            <span class="day-meta-pill"><span>${Icons.clock(10)}</span>${selected.focus} focus min</span>
-            <span class="day-meta-pill"><span>${Icons.tasks(10)}</span>${openDue.length} due pending</span>
+            <span class="day-meta-pill"><span>${Icons.check(10)}</span>${completedTasks.length} Completed</span>
+            <span class="day-meta-pill"><span>${Icons.clock(10)}</span>${selected.focus}m Focus</span>
+            <span class="day-meta-pill"><span>${Icons.tasks(10)}</span>${openDue.length} Pending</span>
+            ${moodHTML}
         `;
 
         document.getElementById('dayDetailGrid').innerHTML = `
@@ -1876,7 +2604,7 @@ const Report = {
                 <div class="day-detail-kpi-value">${completedTasks.length}</div>
             </div>
             <div class="day-detail-kpi">
-                <div class="day-detail-kpi-label">Pending (Due That Day)</div>
+                <div class="day-detail-kpi-label">Pending Due</div>
                 <div class="day-detail-kpi-value">${openDue.length}</div>
             </div>
             <div class="day-detail-kpi">
@@ -1884,26 +2612,64 @@ const Report = {
                 <div class="day-detail-kpi-value">${focusSessions.length}</div>
             </div>
             <div class="day-detail-kpi">
-                <div class="day-detail-kpi-label">Deep Focus Minutes</div>
-                <div class="day-detail-kpi-value">${focusByMode.focus || 0}m</div>
+                <div class="day-detail-kpi-label">Total Rhythm</div>
+                <div class="day-detail-kpi-value">${completedTasks.length + focusSessions.length} Act.</div>
             </div>
         `;
 
-        const completedHtml = completedTasks.length
-            ? completedTasks.slice(0, 6).map(t => `<div class="day-detail-item done">${Utils.escape(t.text)}</div>`).join('')
-            : `<div class="day-detail-empty">No completed tasks logged for this day.</div>`;
-        const pendingHtml = openDue.length
-            ? openDue.slice(0, 4).map(t => `<div class="day-detail-item pending">${Utils.escape(t.text)}</div>`).join('')
-            : `<div class="day-detail-empty">No pending tasks due that day.</div>`;
+        const timeline = [];
 
-        document.getElementById('dayDetailList').innerHTML = `
-            <div class="day-detail-col">
-                <div class="day-detail-col-title">What got done</div>
-                ${completedHtml}
-            </div>
-            <div class="day-detail-col">
-                <div class="day-detail-col-title">Still open</div>
-                ${pendingHtml}
+        completedTasks.forEach(t => {
+            const timeStr = t.completedAt ? new Date(t.completedAt).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : 'All-Day';
+            timeline.push({
+                ts: t.completedAt || Date.now(),
+                time: timeStr,
+                title: t.text,
+                tag: 'Task Complete ✓',
+                tagClass: 'task'
+            });
+        });
+
+        focusSessions.forEach(p => {
+            const timeStr = p.ts ? new Date(p.ts).toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' }) : 'Focus-Block';
+            timeline.push({
+                ts: p.ts || Date.now(),
+                time: timeStr,
+                title: `${p.dur}m Pomodoro block`,
+                tag: 'Focus Done 🔥',
+                tagClass: 'focus'
+            });
+        });
+
+        openDue.forEach((t, i) => {
+            timeline.push({
+                ts: Date.now() + 100000 + i,
+                time: t.time ? Utils.formatTime12(t.time) : 'Due Pending',
+                title: t.text,
+                tag: `Remaining Open (${t.priority || 'no'} rush)`,
+                tagClass: 'pending'
+            });
+        });
+
+        timeline.sort((a, b) => a.ts - b.ts);
+
+        const container = document.getElementById('dayDetailList');
+        if (!container) return;
+
+        if (timeline.length === 0) {
+            container.innerHTML = `<div class="day-detail-empty">No activity logs recorded for this day. 🧘</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="day-timeline-container">
+                ${timeline.map((item, idx) => `
+                    <div class="day-timeline-item" style="animation-delay: ${idx * 0.05}s">
+                        <span class="day-timeline-time">${item.time}</span>
+                        <div class="day-timeline-title">${Utils.escape(item.title)}</div>
+                        <span class="day-timeline-tag ${item.tagClass}">${item.tag}</span>
+                    </div>
+                `).join('')}
             </div>
         `;
     },
@@ -1914,97 +2680,110 @@ const Report = {
 
         const max = Math.max(...values, 1);
         const W = 400, H = 160;
-        const pad = { t: 20, r: 16, b: 30, l: 36 };
+        const pad = { t: 22, r: 16, b: 32, l: 36 };
         const chartW = W - pad.l - pad.r;
         const chartH = H - pad.t - pad.b;
 
         const css = getComputedStyle(document.documentElement);
-        const ac = css.getPropertyValue('--ac').trim();
-        const gridColor = css.getPropertyValue('--chart-grid').trim();
-        const txtColor = css.getPropertyValue('--chart-text').trim();
-        const pointColor = metric === 'focus' ? 'rgba(255,255,255,.96)' : '#ffffff';
+        const ac = css.getPropertyValue('--ac').trim() || '#6c63ff';
+        const gridColor = css.getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.06)';
+        const txtColor = css.getPropertyValue('--chart-text').trim() || 'rgba(255,255,255,0.35)';
         const avg = Math.round(values.reduce((sum, v) => sum + v, 0) / (values.length || 1));
         const avgY = pad.t + chartH - (avg / max) * chartH;
 
         const uid = containerId + '_' + Date.now();
 
         const points = values.map((v, i) => ({
-            x: pad.l + (i / (values.length - 1)) * chartW,
+            x: pad.l + (i / Math.max(values.length - 1, 1)) * chartW,
             y: pad.t + chartH - (v / max) * chartH,
             val: v
         }));
 
+        // Smooth cubic bezier path
         const pathD = points.reduce((acc, p, i) => {
-            if (i === 0) return `M ${p.x} ${p.y}`;
+            if (i === 0) return `M ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
             const prev = points[i - 1];
-            const cpx = (prev.x + p.x) / 2;
-            return `${acc} C ${cpx} ${prev.y}, ${cpx} ${p.y}, ${p.x} ${p.y}`;
+            const tension = 0.4;
+            const cpx1 = prev.x + (p.x - prev.x) * tension;
+            const cpx2 = p.x - (p.x - prev.x) * tension;
+            return `${acc} C ${cpx1.toFixed(1)} ${prev.y.toFixed(1)}, ${cpx2.toFixed(1)} ${p.y.toFixed(1)}, ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
         }, '');
 
-        const areaD = `${pathD} L ${points[points.length - 1].x} ${pad.t + chartH} L ${points[0].x} ${pad.t + chartH} Z`;
+        const baseline = pad.t + chartH;
+        const areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} ${baseline} L ${points[0].x.toFixed(1)} ${baseline} Z`;
 
         const bars = points.map((p, i) => {
-            const h = (values[i] / max) * chartH;
+            const h = Math.max((values[i] / max) * chartH, values[i] > 0 ? 3 : 0);
             const y = pad.t + chartH - h;
-            return `<rect class="chart-bar" x="${p.x - 8}" y="${y}" width="16" height="${h}" rx="8" style="animation-delay:${0.22 + i * 0.06}s"/>`;
+            return `<rect class="chart-bar" x="${(p.x - 7).toFixed(1)}" y="${y.toFixed(1)}" width="14" height="${h.toFixed(1)}" rx="6" style="animation-delay:${0.22 + i * 0.06}s"/>`;
         }).join('');
 
         const gridLines = Array.from({ length: 5 }, (_, i) => {
             const y = pad.t + chartH * (1 - i / 4);
             const val = Math.round(max * i / 4);
             return `
-                <line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" 
-                      stroke="${gridColor}" stroke-width="1" stroke-dasharray="${i === 0 ? 'none' : '4,4'}"/>
-                <text x="${pad.l - 8}" y="${y + 3}" text-anchor="end" 
-                      fill="${txtColor}" font-size="9" font-family="Inter, sans-serif">${val}</text>
+                <line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W - pad.r}" y2="${y.toFixed(1)}"
+                      stroke="${gridColor}" stroke-width="${i === 0 ? 1 : 0.8}" stroke-dasharray="${i === 0 ? 'none' : '3,5'}"/>
+                <text x="${pad.l - 6}" y="${(y + 3.5).toFixed(1)}" text-anchor="end"
+                      fill="${txtColor}" font-size="8" font-family="Inter,sans-serif" font-weight="600">${val}</text>
             `;
         }).join('');
 
         const dotsHTML = points.map((p, i) => `
-            <g class="chart-point" style="animation-delay:${0.4 + i * 0.08}s">
-                <circle cx="${p.x}" cy="${p.y}" r="12" fill="${ac}" opacity="0.08" class="chart-dot-glow"/>
-                <circle cx="${p.x}" cy="${p.y}" r="${p.val > 0 ? 4.5 : 2.5}" 
-                        fill="${p.val > 0 ? pointColor : 'var(--bg4)'}" 
+            <g class="chart-point" style="animation-delay:${0.45 + i * 0.08}s" role="img" aria-label="${labels[i]}: ${p.val}">
+                <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="14" fill="${ac}" opacity="0.06" class="chart-dot-glow"/>
+                <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.val > 0 ? 5.5 : 2.5}"
+                        fill="${p.val > 0 ? '#ffffff' : 'var(--bg4)'}"
                         stroke="${p.val > 0 ? ac : 'var(--bd)'}" stroke-width="2.5"/>
-                ${p.val > 0 ? `<text x="${p.x}" y="${p.y - 12}" text-anchor="middle" 
-                      fill="var(--tx1)" font-size="9" font-weight="700" 
-                      font-family="Inter, sans-serif">${p.val}</text>` : ''}
+                ${p.val > 0 ? `<text x="${p.x.toFixed(1)}" y="${(p.y - 13).toFixed(1)}" text-anchor="middle"
+                      fill="var(--tx1)" font-size="9" font-weight="700"
+                      font-family="Inter,sans-serif">${p.val}</text>` : ''}
             </g>
         `).join('');
 
         const labelsHTML = points.map((p, i) => `
-            <text x="${p.x}" y="${H - 6}" text-anchor="middle" 
-                  fill="${txtColor}" font-size="9" font-weight="600" 
-                  font-family="Inter, sans-serif" letter-spacing="0.03em">${labels[i]}</text>
+            <text x="${p.x.toFixed(1)}" y="${H - 5}" text-anchor="middle"
+                  fill="${txtColor}" font-size="9" font-weight="700"
+                  font-family="Inter,sans-serif" letter-spacing="0.04em">${labels[i]}</text>
         `).join('');
 
         container.innerHTML = `
             <svg viewBox="0 0 ${W} ${H}" class="line-chart-svg" preserveAspectRatio="xMidYMid meet">
                 <defs>
                     <linearGradient id="areaGrad_${uid}" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.3"/>
-                        <stop offset="70%" stop-color="${ac}" stop-opacity="0.05"/>
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.38"/>
+                        <stop offset="55%" stop-color="${ac}" stop-opacity="0.10"/>
                         <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
                     </linearGradient>
-                    <filter id="lineGlow_${uid}">
-                        <feGaussianBlur stdDeviation="4" result="blur"/>
+                    <filter id="lineGlow_${uid}" x="-20%" y="-60%" width="140%" height="220%">
+                        <feGaussianBlur stdDeviation="3" result="blur"/>
+                        <feMerge>
+                            <feMergeNode in="blur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                    <filter id="dotGlow_${uid}" x="-100%" y="-100%" width="300%" height="300%">
+                        <feGaussianBlur stdDeviation="2.5" result="blur"/>
                         <feMerge>
                             <feMergeNode in="blur"/>
                             <feMergeNode in="SourceGraphic"/>
                         </feMerge>
                     </filter>
                     <linearGradient id="lineGrad_${uid}" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.6"/>
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.7"/>
                         <stop offset="50%" stop-color="${ac}"/>
-                        <stop offset="100%" stop-color="${ac}" stop-opacity="0.6"/>
+                        <stop offset="100%" stop-color="${ac}" stop-opacity="0.7"/>
                     </linearGradient>
                 </defs>
+                <rect x="${pad.l}" y="${pad.t}" width="${chartW}" height="${chartH}"
+                      fill="rgba(255,255,255,0.01)" rx="4"/>
                 ${gridLines}
-                <line x1="${pad.l}" y1="${avgY}" x2="${W - pad.r}" y2="${avgY}" class="chart-avg-line"/>
+                <line x1="${pad.l}" y1="${avgY.toFixed(1)}" x2="${W - pad.r}" y2="${avgY.toFixed(1)}"
+                      stroke="${ac}" stroke-width="1" stroke-dasharray="4,6" opacity="0.4" class="chart-avg-line"/>
                 <path d="${areaD}" fill="url(#areaGrad_${uid})" class="chart-area-fill"/>
                 ${bars}
-                <path d="${pathD}" fill="none" stroke="url(#lineGrad_${uid})" stroke-width="3" 
-                      stroke-linecap="round" stroke-linejoin="round" 
+                <path d="${pathD}" fill="none" stroke="url(#lineGrad_${uid})" stroke-width="3.5"
+                      stroke-linecap="round" stroke-linejoin="round"
                       filter="url(#lineGlow_${uid})" class="chart-line-path"/>
                 ${dotsHTML}
                 ${labelsHTML}
@@ -2012,282 +2791,352 @@ const Report = {
         `;
     },
 
+
+
     renderInsights(w, m) {
         const insights = [];
         const mode = State.reportMode || 'week';
         const score = this.getScore(w);
-        const breakdown = this.getScoreBreakdown(w);
         const prevW = Utils.weekData(State.weekOffset - 1);
         const prevScore = this.getScore(prevW);
         const scoreDiff = score - prevScore;
         const monthDays = m.days.length || 1;
         const monthRhythm = Math.round((m.activeDays / monthDays) * 100);
-        const monthAvgFocus = Math.round(m.totalFocus / monthDays);
 
-        if (!w.totalTasks && !w.totalFocus) {
-            insights.push({
-                icon: Icons.spark(12),
-                text: `<strong>Blank canvas.</strong> This week is wide open. Start with one tiny task — momentum loves a small beginning.`
-            });
-        } else {
-            if (scoreDiff > 15) {
-                insights.push({
-                    icon: Icons.trendUp(12),
-                    text: `<strong>Major surge!</strong> Score jumped <strong>+${scoreDiff}</strong> vs last week. Something clicked — keep doing it.`
-                });
+        let momentumText = "<strong>Fresh week arc.</strong> Log your first checked task or Pomodoro session to kickstart score trending.";
+        let momentumClass = "momentum";
+        let momentumIcon = Icons.spark(14);
+        if (w.totalTasks > 0 || w.totalFocus > 0) {
+            if (scoreDiff > 12) {
+                momentumText = `<strong>Score Surge!</strong> Your vibe score jumped <strong>+${scoreDiff}</strong> points compared to last week. You are in beautiful alignment.`;
+                momentumIcon = Icons.trendUp(14);
             } else if (scoreDiff > 0) {
-                insights.push({
-                    icon: Icons.trendUp(12),
-                    text: `<strong>Upward trend.</strong> Score is <strong>+${scoreDiff}</strong> higher than last week. Small gains compound.`
-                });
+                momentumText = `<strong>Rhythm Rising.</strong> Score is <strong>+${scoreDiff}</strong> higher than last week. Small habits compound quietly.`;
+                momentumIcon = Icons.trendUp(14);
             } else if (scoreDiff < -10) {
-                insights.push({
-                    icon: Icons.trendDown(12),
-                    text: `<strong>Dip detected.</strong> Score dropped <strong>${scoreDiff}</strong> vs last week. No judgment — even a short reset flips the trajectory.`
-                });
-            }
-
-            if (score >= 80) {
-                insights.push({
-                    icon: Icons.trophy(12),
-                    text: `<strong>Elite week.</strong> Score of <strong>${score}</strong> — you balanced output, focus, and consistency beautifully.`
-                });
-            } else if (score >= 55) {
-                insights.push({
-                    icon: Icons.target(12),
-                    text: `<strong>Solid foundation.</strong> At <strong>${score}</strong>. Two more focus blocks push this into elite territory.`
-                });
-            } else if (score > 0) {
-                insights.push({
-                    icon: Icons.spark(12),
-                    text: `<strong>Building.</strong> Score of <strong>${score}</strong>. One or two deep sessions make this week feel much stronger.`
-                });
-            }
-
-            if (w.bestDay.tasks > 0 || w.bestDay.focus > 0) {
-                insights.push({
-                    icon: Icons.fire(12),
-                    text: `<strong>Peak: ${w.bestDay.name}</strong> — ${w.bestDay.tasks} task${w.bestDay.tasks !== 1 ? 's' : ''} and ${w.bestDay.focus}m focused. That's your power pattern.`
-                });
-            }
-
-            if (w.activeDays >= 5) {
-                insights.push({
-                    icon: Icons.shield(12),
-                    text: `<strong>${w.activeDays}/7 active days.</strong> Consistency beats intensity. You're proving it daily.`
-                });
-            } else if (w.activeDays >= 3) {
-                insights.push({
-                    icon: Icons.shield(12),
-                    text: `<strong>${w.activeDays}/7 active days.</strong> One more active day this week boosts your rhythm significantly.`
-                });
-            }
-
-            if (w.totalFocus > 0 && w.totalTasks > 0) {
-                const ratio = w.totalFocus / w.totalTasks;
-                if (ratio > 30) {
-                    insights.push({ icon: Icons.target(12), text: `<strong>Deep work mode.</strong> High focus-per-task ratio — quality over quantity is a superpower.` });
-                }
-            }
-
-            if (breakdown.overdue > 0) {
-                const overdueCount = Math.ceil(breakdown.overdue / 2);
-                insights.push({
-                    icon: Icons.trendDown(12),
-                    text: `<strong>${overdueCount} overdue.</strong> Clear, reschedule, or drop them. Overdue items create invisible mental drag.`
-                });
-            }
-        }
-
-        if (mode === 'month') {
-            if (!m.totalTasks && !m.totalFocus) {
-                insights.push({
-                    icon: Icons.spark(12),
-                    text: `<strong>Month reset ready.</strong> Start with one high-signal task tomorrow morning to shape the whole month arc.`
-                });
+                momentumText = `<strong>Energy Dip.</strong> Score dropped <strong>${scoreDiff}</strong> compared to last week. No pressure — rest fuels tomorrow's output.`;
+                momentumIcon = Icons.trendDown(14);
             } else {
-                insights.push({
-                    icon: Icons.target(12),
-                    text: `<strong>Monthly rhythm:</strong> ${monthRhythm}% active days with ${monthAvgFocus}m average focus per day.`
-                });
-
-                if (m.bestDay) {
-                    insights.push({
-                        icon: Icons.fire(12),
-                        text: `<strong>Monthly peak:</strong> Day ${m.bestDay.day} delivered ${m.bestDay.tasks} tasks + ${m.bestDay.focus}m focus.`
-                    });
-                }
+                momentumText = `<strong>Steady Rhythm.</strong> You are showing incredible consistency, matching your productivity levels from last week.`;
+                momentumIcon = Icons.shield(14);
             }
         }
+        insights.push({ type: 'Momentum', text: momentumText, icon: momentumIcon, catClass: momentumClass });
+
+        let peakText = "Your high-focus days will appear here once you log focused flow blocks.";
+        let peakClass = "peaks";
+        let peakIcon = Icons.fire(14);
+        if (w.bestDay.tasks > 0 || w.bestDay.focus > 0) {
+            peakText = `<strong>Best Day: ${w.bestDay.name}</strong> — Completed ${w.bestDay.tasks} tasks with ${w.bestDay.focus} minutes of deep work. Replicate this setup!`;
+        }
+        insights.push({ type: 'Focus Peak', text: peakText, icon: peakIcon, catClass: peakClass });
+
+        let rhythmText = "Consistency is the lock of focus. Set a streak to see your habits lock.";
+        let rhythmClass = "habits";
+        let rhythmIcon = Icons.shield(14);
+        if (w.activeDays >= 5) {
+            rhythmText = `<strong>Epic Flow:</strong> ${w.activeDays}/7 active days. Consistency always beats temporary intensity.`;
+        } else if (w.activeDays >= 3) {
+            rhythmText = `<strong>Active Flow:</strong> ${w.activeDays}/7 active days. Push for just one more session to unlock high vibe indicators.`;
+        }
+        insights.push({ type: 'Habits', text: rhythmText, icon: rhythmIcon, catClass: rhythmClass });
 
         const tips = [
-            'Done beats perfect. Ship it ugly, refine it later.',
-            'If a task feels heavy, split it until each piece feels obvious.',
-            'Protect one distraction-free block tomorrow morning.',
-            'The hardest part is starting. After 2 minutes, momentum takes over.',
-            'Energy management > time management. Work when you\'re sharpest.',
-            'Rest is productive. Recovery fuels tomorrow\'s output.'
+            "Done is better than perfect. Launch it, then iterate.",
+            "Heavy tasks? Split them down until they feel obvious.",
+            "Block out one distraction-free hour tomorrow morning.",
+            "The hardest part is starting. After 2 minutes, flow overrides.",
+            "Energy over time. Work when your brain is sharpest.",
+            "Rest is highly productive. Recovery triggers creativity."
         ];
+        let adviceText = `<em>"${tips[Math.floor(Math.random() * tips.length)]}"</em>`;
+        let adviceClass = "advice";
+        let adviceIcon = Icons.spark(14);
+        insights.push({ type: 'Advice', text: adviceText, icon: adviceIcon, catClass: adviceClass });
 
-        insights.push({
-            icon: Icons.spark(12),
-            text: `<em>"${tips[Math.floor(Math.random() * tips.length)]}"</em>`
-        });
+        const container = document.getElementById('aiInsightsContent');
+        if (!container) return;
 
-        document.getElementById('aiInsightsContent').innerHTML = insights.map((ins, idx) => `
-            <div class="ai-insight-item" style="animation-delay:${idx * 0.06}s">
-                <div class="ai-insight-icon">${ins.icon}</div>
-                <div class="ai-insight-text">${ins.text}</div>
+        container.innerHTML = `
+            <div class="insights-grid">
+                ${insights.map((ins, idx) => `
+                    <div class="insight-card" style="animation-delay: ${idx * 0.05}s">
+                        <div class="insight-card-header ${ins.catClass}">
+                            ${ins.icon}
+                            <span>${ins.type}</span>
+                        </div>
+                        <div class="insight-card-text">${ins.text}</div>
+                    </div>
+                `).join('')}
             </div>
-        `).join('');
+        `;
     },
 
     downloadPDF() {
         Sound.click();
-        Toast.show('Generating report...');
+        Toast.show('Loading PDF engine...');
 
-        setTimeout(() => {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-                const w = Utils.weekData(State.weekOffset);
-                const dates = Utils.weekDates(State.weekOffset);
-                const score = this.getScore(w);
-                const breakdown = this.getScoreBreakdown(w);
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.onload = () => {
+            Toast.show('Generating report...');
+            setTimeout(() => this._generatePDF(), 200);
+        };
+        script.onerror = () => Toast.show('Failed to load PDF library');
 
-                const pageW = 210;
-                let y = 0;
+        if (window.jspdf) {
+            Toast.show('Generating report...');
+            setTimeout(() => this._generatePDF(), 200);
+        } else {
+            document.head.appendChild(script);
+        }
+    },
 
-                const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
-                const toRGB = hex => {
-                    hex = hex.replace('#', '');
-                    return [
-                        parseInt(hex.substring(0, 2), 16),
-                        parseInt(hex.substring(2, 4), 16),
-                        parseInt(hex.substring(4, 6), 16)
-                    ];
-                };
-                const [r, g, b] = toRGB(ac);
+    _generatePDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const w = Utils.weekData(State.weekOffset);
+            const dates = Utils.weekDates(State.weekOffset);
+            const score = this.getScore(w);
+            const breakdown = this.getScoreBreakdown(w);
 
-                doc.setFillColor(r, g, b);
-                doc.rect(0, 0, pageW, 50, 'F');
+            const pageW = 210;
 
-                doc.setTextColor(255, 255, 255);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(26);
-                doc.text('Focussium', 18, 22);
-
-                doc.setFontSize(14);
-                doc.text('Weekly Report', 18, 32);
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(11);
-                const range = `${new Date(dates[0] + 'T00:00:00').toLocaleDateString('en', { month: 'long', day: 'numeric' })} — ${new Date(dates[6] + 'T00:00:00').toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })}`;
-                doc.text(range, 18, 42);
-
-                y = 62;
-                doc.setTextColor(30, 30, 40);
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(20);
-                doc.text(`Score: ${score}/100`, 18, y);
-                y += 12;
-
-                doc.setDrawColor(r, g, b);
-                doc.setFillColor(r, g, b);
-                doc.roundedRect(18, y, score * 1.7, 6, 3, 3, 'F');
-                doc.setDrawColor(220, 220, 225);
-                doc.roundedRect(18, y, 170, 6, 3, 3, 'S');
-                y += 18;
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('Summary', 18, y);
-                y += 10;
-
-                const summaryItems = [
-                    { label: 'Tasks Completed', value: String(w.totalTasks), color: [r, g, b] },
-                    { label: 'Focus Minutes', value: `${w.totalFocus}m`, color: [92, 201, 138] },
-                    { label: 'Active Days', value: `${w.activeDays}/7`, color: [229, 184, 92] }
+            // Get current accent color from DOM
+            const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#f5c842';
+            const toRGB = hex => {
+                hex = hex.replace('#', '');
+                if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+                return [
+                    parseInt(hex.substring(0, 2), 16),
+                    parseInt(hex.substring(2, 4), 16),
+                    parseInt(hex.substring(4, 6), 16)
                 ];
+            };
+            const [r, g, b] = toRGB(ac);
 
-                let sx = 18;
-                summaryItems.forEach(item => {
-                    doc.setFillColor(248, 248, 252);
-                    doc.roundedRect(sx, y, 56, 24, 4, 4, 'F');
-                    doc.setFontSize(9);
-                    doc.setTextColor(120, 120, 130);
-                    doc.text(item.label, sx + 6, y + 8);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(16);
-                    doc.setTextColor(item.color[0], item.color[1], item.color[2]);
-                    doc.text(item.value, sx + 6, y + 19);
-                    doc.setFont('helvetica', 'normal');
-                    sx += 60;
-                });
-                y += 34;
+            // 1. HEADER SECTION (Height: 0 to 38mm)
+            doc.setFillColor(r, g, b);
+            doc.rect(0, 0, pageW, 38, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(24);
+            doc.text('F O C U S S I U M', 16, 17);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(240, 240, 245);
+            doc.text('Your Zen Productivity Space • Weekly Performance Vibe', 16, 25);
+
+            // Date Capsule Badge on Right
+            const range = `${new Date(dates[0] + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })} — ${new Date(dates[6] + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            doc.setFillColor(255, 255, 255, 0.2);
+            doc.roundedRect(132, 13, 62, 9, 2.5, 2.5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            doc.setTextColor(255, 255, 255);
+            doc.text(range, 136, 19);
+
+            // 2. ROW 1: THE VIBE CORE (y = 48mm to 100mm)
+            // Left Column: Vibe Scorecard Card
+            doc.setFillColor(248, 249, 252);
+            doc.setDrawColor(228, 230, 238);
+            doc.roundedRect(15, 46, 85, 52, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(110, 110, 125);
+            doc.text('PRODUCTIVITY SCORE', 21, 55);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(30);
+            doc.setTextColor(r, g, b);
+            doc.text(`${score} / 100`, 21, 69);
+
+            // Custom Linear Progress bar
+            doc.setFillColor(228, 230, 235);
+            doc.roundedRect(21, 76, 73, 5, 2.5, 2.5, 'F');
+            doc.setFillColor(r, g, b);
+            doc.roundedRect(21, 76, Math.max(5, score * 0.73), 5, 2.5, 2.5, 'F');
+
+            let vibeTitle = "Resting Flow 🧘";
+            if (score >= 80) vibeTitle = "Deep Flow State 🧘";
+            else if (score >= 60) vibeTitle = "High Momentum ⚡";
+            else if (score >= 35) vibeTitle = "Rhythm Building 🏗️";
+            else if (score > 0) vibeTitle = "Mindful Recovery 📿";
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9.5);
+            doc.setTextColor(75, 75, 90);
+            doc.text(`Vibe Status: ${vibeTitle}`, 21, 89);
+
+            // Right Column: Key Metrics Card
+            doc.setFillColor(248, 249, 252);
+            doc.roundedRect(108, 46, 87, 52, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(110, 110, 125);
+            doc.text('WEEKLY KEY METRICS', 114, 55);
+
+            // Row 1 inside metrics
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9.5);
+            doc.setTextColor(60, 60, 70);
+            doc.text('Tasks Completed', 114, 67);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(r, g, b);
+            doc.text(`${w.totalTasks} tasks`, 188, 67, { align: 'right' });
+            doc.setDrawColor(226, 228, 236);
+            doc.line(114, 70, 188, 70);
+
+            // Row 2 inside metrics
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(60, 60, 70);
+            doc.text('Total Focus Time', 114, 78);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(92, 190, 128); // Green
+            doc.text(`${w.totalFocus} min`, 188, 78, { align: 'right' });
+            doc.line(114, 81, 188, 81);
+
+            // Row 3 inside metrics
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(60, 60, 70);
+            doc.text('Consistency Rhythm', 114, 89);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(229, 174, 92); // Gold
+            doc.text(`${w.activeDays} / 7 days`, 188, 89, { align: 'right' });
+
+            // 3. ROW 2: INNER WORKINGS (y = 106mm to 184mm)
+            // Left Column: Score Breakdown List
+            doc.setFillColor(253, 253, 254);
+            doc.roundedRect(15, 106, 85, 78, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(110, 110, 125);
+            doc.text('SCORE BREAKDOWN', 21, 115);
+
+            const breakItems = [
+                { label: 'Tasks Done Points', val: `+${breakdown.tasks}`, pos: true },
+                { label: 'Focus Minutes Points', val: `+${breakdown.focus}`, pos: true },
+                { label: 'Consistency rhythm', val: `+${breakdown.consistency}`, pos: true },
+                { label: 'Task completion rate', val: `+${breakdown.completion}`, pos: true },
+                { label: 'Streak Bonus modifier', val: `+${breakdown.streak}`, pos: true },
+                { label: 'Overdue Penalty deduction', val: `-${breakdown.overdue}`, pos: false }
+            ];
+
+            breakItems.forEach((item, idx) => {
+                const y_b = 124 + idx * 8.5;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(80, 80, 95);
+                doc.text(item.label, 21, y_b);
 
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.setTextColor(30, 30, 40);
-                doc.text('Score Breakdown', 18, y);
-                y += 8;
+                if (item.pos) {
+                    doc.setTextColor(50, 140, 95); // soft green
+                } else {
+                    doc.setTextColor(220, 80, 80); // soft red
+                }
+                doc.text(item.val, 92, y_b, { align: 'right' });
 
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                const breakdownLines = [
-                    `Tasks: +${breakdown.tasks}`,
-                    `Focus: +${breakdown.focus}`,
-                    `Consistency: +${breakdown.consistency}`,
-                    `Completion: +${breakdown.completion}`,
-                    `Streak Bonus: +${breakdown.streak}`,
-                    `Overdue Penalty: -${breakdown.overdue}`
-                ];
-                breakdownLines.forEach(line => {
-                    doc.text(line, 22, y);
-                    y += 6;
-                });
-                y += 6;
+                if (idx < 5) {
+                    doc.setDrawColor(240, 240, 244);
+                    doc.line(21, y_b + 2.5, 92, y_b + 2.5);
+                }
+            });
 
+            // Right Column: Daily Week Rhythm Bullet Journal Log
+            doc.setFillColor(253, 253, 254);
+            doc.roundedRect(108, 106, 87, 78, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(110, 110, 125);
+            doc.text('DAILY ACTIVITY LOG', 114, 115);
+
+            w.days.forEach((day, idx) => {
+                const y_d = 124 + idx * 8.5;
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('Daily Breakdown', 18, y);
-                y += 8;
+                doc.setFontSize(8.5);
+                doc.setTextColor(70, 70, 85);
+                doc.text(day.name, 114, y_d);
 
                 doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                w.days.forEach(day => {
-                    doc.text(`${day.name}: ${day.tasks} tasks • ${day.focus}m focus`, 22, y);
-                    y += 6;
-                });
-                y += 8;
-
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(14);
-                doc.text('AI Insights', 18, y);
-                y += 8;
-
-                const insightsText = document.getElementById('aiInsightsContent').textContent
-                    .replace(/\s+/g, ' ')
-                    .trim();
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9.5);
-                const wrapped = doc.splitTextToSize(insightsText, 170);
-                doc.text(wrapped, 18, y);
-
                 doc.setFontSize(8);
-                doc.setTextColor(140, 140, 155);
-                doc.text('Generated by Focussium', pageW / 2, 287, { align: 'center' });
+                doc.setTextColor(110, 110, 125);
+                doc.text(`${day.tasks} tasks done  •  ${day.focus}m focus`, 128, y_d);
 
-                doc.save(`Focussium_Report_${dates[0]}.pdf`);
-                Sound.success();
-                Toast.show('Report downloaded');
-            } catch (e) {
-                console.error(e);
-                Toast.show('PDF generation failed');
-            }
-        }, 300);
+                // Elegant indicator dot showing active vs restful days
+                const isActive = day.tasks > 0 || day.focus > 0;
+                if (isActive) {
+                    doc.setFillColor(r, g, b);
+                } else {
+                    doc.setFillColor(220, 220, 225);
+                }
+                doc.circle(184, y_d - 1, 1, 'F');
+
+                if (idx < 6) {
+                    doc.setDrawColor(240, 240, 244);
+                    doc.line(114, y_d + 2.5, 186, y_d + 2.5);
+                }
+            });
+
+            // 4. ROW 3: AI INSIGHTS & MINDFULNESS BANNER (y = 192mm to 276mm)
+            doc.setFillColor(248, 249, 252);
+            doc.setDrawColor(228, 230, 238);
+            doc.roundedRect(15, 192, 180, 82, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            doc.setTextColor(110, 110, 125);
+            doc.text('AI INSIGHTS & MINDFULNESS REFLECTIONS', 21, 201);
+
+            const rawText = document.getElementById('aiInsightsContent')?.textContent || '';
+            const insightsText = rawText.replace(/\s+/g, ' ').trim() || 'Your mindful productivity vibe will appear here as you log tasks. Complete focus blocks, maintain lists, and review your daily logs to see insights customized for your focus style.';
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(60, 60, 75);
+            const wrapped = doc.splitTextToSize(insightsText, 168);
+            
+            // Limit to fit beautifully on page
+            doc.text(wrapped.slice(0, 5), 21, 210);
+
+            // Visual divider for quotes
+            doc.setDrawColor(226, 228, 236);
+            doc.line(21, 247, 189, 247);
+
+            // Daily Quote block integration
+            const rawQuote = document.getElementById('dailyQuoteText')?.textContent || '"Your mind is for having ideas, not holding them."';
+            const rawAuthor = document.getElementById('dailyQuoteAuthor')?.textContent || '— David Allen';
+
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(8.5);
+            doc.setTextColor(r, g, b);
+            doc.text(rawQuote, 21, 255);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 115);
+            doc.text(rawAuthor, 21, 261);
+
+            // 5. FOOTER
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(140, 140, 155);
+            doc.text('Designed for brains that work differently  •  Focussium v2 Pro', pageW / 2, 287, { align: 'center' });
+
+            doc.save(`Focussium_Report_${dates[0]}.pdf`);
+            Sound.success();
+            Toast.show('Report downloaded');
+        } catch (e) {
+            handleError('PDF generation', e);
+            Toast.show('PDF generation failed');
+        }
     }
 };
 
@@ -2312,33 +3161,252 @@ const Settings = {
         document.getElementById('longDurValue').textContent = State.data.settings.longDur;
         document.getElementById('sessionsValue').textContent = State.data.settings.sessions;
 
-        document.getElementById('accentButtons').innerHTML = ACCENTS.map(a => `
-            <div class="accent-btn ${State.data.settings.accent === a.id ? 'active' : ''}" 
-                 style="background:${a.c}" 
-                 onclick="Settings.setAccent('${a.id}')"
-                 title="${a.n}"></div>
-        `).join('');
+        this.renderAccents();
+        this.renderAvatars();
+        this.renderSoundPalette();
+    },
 
-        // Update custom color picker state
+    renderAccents() {
+        const lvl = State.data?.level || 1;
+        const locks = {
+            royal: 1,
+            neon: 2,
+            sunset: 2,
+            lavender: 2,
+            matcha: 4,
+            void: 4,
+            rose: 4,
+            mint: 6,
+            sky: 6
+        };
+
+        document.getElementById('accentButtons').innerHTML = ACCENTS.map(a => {
+            const req = locks[a.id] || 1;
+            const isLocked = lvl < req;
+            const isActive = State.data.settings.accent === a.id;
+            
+            return `
+            <div class="accent-btn ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}" 
+                 style="background:${a.c}" 
+                 onclick="${isLocked ? `Toast.show('Requires Level ${req} 🔒')` : `Settings.setAccent('${a.id}')`}"
+                 title="${a.n} ${isLocked ? `(Requires Level ${req})` : ''}"></div>
+            `;
+        }).join('');
+
+        const picker = document.getElementById('customColorPicker');
+        if (picker) {
+            picker.classList.toggle('locked', lvl < 5);
+        }
+
         const isCustom = State.data.settings.accent === 'custom';
         const swatch = document.getElementById('customColorSwatch');
         const hexInput = document.getElementById('customHexInput');
         const nativeInput = document.getElementById('customColorNative');
-        const picker = document.getElementById('customColorPicker');
         
         if (isCustom && State.data.settings.customHex) {
             swatch.style.background = `#${State.data.settings.customHex}`;
             swatch.classList.add('has-color');
             hexInput.value = State.data.settings.customHex.toUpperCase();
             nativeInput.value = `#${State.data.settings.customHex}`;
-            picker.classList.add('active');
+            if (picker && lvl >= 5) picker.classList.add('active');
         } else {
             swatch.style.background = '';
             swatch.classList.remove('has-color');
             hexInput.value = '';
-            picker.classList.remove('active');
+            if (picker) picker.classList.remove('active');
+        }
+    },
+
+    renderAvatars() {
+        const lvl = State.data?.level || 1;
+        const avatars = [
+            { id: 'default', req: 1, n: 'Default Explorer', type: 'svg', icon: 'default' },
+            { id: 'seed', req: 2, n: 'Zen Focus Seed', type: 'img', src: 'zen_focus_avatar.png' },
+            { id: 'lotus', req: 2, n: 'Zen Lotus', type: 'svg', icon: 'lotus' },
+            { id: 'custom', req: 3, n: 'Custom Photo / Camera', type: 'custom' },
+            { id: 'voyager', req: 4, n: 'Astro Voyager', type: 'svg', icon: 'voyager' },
+            { id: 'deity', req: 8, n: 'Zen Deity', type: 'svg', icon: 'deity' }
+        ];
+
+        const container = document.getElementById('avatarButtons');
+        if (!container) return;
+
+        const vectors = {
+            default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`,
+            lotus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:var(--ac);"><path d="M12 2C8 6 8 13 12 22C16 13 16 6 12 2Z" /><path d="M12 8C5 11 5 16 12 22C19 16 19 11 12 8Z" /><path d="M12 13C2 15 2 18 12 22C22 18 22 15 12 13Z" /></svg>`,
+            voyager: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:var(--ac);"><path d="M12 2L2 22l10-6 10 6L12 2z" /><path d="M12 2v14" /></svg>`,
+            deity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:#ffd700;"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" /><path d="M3 20h18" stroke-width="2.5" /></svg>`,
+            upload: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:9px; color:var(--tx3);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>`
+        };
+
+        container.innerHTML = avatars.map(av => {
+            const isLocked = lvl < av.req;
+            const isActive = (State.data.settings.avatar || 'default') === av.id;
+
+            let innerContent = '';
+            if (av.type === 'svg') {
+                innerContent = vectors[av.icon] || '';
+            } else if (av.type === 'img') {
+                innerContent = `<img src="${av.src}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}">`;
+            } else if (av.type === 'custom') {
+                const customUrl = State.data.settings?.customAvatarDataUrl;
+                if (customUrl) {
+                    innerContent = `<img src="${customUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}">`;
+                } else {
+                    innerContent = vectors.upload;
+                }
+            }
+
+            return `
+            <button class="avatar-btn ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}"
+                    onclick="${isLocked ? `Toast.show('Requires Level ${av.req} 🔒')` : `Settings.setAvatar('${av.id}')`}"
+                    title="${av.n} ${isLocked ? `(Requires Level ${av.req})` : ''}">
+                ${innerContent}
+            </button>
+            `;
+        }).join('');
+
+        // Render "Change custom photo..." link for users at level 3+
+        let changeBtn = document.getElementById('changeAvatarUploadLink');
+        if (lvl >= 3) {
+            if (!changeBtn) {
+                changeBtn = document.createElement('div');
+                changeBtn.id = 'changeAvatarUploadLink';
+                changeBtn.style.cssText = 'font-size: 0.72rem; color: var(--ac); margin-top: 8px; cursor: pointer; font-weight: 600; text-align: left; width: 100%; display: inline-block; transition: opacity 0.2s;';
+                changeBtn.innerHTML = `<span>📸 Upload / snap custom photo...</span>`;
+                changeBtn.onclick = () => document.getElementById('avatarFileInput').click();
+                container.parentNode.appendChild(changeBtn);
+            }
+        } else if (changeBtn) {
+            changeBtn.remove();
         }
 
+        this.applyAvatarDisplay();
+    },
+
+    setAvatar(avatarId) {
+        if (avatarId === 'custom') {
+            const currentImg = State.data.settings?.customAvatarDataUrl;
+            if (!currentImg) {
+                document.getElementById('avatarFileInput').click();
+                return;
+            }
+        }
+        State.data.settings.avatar = avatarId;
+        Storage.save();
+        this.renderAvatars();
+        Sound.toggle();
+        Toast.show(`Identity updated 🔮`);
+    },
+
+    handleAvatarUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            Toast.show('Please upload a valid image file 🖼️');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const size = 120;
+                canvas.width = size;
+                canvas.height = size;
+
+                const minSide = Math.min(img.width, img.height);
+                const sx = (img.width - minSide) / 2;
+                const sy = (img.height - minSide) / 2;
+
+                ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                if (!State.data.settings) State.data.settings = {};
+                State.data.settings.customAvatarDataUrl = compressedDataUrl;
+                State.data.settings.avatar = 'custom';
+                Storage.save();
+
+                this.renderAvatars();
+                Sound.success();
+                Toast.show('Custom photo saved! 📸');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    },
+
+    applyAvatarDisplay() {
+        const active = State.data?.settings?.avatar || 'default';
+        const img = document.getElementById('userAvatar');
+        if (!img) return;
+
+        const fallback = img.parentNode.querySelector('.avatar-fallback-txt');
+
+        if (active === 'seed') {
+            img.src = 'zen_focus_avatar.png';
+            img.style.display = 'block';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--bd);';
+            if (fallback) fallback.style.display = 'none';
+        } else if (active === 'custom' && State.data.settings?.customAvatarDataUrl) {
+            img.src = State.data.settings.customAvatarDataUrl;
+            img.style.display = 'block';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--bd);';
+            if (fallback) fallback.style.display = 'none';
+        } else {
+            img.style.display = 'none';
+            let fb = fallback;
+            if (!fb) {
+                fb = document.createElement('div');
+                fb.className = 'avatar-fallback-txt';
+                img.parentNode.appendChild(fb);
+            }
+            fb.style.cssText = 'width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg3); border-radius: 50%; user-select: none; transition: background 0.3s; border: 2px solid var(--bd);';
+            fb.style.display = 'flex';
+
+            const vectors = {
+                default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx2); width:100%; height:100%; padding:5px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`,
+                lotus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:100%; height:100%; padding:5px;"><path d="M12 2C8 6 8 13 12 22C16 13 16 6 12 2Z" /><path d="M12 8C5 11 5 16 12 22C19 16 19 11 12 8Z" /><path d="M12 13C2 15 2 18 12 22C22 18 22 15 12 13Z" /></svg>`,
+                voyager: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:100%; height:100%; padding:5px;"><path d="M12 2L2 22l10-6 10 6L12 2z" /><path d="M12 2v14" /></svg>`,
+                deity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#ffd700; width:100%; height:100%; padding:5px;"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" /><path d="M3 20h18" stroke-width="2.5" /></svg>`,
+                custom: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx3); width:100%; height:100%; padding:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>`
+            };
+            fb.innerHTML = vectors[active] || vectors.default;
+        }
+
+        const lvl = State.data?.level || 1;
+        const wrap = img.closest('.avatar-wrapper');
+        if (wrap) {
+            wrap.classList.toggle('level-8-plus', lvl >= 8);
+        }
+    },
+
+    renderSoundPalette() {
+        const lvl = State.data?.level || 1;
+        const container = document.getElementById('paletteButtonsContainer');
+        if (!container) return;
+
+        const isLocked = lvl < 3;
+        const current = State.data.settings.soundPalette || 'zen';
+
+        container.innerHTML = `
+            <button class="palette-btn ${current === 'zen' ? 'active' : ''}" 
+                    onclick="Settings.setSoundPalette('zen')">Zen</button>
+            <button class="palette-btn ${current === 'retro' ? 'active' : ''} ${isLocked ? 'locked' : ''}" 
+                    onclick="${isLocked ? `Toast.show('Requires Level 3 🔒')` : `Settings.setSoundPalette('retro')`}">Retro</button>
+        `;
+    },
+
+    setSoundPalette(palette) {
+        State.data.settings.soundPalette = palette;
+        Storage.save();
+        this.renderSoundPalette();
+        Sound.toggle();
+        Toast.show(`Sound Vibe: ${palette === 'retro' ? 'Retro Synth 🕹️' : 'Zen Chimes 🪷'}`);
     },
 
     setTheme(theme) {
@@ -2359,6 +3427,11 @@ const Settings = {
     },
 
     applyCustomColor() {
+        const lvl = State.data?.level || 1;
+        if (lvl < 5) {
+            Toast.show('Custom palette is locked until Level 5 🔒');
+            return;
+        }
         let hex = document.getElementById('customHexInput').value.trim().replace('#', '');
         if (!/^[0-9A-Fa-f]{6}$/.test(hex)) {
             Toast.show('Enter a valid 6-digit hex code');
@@ -2457,7 +3530,7 @@ document.getElementById('customColorNative').addEventListener('change', e => {
 });
 
 /* ─────────────────────────────────────────────────────────
-   MODALS
+   MODALS (with Escape key support)
 ───────────────────────────────────────────────────────── */
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', e => {
@@ -2468,8 +3541,18 @@ document.querySelectorAll('.modal').forEach(modal => {
     });
 });
 
+// Close any open modal on Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.on').forEach(modal => {
+            modal.classList.remove('on');
+            Sound.close();
+        });
+    }
+});
+
 /* ─────────────────────────────────────────────────────────
-   COMMAND GLASS (QUICK ADD)
+   COMMAND GLASS (QUICK ADD) — Fixed
 ───────────────────────────────────────────────────────── */
 const CommandGlass = {
     open() {
@@ -2479,7 +3562,6 @@ const CommandGlass = {
         glass.classList.add('show');
         document.getElementById('cmdIcon').innerHTML = Icons.zap(12) || Icons.spark(12);
         
-        // Slight delay to ensure display: flex is applied before focusing
         setTimeout(() => input.focus(), 50);
         Sound.click();
     },
@@ -2497,37 +3579,43 @@ const CommandGlass = {
         
         if (!text) return;
 
-        // Simple heuristic: if it starts with "dump ", send to brain dump. Else, add as task.
         if (text.toLowerCase().startsWith('dump ')) {
             const dumpText = text.substring(5).trim();
             if (dumpText) {
                 State.data.dumps.unshift({
-                    id: Utils.id(),
+                    id: Utils.generateId('dump'),
                     text: dumpText,
                     ts: Date.now()
                 });
                 Storage.save();
-                Dump.render(); // update if open
-                Toast.show("Brain dump saved");
+                Dump.render();
+                Nav.updateBadges();
+                Toast.show('Brain dump saved');
             }
         } else {
-            // Send to Tasks today
-            State.data.tasks.push({
-                id: Utils.id(),
+            State.data.tasks.unshift({
+                id: Utils.generateId('task'),
                 text: text,
+                notes: '',
                 date: Utils.today(),
-                listId: null,
+                time: '',
+                priority: 'none',
+                list: State.data.lists[0] || 'My Tasks',
                 completed: false,
-                subtasks: []
+                completedAt: null,
+                createdAt: Date.now(),
+                subtasks: [],
+                repeat: 'none'
             });
             Storage.save();
             Tasks.render();
             Home.render();
-            Toast.show("Task added to Today");
+            Nav.updateBadges();
+            Toast.show('Task added to Today');
         }
 
         this.close();
-        Sound.click();
+        Sound.success();
     }
 };
 
@@ -2554,7 +3642,6 @@ document.getElementById('dumpTextarea').addEventListener('keydown', e => {
 });
 
 document.addEventListener('keydown', e => {
-    // Command Glass Toggle (Ctrl+K or Cmd+K)
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         const glass = document.getElementById('cmdGlass');
@@ -2565,7 +3652,6 @@ document.addEventListener('keydown', e => {
         }
     }
 
-    // Escape Command Glass
     if (e.key === 'Escape') {
         const glass = document.getElementById('cmdGlass');
         if (glass.classList.contains('show')) {
@@ -2582,6 +3668,122 @@ document.getElementById('cmdInput').addEventListener('keydown', e => {
 });
 
 /* ─────────────────────────────────────────────────────────
+   CANVAS PARTICLES DUST (zero-standby visual flow engine)
+───────────────────────────────────────────────────────── */
+const Particles = {
+    canvas: null,
+    ctx: null,
+    list: [],
+    animating: false,
+    animFrameId: null,
+
+    init() {
+        this.canvas = document.getElementById('particleCanvas');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        
+        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('click', (e) => this.handleClick(e));
+    },
+
+    resize() {
+        if (!this.canvas) return;
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    },
+
+    getAccentColor() {
+        const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#f5c842';
+        return ac;
+    },
+
+    spawn(x, y, count = 12, sizeMultiplier = 1.0) {
+        if (!this.canvas) return;
+        const color = this.getAccentColor();
+
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = (0.5 + Math.random() * 2.0) * sizeMultiplier;
+            
+            this.list.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - (0.5 + Math.random() * 0.8),
+                size: (1.5 + Math.random() * 2.5) * sizeMultiplier,
+                alpha: 1.0,
+                decay: 0.015 + Math.random() * 0.02,
+                color: color
+            });
+        }
+
+        this.startLoop();
+    },
+
+    spawnExplosion(x, y, count = 30) {
+        this.spawn(x, y, count, 2.2);
+    },
+
+    handleClick(e) {
+        if (e.target.closest('.ambient-slider') || e.target.closest('.modal-sheet') || e.target.closest('.xp-bar-container') || e.target.closest('.google-btn') || e.target.closest('.form-input')) {
+            return;
+        }
+        this.spawn(e.clientX, e.clientY, 8);
+    },
+
+    startLoop() {
+        if (this.animating) return;
+        this.animating = true;
+        this.loop();
+    },
+
+    stopLoop() {
+        this.animating = false;
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+            this.animFrameId = null;
+        }
+        if (this.ctx && this.canvas) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    },
+
+    loop() {
+        if (!this.animating) return;
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        for (let i = this.list.length - 1; i >= 0; i--) {
+            const p = this.list[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= p.decay;
+
+            this.ctx.save();
+            this.ctx.globalAlpha = p.alpha;
+            this.ctx.shadowBlur = 6;
+            this.ctx.shadowColor = p.color;
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.restore();
+
+            if (p.alpha <= 0) {
+                this.list.splice(i, 1);
+            }
+        }
+
+        if (this.list.length === 0) {
+            this.stopLoop();
+        } else {
+            this.animFrameId = requestAnimationFrame(() => this.loop());
+        }
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
    APP INIT
 ───────────────────────────────────────────────────────── */
 const App = {
@@ -2591,18 +3793,21 @@ const App = {
         }
 
         Theme.apply();
-        Clock.update();
-
-        if (State.clockInterval) clearInterval(State.clockInterval);
-        State.clockInterval = setInterval(() => Clock.update(), 10000);
+        Clock.start();
 
         Pomo.init();
+        Pomo.requestNotificationPermission();
         Home.render();
         Tasks.render();
         Dump.render();
         Report.render();
         Settings.render();
         Level.update();
+        Nav.updateBadges();
+        
+        Particles.init();
+
+        Utils.loadDailyQuote();
 
         document.getElementById('taskDateInput').value = Utils.today();
         document.getElementById('userEmailDisplay').textContent = State.user?.email || '—';
