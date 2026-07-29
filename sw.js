@@ -9,6 +9,8 @@ const ASSETS = [
     './js/app.js',
     './js/sounds.js',
     './js/icons.js',
+    './js/threebg_dark.js',
+    './js/threebg_light.js',
     './js/firebase-config.js',
     './icon-192.png',
     './icon-512.png'

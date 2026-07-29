@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-accent="royal">
+<html lang="en" data-theme="dark" data-accent="neon">
 
 <head>
     <meta charset="UTF-8">
@@ -27,26 +27,34 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="shortcut icon" href="icon-192.png">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Focussium — Zen Productivity Space">
-    <meta property="og:description" content="Your zen productivity space. Focus timer, tasks, brain dump & weekly vibe reports.">
-    <meta property="og:image" content="icon-512.png">
+    <!-- Open Graph (fixed absolute URL for social sharing) -->
+    <meta property="og:title" content="Focussium — Deep Focus Productivity">
+    <meta property="og:description" content="Your high-contrast productivity space. Drift timer, tasks, brain dump & weekly analytics.">
+    <meta property="og:image" content="https://sanjay3226.github.io/Focussium/icon-512.png">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Focussium">
-    <meta name="twitter:image" content="icon-512.png">
+    <meta name="twitter:image" content="https://sanjay3226.github.io/Focussium/icon-512.png">
 
-    <!-- Fonts -->
+    <!-- Fonts: Space Grotesk (headings) + Inter (body) + DM Serif (quotes) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
 
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
+    <!-- THREE.JS BACKGROUND LAYER (cosmic nebula) -->
+    <div id="threeJsBg"></div>
+
+    <!-- CSS Fallback background orbs (if Three.js fails to load) -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
     <canvas class="particle-canvas" id="particleCanvas"></canvas>
     
     <!-- Loading Screen -->
@@ -59,80 +67,94 @@
 
     <!-- Login Screen -->
     <div class="login-screen" id="loginScreen">
-        <div class="login-bg"></div>
         <div class="login-card">
-            <img class="login-logo" id="loginLogo" src="icon-512.png" alt="Focussium Logo">
+            <div class="login-badge-header">
+                <img class="login-logo" id="loginLogo" src="icon-512.png" alt="Focussium Logo">
+                <span class="login-version-pill">v2.0 Zen Space</span>
+            </div>
             <h1 class="login-title">Focussium</h1>
-            <p class="login-desc">Your <strong>zen space</strong> for getting things done.<br>Built for brains that work
-                differently.</p>
+            <p class="login-desc">Your <strong>zen sanctuary</strong> for deep work.<br>Built for brains that work differently.</p>
 
-            <div id="googleAuthSection">
+            <div class="auth-box">
                 <button class="google-btn" id="googleBtn" onclick="Auth.signInGoogle()">
                     <span class="google-btn-icon" id="googleIcon"></span>
                     <span>Continue with Google</span>
                 </button>
-                <div class="login-toggle" onclick="Auth.toggleEmail(true)">Or use email address</div>
-            </div>
-
-            <div class="email-form" id="emailForm">
-                <input type="email" class="form-input" id="loginEmail" placeholder="Email address" autocomplete="email">
-                <input type="password" class="form-input" id="loginPassword" placeholder="Password">
-                <div class="email-btns">
-                    <button class="btn-primary" id="emailSignInBtn" onclick="Auth.signInEmail()">Sign In</button>
-                    <button class="btn-secondary" id="emailSignUpBtn" onclick="Auth.signUp()">Sign Up</button>
-                </div>
-                <div class="login-toggle" onclick="Auth.toggleEmail(false)">Use Google instead</div>
             </div>
 
             <div class="login-error" id="loginError"></div>
-            <p class="login-footer">Sync your progress across all your devices</p>
+
+            <div class="login-footer-row">
+                <span class="login-footer-badge">🔒 Cloud Encrypted Sync</span>
+                <span class="login-footer-badge">⚡ Offline Zen Mode</span>
+            </div>
         </div>
     </div>
 
-    <!-- Onboarding -->
+    <!-- Onboarding Welcome Screen -->
     <div class="onboard-screen" id="onboardScreen">
         <div class="onboard-card">
             <div class="onboard-step active" data-step="0">
-                <div class="onboard-emoji" id="onboardEmoji0"></div>
-                <h2 class="onboard-title">Welcome!</h2>
-                <p class="onboard-desc">Let's set up your space in 30 seconds. Pick what feels right — you can always
-                    change later.</p>
-                <button class="onboard-btn" onclick="Onboard.next()">Let's Go</button>
-            </div>
-            <div class="onboard-step" data-step="1">
-                <div class="onboard-emoji" id="onboardEmoji1"></div>
-                <h2 class="onboard-title">What's your name?</h2>
-                <p class="onboard-desc">We'll use this for greetings.</p>
-                <input class="onboard-input" id="onboardName" placeholder="Your first name..." maxlength="20"
-                    autocomplete="off">
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
-                <button class="onboard-skip" onclick="Onboard.next()">Skip</button>
-            </div>
-            <div class="onboard-step" data-step="2">
-                <div class="onboard-emoji" id="onboardEmoji2"></div>
-                <h2 class="onboard-title">Pick your vibe</h2>
-                <p class="onboard-desc">Choose a color that speaks to you.</p>
-                <div class="onboard-colors" id="onboardColors"></div>
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
-            </div>
-            <div class="onboard-step" data-step="3">
-                <div class="onboard-emoji" id="onboardEmoji3"></div>
-                <h2 class="onboard-title">Light or dark?</h2>
-                <p class="onboard-desc">Pick your preferred mode.</p>
-                <div class="onboard-themes">
-                    <button class="onboard-theme active" data-theme="dark"
-                        onclick="Onboard.setTheme('dark')">Dark</button>
-                    <button class="onboard-theme" data-theme="light" onclick="Onboard.setTheme('light')">Light</button>
-                    <button class="onboard-theme" data-theme="system" onclick="Onboard.setTheme('system')">Auto</button>
+                <div class="onboard-hero-badge">
+                    <img src="icon-512.png" alt="Focussium" class="onboard-logo-img">
                 </div>
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
+                <h2 class="onboard-title">Welcome to Focussium</h2>
+                <p class="onboard-desc">Your 30-second zen setup. Tailored for your unique rhythm and focus style.</p>
+                <div class="onboard-feature-pills">
+                    <span class="feat-pill">⏱️ Focus Timer</span>
+                    <span class="feat-pill">📋 Task Manager</span>
+                    <span class="feat-pill">🧠 Brain Dump</span>
+                    <span class="feat-pill">📊 Vibe Analytics</span>
+                </div>
+                <button class="onboard-btn primary" onclick="Onboard.next()">Begin Setup →</button>
             </div>
+
+            <div class="onboard-step" data-step="1">
+                <div class="onboard-step-num">Step 1 of 3</div>
+                <h2 class="onboard-title">What should we call you?</h2>
+                <p class="onboard-desc">We'll use your name for daily greetings and weekly vibe reports.</p>
+                <input class="onboard-input" id="onboardName" placeholder="Your first name..." maxlength="20" autocomplete="off">
+                <div class="onboard-btn-group">
+                    <button class="onboard-btn primary" onclick="Onboard.next()">Continue</button>
+                    <button class="onboard-skip" onclick="Onboard.next()">Skip for now</button>
+                </div>
+            </div>
+
+            <div class="onboard-step" data-step="2">
+                <div class="onboard-step-num">Step 2 of 3</div>
+                <h2 class="onboard-title">Pick your accent vibe</h2>
+                <p class="onboard-desc">Choose a color tone that calms your mind.</p>
+                <div class="onboard-colors" id="onboardColors"></div>
+                <button class="onboard-btn primary" onclick="Onboard.next()">Continue</button>
+            </div>
+
+            <div class="onboard-step" data-step="3">
+                <div class="onboard-step-num">Step 3 of 3</div>
+                <h2 class="onboard-title">Light or Dark mode?</h2>
+                <p class="onboard-desc">Select your preferred space aesthetic.</p>
+                <div class="onboard-themes">
+                    <button class="onboard-theme active" data-theme="dark" onclick="Onboard.setTheme('dark')">
+                        <span class="theme-icon">🌙</span> Dark
+                    </button>
+                    <button class="onboard-theme" data-theme="light" onclick="Onboard.setTheme('light')">
+                        <span class="theme-icon">☀️</span> Light
+                    </button>
+                    <button class="onboard-theme" data-theme="system" onclick="Onboard.setTheme('system')">
+                        <span class="theme-icon">⚙️</span> Auto
+                    </button>
+                </div>
+                <button class="onboard-btn primary" onclick="Onboard.next()">Continue</button>
+            </div>
+
             <div class="onboard-step" data-step="4">
-                <div class="onboard-emoji" id="onboardEmoji4"></div>
-                <h2 class="onboard-title">You're all set!</h2>
-                <p class="onboard-desc">Your zen productivity space is ready. Let's start flowing.</p>
-                <button class="onboard-btn" onclick="Onboard.done()">Start Flowing</button>
+                <div class="onboard-hero-badge final-badge">
+                    <span>🧘✨</span>
+                </div>
+                <h2 class="onboard-title">You're All Set!</h2>
+                <p class="onboard-desc">Your customized zen space is unlocked and ready for deep flow.</p>
+                <button class="onboard-btn primary pulse" onclick="Onboard.done()">Enter Zen Space ✨</button>
             </div>
+
             <div class="onboard-dots" id="onboardDots"></div>
         </div>
     </div>
@@ -144,7 +166,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-top">
-                <div class="header-left">
+                <div class="header-left" onclick="Account.open()" style="cursor: pointer;" title="View Profile & XP Progress">
                     <div class="avatar-wrapper">
                         <img class="avatar" id="userAvatar" src="" alt="Avatar">
                         <div class="user-level-badge" id="userLevelBadge">1</div>
@@ -568,6 +590,7 @@
     <div class="modal" id="addTaskModal" role="dialog" aria-modal="true" aria-label="Task editor">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
+            <button class="account-close-btn" onclick="document.getElementById('addTaskModal').classList.remove('on')" title="Close Task Editor">✕</button>
             <div class="modal-title" id="taskModalTitle">New Task</div>
 
             <div class="form-group">
@@ -659,6 +682,7 @@
     <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
+            <button class="account-close-btn" onclick="Settings.close()" title="Close Settings">✕</button>
             <div class="modal-title">Settings</div>
 
             <div class="settings-section">
@@ -712,7 +736,7 @@
                         <div class="settings-row-icon" id="settingsAvatarIcon"></div>
                         <div class="settings-row-text">
                             <h4>Profile Avatar</h4>
-                            <p>Unlock custom VIP personas</p>
+                            <p>Choose your avatar identity</p>
                         </div>
                     </div>
                     <div class="avatar-buttons" id="avatarButtons"></div>
@@ -831,16 +855,88 @@
         </div>
     </div>
 
+    <!-- Account Profile Modal -->
+    <div class="modal" id="accountModal" onclick="if (event.target === this) Account.close();" role="dialog" aria-modal="true" aria-label="Account Profile">
+        <div class="modal-sheet account-sheet">
+            <div class="modal-handle"></div>
+            <button class="account-close-btn" onclick="Account.close()" title="Close Profile">✕</button>
+            
+            <div class="account-card-header">
+                <div class="account-avatar-ring">
+                    <img id="accountModalAvatarImg" src="" alt="Avatar">
+                    <div class="account-avatar-fallback" id="accountModalAvatarFallback"></div>
+                    <div class="account-lvl-badge" id="accountModalLvlBadge">1</div>
+                </div>
+                <div class="account-identity">
+                    <h3 class="account-name" id="accountModalName">Focused Creator</h3>
+                    <p class="account-email" id="accountModalEmail">user@focussium.app</p>
+                    <span class="account-rank-pill" id="accountModalRankPill">Level 1 • Focus Initiate</span>
+                </div>
+            </div>
+
+            <!-- Pure Level + XP Section -->
+            <div class="account-xp-card">
+                <div class="account-xp-top">
+                    <span class="account-xp-label">EXPERIENCE POINTS (XP)</span>
+                    <span class="account-xp-val" id="accountModalXpVal">0 / 800 XP</span>
+                </div>
+                <div class="account-xp-track">
+                    <div class="account-xp-bar" id="accountModalXpBar"></div>
+                </div>
+                <div class="account-xp-sub" id="accountModalXpSub">
+                    Gain XP by completing focus sessions (+50 XP) & tasks (+5 XP).
+                </div>
+            </div>
+
+            <!-- Key Details Grid -->
+            <div class="account-stats-section">
+                <div class="account-stats-title">KEY PERFORMANCE DETAILS</div>
+                <div class="account-stats-grid">
+                    <div class="ac-stat-box">
+                        <div class="ac-stat-num" id="acStatTasks">0</div>
+                        <div class="ac-stat-lbl">Tasks Done</div>
+                    </div>
+                    <div class="ac-stat-box">
+                        <div class="ac-stat-num" id="acStatFocus">0m</div>
+                        <div class="ac-stat-lbl">Focus Time</div>
+                    </div>
+                    <div class="ac-stat-box">
+                        <div class="ac-stat-num" id="acStatStreak">0</div>
+                        <div class="ac-stat-lbl">Day Streak</div>
+                    </div>
+                    <div class="ac-stat-box">
+                        <div class="ac-stat-num" id="acStatScore">0</div>
+                        <div class="ac-stat-lbl">Week Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Footer Actions -->
+            <div class="account-actions">
+                <button class="account-btn secondary" onclick="Account.close(); Settings.open();">Settings</button>
+                <button class="account-btn primary" onclick="Account.close();">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Fullscreen Pomodoro -->
     <div class="fullscreen-pomo" id="fullscreenPomo">
         <div class="fs-bg" id="fsBg"></div>
-        <button class="fs-close-btn" onclick="Pomo.exitFullscreen()" id="fsCloseBtn"></button>
+        <button class="fs-close-btn" onclick="Pomo.exitFullscreen()" id="fsCloseBtn" title="Close Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
         <div class="fs-time" id="fsTime">25:00</div>
         <div class="fs-label" id="fsLabel">Focus Time</div>
         <div class="fs-controls">
-            <button class="pomo-ctrl-btn secondary" onclick="Pomo.reset()" id="fsResetBtn"></button>
-            <button class="pomo-ctrl-btn primary" onclick="Pomo.toggle()" id="fsPlayBtn"></button>
-            <button class="pomo-ctrl-btn secondary" onclick="Pomo.skip()" id="fsSkipBtn"></button>
+            <button class="pomo-ctrl-btn secondary" onclick="Pomo.reset()" id="fsResetBtn" title="Reset Timer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </button>
+            <button class="pomo-ctrl-btn primary" onclick="Pomo.toggle()" id="fsPlayBtn" title="Start / Pause">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;"><polygon points="5,3 19,12 5,21"></polygon></svg>
+            </button>
+            <button class="pomo-ctrl-btn secondary" onclick="Pomo.skip()" id="fsSkipBtn" title="Skip Session">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            </button>
         </div>
     </div>
 
@@ -860,11 +956,11 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <!-- Toast (aria-live for screen readers) -->
+    <div class="toast" id="toast" role="alert" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Celebration Canvas -->
-    <canvas class="celebration-canvas" id="celebrationCanvas"></canvas>
+    <!-- SVG Confetti Layer (populated dynamically by SvgConfetti engine) -->
+    <div id="svgConfettiLayer" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;overflow:hidden;"></div>
 
     <!-- Level Up Modal -->
     <div class="modal level-up-modal" id="levelUpModal" role="dialog" aria-modal="true" aria-label="Level Up Celebration">
@@ -874,13 +970,10 @@
             <div class="level-up-badge-wrapper">
                 <div class="level-up-badge" id="levelUpBadgeVal">1</div>
             </div>
-            <h2 class="level-up-title" id="levelUpTitleText">Rank Up!</h2>
-            <p class="level-up-subtitle" id="levelUpSubText">You reached Level 2</p>
-            <div class="level-up-unlocked-card">
-                <div class="unlocked-label">UNLOCKED REWARD</div>
-                <div class="unlocked-item" id="levelUpUnlockText">Custom Theme Accent</div>
-            </div>
-            <button class="level-up-btn" onclick="Level.claimVibe()">Claim Vibe</button>
+            <h2 class="level-up-title" id="levelUpTitleText">Focus Initiate</h2>
+            <p class="level-up-subtitle" id="levelUpSubText">Level 1 reached.</p>
+            <div id="levelUpUnlockText" style="display:none"></div>
+            <button class="level-up-btn" onclick="Level.claimVibe()">Continue</button>
         </div>
     </div>
 
@@ -890,10 +983,17 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+    <!-- Three.js CDN (for cosmic space background) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+
     <script src="js/icons.js"></script>
     <script src="js/sounds.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Background Space Scene Scripts -->
+    <script src="js/threebg_dark.js"></script>
+    <script src="js/threebg_light.js"></script>
 </body>
 
 </html>
