@@ -159,7 +159,7 @@ const Sound = (() => {
 
                 ambientVolumeNode = c.createGain();
                 ambientVolumeNode.gain.setValueAtTime(0.0001, c.currentTime);
-                ambientVolumeNode.gain.exponentialRampToValueAtTime(vol * 0.35, c.currentTime + 1.5);
+                ambientVolumeNode.gain.exponentialRampToValueAtTime(vol * 0.75, c.currentTime + 0.8);
                 ambientVolumeNode.connect(c.destination);
 
                 if (type === 'rain') {
@@ -312,7 +312,7 @@ const Sound = (() => {
                 const c = getContext();
                 if (ambientVolumeNode) {
                     ambientVolumeNode.gain.setValueAtTime(ambientVolumeNode.gain.value, c.currentTime);
-                    ambientVolumeNode.gain.linearRampToValueAtTime(vol * 0.35, c.currentTime + 0.1);
+                    ambientVolumeNode.gain.linearRampToValueAtTime(vol * 0.75, c.currentTime + 0.1);
                 }
             } catch(e) {}
         },
@@ -320,11 +320,9 @@ const Sound = (() => {
         click() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: sharp high-passed laser blip
-                    synth({ freq: 1100, pitchSweep: 300, dur: 0.05, vol: 0.05, type: 'triangle', decayType: 'linear' });
+                    synth({ freq: 1100, pitchSweep: 300, dur: 0.05, vol: 0.12, type: 'triangle', decayType: 'linear' });
                 } else {
-                    // Zen: organic fast woodblock pop
-                    synth({ freq: 520, pitchSweep: 180, dur: 0.04, vol: 0.12, type: 'sine', decayType: 'linear' });
+                    synth({ freq: 520, pitchSweep: 180, dur: 0.04, vol: 0.25, type: 'sine', decayType: 'linear' });
                 }
             });
         },
@@ -332,13 +330,11 @@ const Sound = (() => {
         nav() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: Bouncy double sound
-                    synth({ freq: 300, pitchSweep: 700, dur: 0.06, vol: 0.04, type: 'square', decayType: 'linear' });
-                    synth({ freq: 500, pitchSweep: 1100, dur: 0.06, vol: 0.03, type: 'square', delay: 0.04, decayType: 'linear' });
+                    synth({ freq: 300, pitchSweep: 700, dur: 0.06, vol: 0.10, type: 'square', decayType: 'linear' });
+                    synth({ freq: 500, pitchSweep: 1100, dur: 0.06, vol: 0.08, type: 'square', delay: 0.04, decayType: 'linear' });
                 } else {
-                    // Zen: Floating dual FM bell chimes
-                    synth({ freq: 660, dur: 0.15, vol: 0.04, type: 'sine', modFreq: 1320, modAmt: 150 });
-                    synth({ freq: 880, dur: 0.20, vol: 0.03, type: 'sine', modFreq: 1760, modAmt: 200, delay: 0.04 });
+                    synth({ freq: 660, dur: 0.15, vol: 0.12, type: 'sine', modFreq: 1320, modAmt: 150 });
+                    synth({ freq: 880, dur: 0.20, vol: 0.10, type: 'sine', modFreq: 1760, modAmt: 200, delay: 0.04 });
                 }
             });
         },
@@ -346,19 +342,17 @@ const Sound = (() => {
         success() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: Arcade rapid arpeggio power-up
-                    synth({ freq: 440, dur: 0.06, vol: 0.04, type: 'square' });
-                    synth({ freq: 554, dur: 0.06, vol: 0.04, type: 'square', delay: 0.04 });
-                    synth({ freq: 659, dur: 0.06, vol: 0.04, type: 'square', delay: 0.08 });
-                    synth({ freq: 880, dur: 0.16, vol: 0.05, type: 'square', delay: 0.12 });
+                    synth({ freq: 440, dur: 0.06, vol: 0.12, type: 'square' });
+                    synth({ freq: 554, dur: 0.06, vol: 0.12, type: 'square', delay: 0.04 });
+                    synth({ freq: 659, dur: 0.06, vol: 0.12, type: 'square', delay: 0.08 });
+                    synth({ freq: 880, dur: 0.16, vol: 0.15, type: 'square', delay: 0.12 });
                 } else {
-                    // Zen: Floating ascending major-pentatonic chimes with spatial delay
                     const notes = [523, 587, 659, 784, 880];
                     notes.forEach((f, i) => {
                         synth({
                             freq: f,
                             dur: 0.35 + i * 0.04,
-                            vol: 0.045,
+                            vol: 0.15,
                             type: 'sine',
                             modFreq: f * 2,
                             modAmt: 120,
@@ -373,11 +367,9 @@ const Sound = (() => {
         delete() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: laser shot down
-                    synth({ freq: 780, pitchSweep: 80, dur: 0.14, vol: 0.06, type: 'sawtooth', decayType: 'linear' });
+                    synth({ freq: 780, pitchSweep: 80, dur: 0.14, vol: 0.14, type: 'sawtooth', decayType: 'linear' });
                 } else {
-                    // Zen: descending wooden drawer slide
-                    synth({ freq: 380, pitchSweep: 140, dur: 0.14, vol: 0.08, type: 'sine', decayType: 'linear' });
+                    synth({ freq: 380, pitchSweep: 140, dur: 0.14, vol: 0.20, type: 'sine', decayType: 'linear' });
                 }
             });
         },
@@ -385,11 +377,9 @@ const Sound = (() => {
         open() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: rising tone
-                    synth({ freq: 400, pitchSweep: 800, dur: 0.10, vol: 0.04, type: 'triangle', decayType: 'linear' });
+                    synth({ freq: 400, pitchSweep: 800, dur: 0.10, vol: 0.12, type: 'triangle', decayType: 'linear' });
                 } else {
-                    // Zen: smooth physical sliding glide up
-                    synth({ freq: 300, pitchSweep: 480, dur: 0.16, vol: 0.06, type: 'sine', decayType: 'linear' });
+                    synth({ freq: 300, pitchSweep: 480, dur: 0.16, vol: 0.18, type: 'sine', decayType: 'linear' });
                 }
             });
         },
@@ -397,11 +387,9 @@ const Sound = (() => {
         close() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: falling tone
-                    synth({ freq: 800, pitchSweep: 400, dur: 0.10, vol: 0.04, type: 'triangle', decayType: 'linear' });
+                    synth({ freq: 800, pitchSweep: 400, dur: 0.10, vol: 0.12, type: 'triangle', decayType: 'linear' });
                 } else {
-                    // Zen: smooth physical sliding glide down
-                    synth({ freq: 480, pitchSweep: 300, dur: 0.16, vol: 0.06, type: 'sine', decayType: 'linear' });
+                    synth({ freq: 480, pitchSweep: 300, dur: 0.16, vol: 0.18, type: 'sine', decayType: 'linear' });
                 }
             });
         },
@@ -409,13 +397,11 @@ const Sound = (() => {
         toggle() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: quick bouncy chirps
-                    synth({ freq: 600, pitchSweep: 850, dur: 0.05, vol: 0.04, type: 'square' });
-                    synth({ freq: 850, pitchSweep: 600, dur: 0.05, vol: 0.04, type: 'square', delay: 0.04 });
+                    synth({ freq: 600, pitchSweep: 850, dur: 0.05, vol: 0.12, type: 'square' });
+                    synth({ freq: 850, pitchSweep: 600, dur: 0.05, vol: 0.12, type: 'square', delay: 0.04 });
                 } else {
-                    // Zen: clean soft dual chime
-                    synth({ freq: 392, dur: 0.08, vol: 0.05, type: 'sine', modFreq: 784, modAmt: 80 });
-                    synth({ freq: 587, dur: 0.12, vol: 0.04, type: 'sine', modFreq: 1174, modAmt: 100, delay: 0.03 });
+                    synth({ freq: 392, dur: 0.08, vol: 0.15, type: 'sine', modFreq: 784, modAmt: 80 });
+                    synth({ freq: 587, dur: 0.12, vol: 0.12, type: 'sine', modFreq: 1174, modAmt: 100, delay: 0.03 });
                 }
             });
         },
@@ -423,14 +409,12 @@ const Sound = (() => {
         timerStart() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: countdown coin chime
-                    synth({ freq: 987, dur: 0.08, vol: 0.05, type: 'square' });
-                    synth({ freq: 1318, dur: 0.22, vol: 0.06, type: 'square', delay: 0.06 });
+                    synth({ freq: 987, dur: 0.08, vol: 0.14, type: 'square' });
+                    synth({ freq: 1318, dur: 0.22, vol: 0.18, type: 'square', delay: 0.06 });
                 } else {
-                    // Zen: Resonant Japanese singing bowl base drone & floating overtones
-                    synth({ freq: 196, dur: 1.8, vol: 0.12, type: 'sine', useDelay: true });
-                    synth({ freq: 294, dur: 1.4, vol: 0.06, type: 'sine', modFreq: 588, modAmt: 30, useDelay: true, delay: 0.03 });
-                    synth({ freq: 392, dur: 1.1, vol: 0.03, type: 'triangle', useDelay: true, delay: 0.06 });
+                    synth({ freq: 196, dur: 1.8, vol: 0.35, type: 'sine', useDelay: true });
+                    synth({ freq: 294, dur: 1.4, vol: 0.20, type: 'sine', modFreq: 588, modAmt: 30, useDelay: true, delay: 0.03 });
+                    synth({ freq: 392, dur: 1.1, vol: 0.12, type: 'triangle', useDelay: true, delay: 0.06 });
                 }
             });
         },
@@ -438,20 +422,18 @@ const Sound = (() => {
         timerDone() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: Rapid arpeggiating victory fanfare
                     const retroNotes = [523, 659, 784, 1047, 1318, 1568];
                     retroNotes.forEach((f, i) => {
-                        synth({ freq: f, dur: 0.06, vol: 0.05, type: 'square', delay: i * 0.05 });
+                        synth({ freq: f, dur: 0.06, vol: 0.14, type: 'square', delay: i * 0.05 });
                     });
-                    synth({ freq: 1047, dur: 0.4, vol: 0.06, type: 'square', delay: 0.3, useDelay: true });
+                    synth({ freq: 1047, dur: 0.4, vol: 0.18, type: 'square', delay: 0.3, useDelay: true });
                 } else {
-                    // Zen: Temple chime triple harmony chord
                     const harmonies = [523, 659, 784, 1047];
                     harmonies.forEach((f, i) => {
                         synth({
                             freq: f,
                             dur: 1.2,
-                            vol: 0.055,
+                            vol: 0.18,
                             type: 'sine',
                             modFreq: f * 3,
                             modAmt: 100,
@@ -466,12 +448,10 @@ const Sound = (() => {
         breakStart() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: Calm retro whistle
-                    synth({ freq: 784, pitchSweep: 392, dur: 0.22, vol: 0.05, type: 'triangle', decayType: 'linear' });
+                    synth({ freq: 784, pitchSweep: 392, dur: 0.22, vol: 0.14, type: 'triangle', decayType: 'linear' });
                 } else {
-                    // Zen: Medium singing bowl floating chord
-                    synth({ freq: 220, dur: 1.5, vol: 0.10, type: 'sine', useDelay: true });
-                    synth({ freq: 440, dur: 1.1, vol: 0.05, type: 'sine', modFreq: 880, modAmt: 40, useDelay: true, delay: 0.03 });
+                    synth({ freq: 220, dur: 1.5, vol: 0.25, type: 'sine', useDelay: true });
+                    synth({ freq: 440, dur: 1.1, vol: 0.15, type: 'sine', modFreq: 880, modAmt: 40, useDelay: true, delay: 0.03 });
                 }
             });
         },
@@ -479,28 +459,24 @@ const Sound = (() => {
         levelUp() {
             play(() => {
                 if (getPalette() === 'retro') {
-                    // Retro: Huge celebratory scale sweep and trill!
                     const notes = [261, 329, 392, 523, 659, 784, 1047, 1318];
                     notes.forEach((f, i) => {
-                        synth({ freq: f, dur: 0.05, vol: 0.05, type: 'square', delay: i * 0.04 });
+                        synth({ freq: f, dur: 0.05, vol: 0.14, type: 'square', delay: i * 0.04 });
                     });
-                    // Bouncy chord
                     [784, 1047, 1318, 1568].forEach((f, i) => {
-                        synth({ freq: f, dur: 0.6, vol: 0.04, type: 'triangle', delay: 0.32 + i * 0.02, useDelay: true });
+                        synth({ freq: f, dur: 0.6, vol: 0.15, type: 'triangle', delay: 0.32 + i * 0.02, useDelay: true });
                     });
                 } else {
-                    // Zen: Epic celestial pentatonic sweep running into a sparkling major-7th chime sweep
-                    const notes = [261, 329, 392, 523, 659]; // C4, E4, G4, C5, E5 arpeggio
+                    const notes = [261, 329, 392, 523, 659];
                     notes.forEach((f, i) => {
-                        synth({ freq: f, dur: 0.4, vol: 0.06, type: 'sine', delay: i * 0.05 });
+                        synth({ freq: f, dur: 0.4, vol: 0.20, type: 'sine', delay: i * 0.05 });
                     });
-                    // Celestial major 7th chord (G5, B5, D6, F#6) spatial chimes
                     const chord = [784, 987, 1174, 1480];
                     chord.forEach((f, i) => {
                         synth({
                             freq: f,
                             dur: 1.8,
-                            vol: 0.05,
+                            vol: 0.18,
                             type: 'sine',
                             modFreq: f * 2,
                             modAmt: 250,

@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    FOCUSSIUM v2 PRO — MAIN APPLICATION (ENHANCED)
 ═══════════════════════════════════════════════════════════ */
 
@@ -11,17 +11,26 @@ const CONFIG = {
     TOAST_DURATION: 2600,
     UNDO_DURATION: 4000,
     TASK_ANIMATION_STAGGER: 0.04,
-    XP_PER_FOCUS_MINUTE: 10,
-    XP_PER_TASK: 50,
+    // Ultra-slow XP — 25min session = 50 XP, task = 5 XP
+    XP_PER_FOCUS_MINUTE: 2,
+    XP_PER_TASK: 5,
+    // XP_DIVISOR: Level N achieved at 800*(N-1)^2 total XP
+    // Level 2: ~16 sessions | Level 5: ~256 sessions | Level 10: ~1296 sessions
+    XP_LEVEL_DIVISOR: 800,
     RANKS: {
-        1: { title: "Novice Flow 🧘", unlock: "Start your zen focus." },
-        2: { title: "Habit Builder 🏗️", unlock: "Cyber Neon & Aura Sunset accents!" },
-        3: { title: "Focus Disciple 📿", unlock: "Vibrant Retro Synth sound palette!" },
-        4: { title: "Productivity Elite ⚡", unlock: "4 Animated VIP Avatars in settings!" },
-        5: { title: "Zen Master 🪷", unlock: "Custom Color Swatch hex input!" },
-        6: { title: "Time Whisperer ⏳", unlock: "Mystic Nebula accent theme!" },
-        7: { title: "Deep Explorer 🌌", unlock: "Golden Celestial Aura decoration!" },
-        8: { title: "Zen Deity 👑", unlock: "Infinite Golden Aura & Elite Status!" }
+        1:  { title: "Focus Initiate" },
+        2:  { title: "The Consistent" },
+        3:  { title: "Habit Forger" },
+        4:  { title: "Deep Diver" },
+        5:  { title: "Flow State" },
+        6:  { title: "Time Sculptor" },
+        7:  { title: "Mind Architect" },
+        8:  { title: "Discipline Monk" },
+        9:  { title: "Zen Operator" },
+        10: { title: "The Unbreakable" },
+        12: { title: "Chronos Wielder" },
+        15: { title: "Chronos Bound" },
+        20: { title: "Infinite Focus" }
     }
 };
 
@@ -292,6 +301,10 @@ const Storage = {
                 return {
                     ...State.defaults,
                     ...parsed,
+                    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+                    lists: (Array.isArray(parsed.lists) && parsed.lists.length) ? parsed.lists : Utils.clone(State.defaults.lists),
+                    dumps: Array.isArray(parsed.dumps) ? parsed.dumps : [],
+                    pomo: Array.isArray(parsed.pomo) ? parsed.pomo : [],
                     settings: { ...State.defaults.settings, ...(parsed.settings || {}) }
                 };
             } catch (e) {
@@ -309,15 +322,16 @@ const Storage = {
     async saveRemote() {
         if (!State.user) return;
 
+        // BUG 1 FIX: guard against null element
         const indicator = document.getElementById('syncIndicator');
-        indicator.className = 'sync-indicator saving';
+        if (indicator) indicator.className = 'sync-indicator saving';
 
         try {
             await FB.db.collection('users').doc(State.user.uid).set(Utils.clone(State.data));
-            indicator.className = 'sync-indicator';
+            if (indicator) indicator.className = 'sync-indicator';
         } catch (e) {
             handleError('Firestore save failed', e);
-            indicator.className = 'sync-indicator error';
+            if (indicator) indicator.className = 'sync-indicator error';
         }
     },
 
@@ -417,18 +431,29 @@ const Theme = {
     },
 
     apply() {
-        let theme = State.data.settings.theme;
+        let theme = State.data?.settings?.theme || 'dark';
         if (theme === 'system') {
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.setAttribute('data-theme', theme);
 
-        if (State.data.settings.accent === 'custom' && State.data.settings.customHex) {
+        if (State.data?.settings?.accent === 'custom' && State.data?.settings?.customHex) {
             document.documentElement.setAttribute('data-accent', 'royal');
             this.applyCustomAccent(State.data.settings.customHex);
         } else {
             this.clearCustomAccent();
-            document.documentElement.setAttribute('data-accent', State.data.settings.accent);
+            document.documentElement.setAttribute('data-accent', State.data?.settings?.accent || 'neon');
+        }
+
+        // Dynamic Three.js Background Swapping (Light / Dark WebGL scenes)
+        const bgContainer = document.getElementById('threeJsBg');
+        if (bgContainer) {
+            bgContainer.innerHTML = '';
+            if (theme === 'light' && typeof window.initThreeBgLight === 'function') {
+                window.initThreeBgLight();
+            } else if (typeof window.initThreeBg === 'function') {
+                window.initThreeBg();
+            }
         }
     }
 };
@@ -478,75 +503,42 @@ const Toast = {
    AUTH
 ───────────────────────────────────────────────────────── */
 const Auth = {
-    toggleEmail(show) {
-        document.getElementById('googleAuthSection').style.display = show ? 'none' : 'block';
-        document.getElementById('emailForm').classList.toggle('show', show);
-        document.getElementById('loginError').textContent = '';
-    },
-
     async signInGoogle() {
         const btn = document.getElementById('googleBtn');
-        btn.querySelector('span:last-child').textContent = 'Signing in...';
+        const label = btn.querySelector('span:last-child');
+        label.textContent = 'Signing in...';
         btn.disabled = true;
 
         try {
             await FB.auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
         } catch (e) {
-            document.getElementById('loginError').textContent = e.message;
-            btn.querySelector('span:last-child').textContent = 'Continue with Google';
-            btn.disabled = false;
-        }
-    },
-
-    async signInEmail() {
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPassword').value;
-        const btn = document.getElementById('emailSignInBtn');
-
-        if (!email || !pass) return;
-
-        btn.textContent = '...';
-        btn.disabled = true;
-
-        try {
-            await FB.auth.signInWithEmailAndPassword(email, pass);
-        } catch (err) {
-            let msg = err.message;
-            if (err.code === 'auth/user-not-found') msg = 'User not found. Try signing up.';
-            if (err.code === 'auth/wrong-password') msg = 'Incorrect password.';
-            document.getElementById('loginError').textContent = msg;
-            btn.textContent = 'Sign In';
-            btn.disabled = false;
-        }
-    },
-
-    async signUp() {
-        const email = document.getElementById('loginEmail').value;
-        const pass = document.getElementById('loginPassword').value;
-        const btn = document.getElementById('emailSignUpBtn');
-
-        if (!email || pass.length < 6) {
-            document.getElementById('loginError').textContent = 'Password must be at least 6 characters.';
-            return;
-        }
-
-        btn.textContent = '...';
-        btn.disabled = true;
-
-        try {
-            await FB.auth.createUserWithEmailAndPassword(email, pass);
-        } catch (err) {
-            document.getElementById('loginError').textContent = err.message;
-            btn.textContent = 'Sign Up';
+            const err = document.getElementById('loginError');
+            if (err) err.textContent = e.message;
+            label.textContent = 'Continue with Google';
             btn.disabled = false;
         }
     },
 
     async signOut() {
         try {
+            // Close all open modals automatically (settings, account, task editor)
+            document.querySelectorAll('.modal.on').forEach(m => m.classList.remove('on'));
+
+            if (State.pomo.running) {
+                clearInterval(State.pomo.interval);
+                State.pomo.running = false;
+                State.pomo.interval = null;
+            }
             await FB.auth.signOut();
             State.data = Utils.clone(State.defaults);
             localStorage.removeItem('focussium_v2_data');
+            
+            // Show fresh Login Screen cleanly
+            document.getElementById('loginScreen').classList.add('show');
+            document.getElementById('onboardScreen').classList.remove('show');
+            document.getElementById('app').classList.remove('show');
+            Sound.click();
+            Toast.show('Signed out cleanly');
         } catch (e) {
             handleError('Sign out failed', e);
             Toast.show('Sign out failed');
@@ -554,9 +546,18 @@ const Auth = {
     },
 
     init() {
-        FB.auth.onAuthStateChanged(async user => {
+        let initialized = false;
+        const hideLoading = () => {
+            if (initialized) return;
+            initialized = true;
             const loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) loadingScreen.classList.add('hide');
+        };
 
+        // Safety fallback timer if Firebase callback delays or encounters network lag
+        setTimeout(hideLoading, 1200);
+
+        FB.auth.onAuthStateChanged(async user => {
             if (user) {
                 State.user = user;
 
@@ -576,26 +577,33 @@ const Auth = {
                     State.data = Storage.load();
                 }
 
-                // Avatar with premium fallback/VIP display
-                Settings.applyAvatarDisplay();
+                if (typeof Settings !== 'undefined' && Settings.applyAvatarDisplay) {
+                    Settings.applyAvatarDisplay();
+                }
 
-                document.getElementById('userEmailDisplay').textContent = user.email || '';
-                document.getElementById('loginScreen').classList.remove('show');
+                const emailDisp = document.getElementById('userEmailDisplay');
+                if (emailDisp) emailDisp.textContent = user.email || '';
 
-                setTimeout(() => loadingScreen.classList.add('hide'), 300);
+                const loginScreen = document.getElementById('loginScreen');
+                if (loginScreen) loginScreen.classList.remove('show');
+
+                setTimeout(hideLoading, 300);
 
                 if (!State.data.onboarded) {
-                    Onboard.show();
+                    if (typeof Onboard !== 'undefined' && Onboard.show) Onboard.show();
                 } else {
-                    document.getElementById('app').classList.add('show');
+                    const appEl = document.getElementById('app');
+                    if (appEl) appEl.classList.add('show');
                     App.init();
                 }
             } else {
                 State.user = null;
                 State.data = Storage.load();
-                document.getElementById('app').classList.remove('show');
-                document.getElementById('loginScreen').classList.add('show');
-                setTimeout(() => loadingScreen.classList.add('hide'), 300);
+                const appEl = document.getElementById('app');
+                if (appEl) appEl.classList.remove('show');
+                const loginScreen = document.getElementById('loginScreen');
+                if (loginScreen) loginScreen.classList.add('show');
+                setTimeout(hideLoading, 300);
                 App.init();
             }
         });
@@ -722,88 +730,67 @@ const Clock = {
     }
 };
 
-/* ─────────────────────────────────────────────────────────
-   LEVELING, CONFETTI & DEITY GLOW ENGINE
-   ───────────────────────────────────────────────────────── */
-const Confetti = {
-    canvas: null,
-    ctx: null,
-    particles: [],
-    animationId: null,
-
-    init() {
-        this.canvas = document.getElementById('celebrationCanvas');
-        if (!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        window.addEventListener('resize', () => this.resize());
-        this.resize();
+/* ---------------------------------------------------------
+   SVG CONFETTI ENGINE (replaces old canvas-based Confetti)
+   --------------------------------------------------------- */
+const SvgConfetti = {
+    layer: null,
+    shapes: {
+        star5:    '<polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="currentColor"/>',
+        diamond:  '<polygon points="12,2 22,12 12,22 2,12" fill="currentColor"/>',
+        ring:     '<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="3"/>',
+        lightning:'<polygon points="13,2 7,13 12,13 11,22 17,11 12,11" fill="currentColor"/>',
+        cross:    '<path d="M10,2 L14,2 L14,10 L22,10 L22,14 L14,14 L14,22 L10,22 L10,14 L2,14 L2,10 L10,10 Z" fill="currentColor"/>',
+        crescent: '<path d="M21,12.79A9,9,0,1,1,11.21,3,7,7,0,0,0,21,12.79Z" fill="currentColor"/>',
+        triangle: '<polygon points="12,3 22,21 2,21" fill="currentColor"/>',
+        spark:    '<path d="M12,2 L13.5,10.5 L22,12 L13.5,13.5 L12,22 L10.5,13.5 L2,12 L10.5,10.5 Z" fill="currentColor"/>'
     },
-
-    resize() {
-        if (this.canvas) {
-            this.canvas.width = window.innerWidth;
-            this.canvas.height = window.innerHeight;
-        }
-    },
+    colors: ['#00E5FF','#7B2DFF','#FF5757','#FFD700','#3DD9B8','#FF4D8D','#FFFFFF','#A78BFA','#F97316','#22D3EE'],
 
     start() {
-        this.init();
-        if (!this.canvas) return;
-        this.particles = [];
-        const colors = [
-            getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#f5c842',
-            getComputedStyle(document.documentElement).getPropertyValue('--acl').trim() || '#ffdd6b',
-            '#ff5757', '#3dd9b8', '#9d6eff', '#00e5ff'
-        ];
-
-        for (let i = 0; i < 150; i++) {
-            this.particles.push({
-                x: Math.random() * this.canvas.width,
-                y: Math.random() * this.canvas.height - this.canvas.height,
-                r: Math.random() * 5 + 4,
-                d: Math.random() * this.canvas.height,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                tilt: Math.random() * 10 - 5,
-                tiltAngleIncremental: Math.random() * 0.07 + 0.02,
-                tiltAngle: 0,
-                speedY: Math.random() * 3 + 2,
-                speedX: Math.random() * 2 - 1
-            });
+        let layer = document.getElementById('svgConfettiLayer');
+        if (!layer) {
+            layer = document.createElement('div');
+            layer.id = 'svgConfettiLayer';
+            layer.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;overflow:hidden;';
+            document.body.appendChild(layer);
         }
-
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-        this.draw();
+        layer.innerHTML = '';
+        this.layer = layer;
+        const shapeKeys = Object.keys(this.shapes);
+        for (let i = 0; i < 90; i++) setTimeout(() => this._spawn(shapeKeys), i * 20);
+        setTimeout(() => { if (this.layer) this.layer.innerHTML = ''; }, 5500);
     },
 
-    draw() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        let active = false;
+    _spawn(shapeKeys) {
+        if (!this.layer) return;
+        const shape = shapeKeys[Math.floor(Math.random() * shapeKeys.length)];
+        const color = this.colors[Math.floor(Math.random() * this.colors.length)];
+        const size  = 10 + Math.random() * 22;
+        const startX = Math.random() * window.innerWidth;
+        const driftX = (Math.random() - 0.5) * 320;
+        const dur    = 2200 + Math.random() * 1800;
+        const rotEnd = (Math.random() - 0.5) * 900;
+        const op     = 0.75 + Math.random() * 0.25;
+        const h      = window.innerHeight;
 
-        this.particles.forEach((p, idx) => {
-            p.tiltAngle += p.tiltAngleIncremental;
-            p.y += p.speedY;
-            p.x += p.speedX + Math.sin(p.tiltAngle) * 0.5;
-            p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
+        const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        el.setAttribute('viewBox', '0 0 24 24');
+        el.setAttribute('width', size);
+        el.setAttribute('height', size);
+        el.style.cssText = 'position:absolute;left:' + startX + 'px;top:-40px;color:' + color + ';opacity:' + op + ';will-change:transform,opacity;filter:drop-shadow(0 0 5px ' + color + '99);';
+        el.innerHTML = this.shapes[shape];
+        this.layer.appendChild(el);
 
-            if (p.y < this.canvas.height + p.r * 2) {
-                active = true;
-            }
-
-            this.ctx.beginPath();
-            this.ctx.lineWidth = p.r;
-            this.ctx.strokeStyle = p.color;
-            this.ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-            this.ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-            this.ctx.stroke();
-        });
-
-        if (active) {
-            this.animationId = requestAnimationFrame(() => this.draw());
-        } else {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
+        const anim = el.animate([
+            { transform: 'translateY(0px) translateX(0px) rotate(0deg) scale(1)', opacity: op },
+            { transform: 'translateY(' + (h*0.45) + 'px) translateX(' + (driftX*0.5) + 'px) rotate(' + (rotEnd*0.5) + 'deg) scale(0.85)', opacity: op*0.9, offset: 0.55 },
+            { transform: 'translateY(' + (h+60) + 'px) translateX(' + driftX + 'px) rotate(' + rotEnd + 'deg) scale(0.2)', opacity: 0 }
+        ], { duration: dur, easing: 'cubic-bezier(0.22,0.61,0.36,1)', fill: 'forwards' });
+        anim.onfinish = () => el.remove();
     }
 };
+
 
 const Level = {
     getXP() {
@@ -812,17 +799,20 @@ const Level = {
         return (totalFocus * CONFIG.XP_PER_FOCUS_MINUTE) + (totalTasks * CONFIG.XP_PER_TASK);
     },
 
+    // SLOW BURN: Level N requires 800*(N-1)^2 total XP
+    // e.g. Level 2 = 800 XP, Level 10 = 64,800 XP, Level 20 = 304,800 XP
     getCurrentLevel() {
         const xp = this.getXP();
-        return Math.floor(Math.sqrt(Math.max(xp, 0) / 100)) + 1;
+        return Math.max(1, Math.floor(Math.sqrt(Math.max(xp, 0) / CONFIG.XP_LEVEL_DIVISOR)) + 1);
     },
 
     update() {
         const xp = this.getXP();
         const level = this.getCurrentLevel();
 
-        const xpForCurrentLevel = 100 * Math.pow(level - 1, 2);
-        const xpForNextLevel = 100 * Math.pow(level, 2);
+        // Updated boundaries to match new slow formula: 800*(N-1)^2
+        const xpForCurrentLevel = CONFIG.XP_LEVEL_DIVISOR * Math.pow(level - 1, 2);
+        const xpForNextLevel = CONFIG.XP_LEVEL_DIVISOR * Math.pow(level, 2);
         const xpInCurrentLevel = xp - xpForCurrentLevel;
         const xpNeededForNext = xpForNextLevel - xpForCurrentLevel;
         const progressPercent = Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNext) * 100));
@@ -855,19 +845,24 @@ const Level = {
         const bar = document.getElementById('xpBarFill');
         if (bar) bar.style.width = `${progressPercent}%`;
 
-        // Proactively update Settings display ifSettings is defined
-        if (window.Settings && typeof Settings.render === 'function') {
-            Settings.renderAccents();
-            Settings.renderAvatars();
-            Settings.renderSoundPalette();
+        // Proactively update Settings display if Settings is defined
+        if (window.Settings && typeof Settings.renderAccents === 'function') {
+            try {
+                Settings.renderAccents();
+                Settings.renderAvatars();
+                Settings.renderSoundPalette();
+            } catch (e) {}
         }
     },
 
     celebrate(newLvl) {
         Sound.levelUp();
-        Confetti.start();
+        SvgConfetti.start();
 
-        const rank = CONFIG.RANKS[newLvl] || { title: "Focused Creator 💫", unlock: "New customization rewards!" };
+        // Find the nearest rank title at or below this level
+        const rankKeys = Object.keys(CONFIG.RANKS).map(Number).sort((a,b) => a-b);
+        let rankTitle = 'Focused Creator';
+        for (const k of rankKeys) { if (newLvl >= k) rankTitle = CONFIG.RANKS[k].title; }
 
         const modal = document.getElementById('levelUpModal');
         const badgeVal = document.getElementById('levelUpBadgeVal');
@@ -876,9 +871,10 @@ const Level = {
         const unlockText = document.getElementById('levelUpUnlockText');
 
         if (badgeVal) badgeVal.textContent = newLvl;
-        if (titleText) titleText.textContent = rank.title;
-        if (subText) subText.textContent = `You reached Level ${newLvl}!`;
-        if (unlockText) unlockText.textContent = rank.unlock;
+        if (titleText) titleText.textContent = rankTitle;
+        if (subText) subText.textContent = `Level ${newLvl} reached.`;
+        if (unlockText) unlockText.textContent = '';
+        if (unlockText) unlockText.style.display = 'none';
 
         if (modal) modal.classList.add('on');
     },
@@ -1152,7 +1148,7 @@ const Tasks = {
                 : todayTasks.filter(t => t.list === list && !t.completed).length;
 
             return `
-            <button class="tab ${list === State.data.currentList ? 'active' : ''}" onclick="Tasks.setList('${Utils.escape(list).replace(/'/g, "\\'")}')">
+            <button class="tab ${list === State.data.currentList ? 'active' : ''}" data-list="${Utils.escape(list)}" onclick="Tasks.setList(this.dataset.list)">
                 ${Utils.escape(list)}
                 ${count ? `<span class="tab-count">${count}</span>` : ''}
             </button>`;
@@ -1401,6 +1397,7 @@ const Tasks = {
         } else {
             State.data.tasks.unshift({
                 id: Utils.generateId('task'),
+                repeatGroupId: Utils.generateId('rg'), // BUG 2 FIX: unique group key for repeats
                 ...taskData,
                 completed: false,
                 completedAt: null,
@@ -1505,14 +1502,26 @@ const Tasks = {
 
     summonRepeats() {
         const today = Utils.today();
-        const repeatNames = [...new Set(
+        // BUG 2 FIX: group by repeatGroupId (not task text) to avoid collisions
+        const repeatGroupIds = [...new Set(
             State.data.tasks
-                .filter(t => t.repeat && t.repeat !== 'none')
-                .map(t => t.text)
+                .filter(t => t.repeat && t.repeat !== 'none' && t.repeatGroupId)
+                .map(t => t.repeatGroupId)
         )];
 
-        repeatNames.forEach(name => {
-            const items = State.data.tasks.filter(t => t.text === name && t.repeat && t.repeat !== 'none');
+        // Also handle legacy tasks without repeatGroupId (group by text as fallback, assign new id)
+        State.data.tasks
+            .filter(t => t.repeat && t.repeat !== 'none' && !t.repeatGroupId)
+            .forEach(t => { t.repeatGroupId = Utils.generateId('rg'); });
+
+        const allRepeatGroupIds = [...new Set(
+            State.data.tasks
+                .filter(t => t.repeat && t.repeat !== 'none' && t.repeatGroupId)
+                .map(t => t.repeatGroupId)
+        )];
+
+        allRepeatGroupIds.forEach(gid => {
+            const items = State.data.tasks.filter(t => t.repeatGroupId === gid && t.repeat && t.repeat !== 'none');
             const active = items.filter(t => !t.completed);
 
             if (active.length > 0) {
@@ -1529,7 +1538,7 @@ const Tasks = {
                     const last = completed[0];
                     const doneDate = new Date(last.completedAt).toISOString().split('T')[0];
 
-                    if (doneDate < today && !State.data.tasks.some(t => t.text === name && t.date === today && !t.completed)) {
+                    if (doneDate < today && !State.data.tasks.some(t => t.repeatGroupId === gid && t.date === today && !t.completed)) {
                         State.data.tasks.unshift({
                             ...last,
                             id: Utils.generateId('task'),
@@ -1685,10 +1694,62 @@ const Dump = {
 };
 
 /* ─────────────────────────────────────────────────────────
+   DEEP RELATABLE QUOTES ENGINE
+───────────────────────────────────────────────────────── */
+const QUOTES_COLLECTION = [
+    { text: "The wound is the place where the Light enters you.", author: "Rumi" },
+    { text: "You have power over your mind — not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
+    { text: "He who has a why to live can bear almost any how.", author: "Viktor Frankl" },
+    { text: "Your mind is for having ideas, not holding them.", author: "David Allen" },
+    { text: "Mastering others is strength. Mastering yourself is true power.", author: "Lao Tzu" },
+    { text: "We suffer more often in imagination than in reality.", author: "Seneca" },
+    { text: "There is nothing outside of yourself that can ever enable you to get better. Everything is within.", author: "Miyamoto Musashi" },
+    { text: "A calm mind, a fit body, a house full of love. These things must be earned, not bought.", author: "Naval Ravikant" },
+    { text: "Focus is a matter of deciding what things you're not going to do.", author: "John Carmack" },
+    { text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca" },
+    { text: "Silence is a source of great strength.", author: "Lao Tzu" },
+    { text: "It's not what happens to you, but how you react to it that matters.", author: "Epictetus" },
+    { text: "Do not pray for an easy life, pray for the strength to endure a difficult one.", author: "Bruce Lee" },
+    { text: "What we achieve inwardly will change outer reality.", author: "Plutarch" },
+    { text: "Discipline is choosing between what you want now and what you want most.", author: "Abraham Lincoln" },
+    { text: "Flow is the state of total immersion where action and awareness merge.", author: "Mihaly Csikszentmihalyi" },
+    { text: "The man who moves a mountain begins by carrying away small stones.", author: "Confucius" },
+    { text: "To be calm is the highest achievement of the self.", author: "Zen Proverb" },
+    { text: "Concentrate all your thoughts upon the work in hand. The sun's rays do not burn until brought to a focus.", author: "Alexander Graham Bell" }
+];
+
+const Quotes = {
+    getTodayQuote() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayOfYear = Math.floor(diff / oneDay);
+        return QUOTES_COLLECTION[dayOfYear % QUOTES_COLLECTION.length];
+    },
+
+    render() {
+        const card = document.getElementById('dailyQuoteCard');
+        const text = document.getElementById('dailyQuoteText');
+        const author = document.getElementById('dailyQuoteAuthor');
+        const sparkle = document.getElementById('quoteSparkleIcon');
+
+        if (!card || !text || !author) return;
+
+        const q = this.getTodayQuote();
+        text.textContent = `"${q.text}"`;
+        author.textContent = `— ${q.author}`;
+        if (sparkle && Icons.spark) sparkle.innerHTML = Icons.spark(14);
+        card.style.display = 'flex';
+    }
+};
+
+/* ─────────────────────────────────────────────────────────
    HOME
 ───────────────────────────────────────────────────────── */
 const Home = {
     render() {
+        Quotes.render();
         const todayTasks = Tasks.getVisibleToday();
         const doneTasks = todayTasks.filter(t => t.completed);
         const focusMin = State.data.pomo
@@ -1745,11 +1806,21 @@ const Home = {
             y: padY + chartH - (v / max) * chartH
         }));
 
-        const linePoints = points.map(p => `${p.x},${p.y}`).join(' ');
-        const areaPoints = `${linePoints} ${points[points.length - 1].x},${H - 2} ${points[0].x},${H - 2}`;
+        // Generate smooth cubic Bezier curve path
+        let curveD = `M ${points[0].x},${points[0].y}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[i];
+            const p1 = points[i + 1];
+            const cp1x = p0.x + (p1.x - p0.x) * 0.45;
+            const cp1y = p0.y;
+            const cp2x = p0.x + (p1.x - p0.x) * 0.55;
+            const cp2y = p1.y;
+            curveD += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
+        }
+        const areaD = `${curveD} L ${points[points.length - 1].x},${H - 2} L ${points[0].x},${H - 2} Z`;
 
         const css = getComputedStyle(document.documentElement);
-        const ac = css.getPropertyValue('--ac').trim();
+        const ac = css.getPropertyValue('--ac').trim() || '#38B6FF';
 
         const refLines = [0.25, 0.5, 0.75].map((ratio, idx) => {
             const y = padY + chartH * ratio;
@@ -1757,7 +1828,7 @@ const Home = {
         }).join('');
 
         const dotsHTML = points.map((p, i) => `
-            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.3 : 2}" 
+            <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.5 : 2}" 
                     fill="${values[i] > 0 ? ac : 'var(--bd)'}" 
                     class="mini-chart-dot" style="animation-delay:${0.3 + i * 0.06}s"
                     opacity="${values[i] > 0 ? 1 : 0.4}"/>
@@ -1765,23 +1836,37 @@ const Home = {
 
         const labelsHTML = w.days.map((d, i) => `
             <text x="${points[i].x}" y="${H + 12}" text-anchor="middle" 
-                  fill="var(--tx4)" font-size="8" font-weight="600" 
-                  font-family="Inter, sans-serif" letter-spacing="0.04em">${d.name}</text>
+                  fill="var(--tx3)" font-size="8" font-weight="700" 
+                  font-family="'Space Grotesk', 'Inter', sans-serif" letter-spacing="0.04em">${d.name}</text>
         `).join('');
 
         document.getElementById('weekMiniChart').innerHTML = `
-            <svg viewBox="0 0 ${W} ${H + 16}" class="mini-line-chart" preserveAspectRatio="none">
+            <svg viewBox="0 0 ${W} ${H + 16}" class="mini-line-chart" preserveAspectRatio="none" style="overflow: visible;">
                 <defs>
                     <linearGradient id="miniAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.22"/>
+                        <stop offset="0%" stop-color="${ac}" stop-opacity="0.38"/>
+                        <stop offset="50%" stop-color="${ac}" stop-opacity="0.10"/>
                         <stop offset="100%" stop-color="${ac}" stop-opacity="0"/>
                     </linearGradient>
                 </defs>
                 ${refLines}
-                <polygon points="${areaPoints}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
-                <polyline points="${linePoints}" fill="none" stroke="${ac}" stroke-width="2.5" 
-                      stroke-linecap="round" stroke-linejoin="round" class="mini-chart-line"/>
-                ${dotsHTML}
+                <path d="${areaD}" fill="url(#miniAreaGrad)" class="mini-chart-area"/>
+                <!-- Outer Ambient Neon Glow Path (Pure CSS drop-shadow without box artifacts) -->
+                <path d="${curveD}" fill="none" stroke="${ac}" stroke-width="5" 
+                      stroke-linecap="round" stroke-linejoin="round" opacity="0.45" 
+                      style="filter: drop-shadow(0 0 8px ${ac});" class="mini-chart-glow-outer"/>
+                <!-- Sharp Core Line Path -->
+                <path d="${curveD}" fill="none" stroke="${ac}" stroke-width="2.8" 
+                      stroke-linecap="round" stroke-linejoin="round" 
+                      style="filter: drop-shadow(0 0 4px ${ac});" class="mini-chart-line"/>
+                ${points.map((p, i) => `
+                    ${values[i] > 0 ? `<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${ac}" opacity="0.5" style="filter: drop-shadow(0 0 6px ${ac});"/>` : ''}
+                    <circle cx="${p.x}" cy="${p.y}" r="${values[i] > 0 ? 3.5 : 2}" 
+                            fill="${values[i] > 0 ? '#FFFFFF' : 'var(--bd)'}" 
+                            stroke="${values[i] > 0 ? ac : 'none'}" stroke-width="1.5"
+                            class="mini-chart-dot" style="animation-delay:${0.3 + i * 0.06}s"
+                            opacity="${values[i] > 0 ? 1 : 0.4}"/>
+                `).join('')}
                 ${labelsHTML}
             </svg>
         `;
@@ -1880,10 +1965,10 @@ const Pomo = {
             btn.classList.toggle('active', btn.dataset.sound === type);
         });
 
-        if (State.pomo.running) {
+        if (type !== 'none') {
             const vol = State.data.settings.ambientVol !== undefined ? State.data.settings.ambientVol : 40;
             Sound.startAmbient(type, vol / 100);
-        } else if (type === 'none') {
+        } else {
             Sound.stopAmbient();
         }
         Sound.click();
@@ -1964,6 +2049,9 @@ const Pomo = {
             if (State.pomo.left <= 0) this.setMode(State.pomo.mode);
 
             State.pomo.running = true;
+            // BUG 3 FIX: use timestamps to prevent drift
+            State.pomo.startTime = Date.now();
+            State.pomo.startLeft = State.pomo.left;
             this.updatePlayButton(true);
             this.updateRunningState(true);
             Sound.timerStart();
@@ -1976,7 +2064,9 @@ const Pomo = {
             this.cycleInsight(true);
 
             State.pomo.interval = setInterval(() => {
-                State.pomo.left--;
+                // Timestamp-based: immune to CPU throttle, tab sleep, system sleep
+                const elapsed = Math.floor((Date.now() - State.pomo.startTime) / 1000);
+                State.pomo.left = Math.max(0, State.pomo.startLeft - elapsed);
                 this.updateDisplay();
 
                 if (State.pomo.mode === 'focus' && State.pomo.left % 60 === 0 && State.pomo.left > 0) {
@@ -1991,7 +2081,7 @@ const Pomo = {
                     Sound.stopAmbient();
                     this.done();
                 }
-            }, 1000);
+            }, 500); // Poll every 500ms for accuracy without overkill
         }
     },
 
@@ -2004,10 +2094,8 @@ const Pomo = {
     },
 
     updateRunningState(running) {
-        document.getElementById('pomoTimer').classList.toggle('running', running);
-        
-        const isZenMode = running && State.pomo.mode === 'focus';
-        document.getElementById('app').classList.toggle('focus-zen', isZenMode);
+        const timer = document.getElementById('pomoTimer');
+        if (timer) timer.classList.toggle('running', running);
     },
 
     reset() {
@@ -2096,23 +2184,14 @@ const Pomo = {
     },
 
     enterFullscreen() {
-        document.getElementById('fullscreenPomo').classList.add('on');
-        try { document.documentElement.requestFullscreen(); } catch (e) {}
-        // Escape key exits fullscreen pomo
-        if (!Pomo._escListener) {
-            Pomo._escListener = (e) => { if (e.key === 'Escape') Pomo.exitFullscreen(); };
-            document.addEventListener('keydown', Pomo._escListener);
-        }
+        const fs = document.getElementById('fullscreenPomo');
+        if (fs) fs.classList.add('on');
         Sound.click();
     },
 
     exitFullscreen() {
-        document.getElementById('fullscreenPomo').classList.remove('on');
-        try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
-        if (Pomo._escListener) {
-            document.removeEventListener('keydown', Pomo._escListener);
-            Pomo._escListener = null;
-        }
+        const fs = document.getElementById('fullscreenPomo');
+        if (fs) fs.classList.remove('on');
         Sound.click();
     },
 
@@ -2144,11 +2223,7 @@ const Pomo = {
     }
 };
 
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && document.getElementById('fullscreenPomo').classList.contains('on')) {
-        Pomo.exitFullscreen();
-    }
-});
+// BUG 5 FIX: Removed duplicate Escape handler — consolidated below in the keyboard shortcuts section
 
 /* ─────────────────────────────────────────────────────────
    REPORT
@@ -2297,6 +2372,9 @@ const Report = {
             const el = document.getElementById(id);
             if (el) el.innerHTML = Icons.chevronDown(12);
         });
+
+        const dlIcon = document.getElementById('downloadIcon');
+        if (dlIcon && Icons.download) dlIcon.innerHTML = Icons.download(16);
     },
 
     applyModeVisibility() {
@@ -2900,243 +2978,504 @@ const Report = {
             const dates = Utils.weekDates(State.weekOffset);
             const score = this.getScore(w);
             const breakdown = this.getScoreBreakdown(w);
+            const userLevel = State.data.level || 1;
+            const userName = (State.data.name || 'Focused Creator').replace(/[^\x20-\x7E]/g, '').trim() || 'Focused Creator';
 
-            const pageW = 210;
+            const PW = 210, PH = 297;
 
-            // Get current accent color from DOM
-            const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#f5c842';
+            // --- COLOR SYSTEM ---
+            const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#6366F1';
             const toRGB = hex => {
                 hex = hex.replace('#', '');
                 if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-                return [
-                    parseInt(hex.substring(0, 2), 16),
-                    parseInt(hex.substring(2, 4), 16),
-                    parseInt(hex.substring(4, 6), 16)
-                ];
+                const r = parseInt(hex.substring(0,2),16)||99;
+                const g = parseInt(hex.substring(2,4),16)||102;
+                const b = parseInt(hex.substring(4,6),16)||241;
+                return [r, g, b];
             };
-            const [r, g, b] = toRGB(ac);
+            const [ar, ag, ab] = toRGB(ac);
 
-            // 1. HEADER SECTION (Height: 0 to 38mm)
-            doc.setFillColor(r, g, b);
-            doc.rect(0, 0, pageW, 38, 'F');
+            // Dark bg colors
+            const BG   = [10, 14, 26];       // #0A0E1A deep space
+            const BG2  = [17, 24, 39];        // #111827 card bg
+            const BG3  = [30, 41, 59];        // #1E293B elevated card
+            const BORD = [51, 65, 85];        // #334155 border
+            const TX1  = [248, 250, 252];     // #F8FAFC primary text
+            const TX2  = [148, 163, 184];     // #94A3B8 secondary text
+            const TX3  = [100, 116, 139];     // #64748B muted text
+            const GRN  = [16, 185, 129];      // #10B981 emerald
+            const AMB  = [245, 158, 11];      // #F59E0B amber
+            const RSE  = [239, 68, 68];       // #EF4444 rose
 
-            doc.setTextColor(255, 255, 255);
+            // Helpers
+            const setFill = (rgb) => doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+            const setDraw = (rgb) => doc.setDrawColor(rgb[0], rgb[1], rgb[2]);
+            const setText = (rgb) => doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+            const setAc   = ()    => doc.setTextColor(ar, ag, ab);
+
+            // Simulate gradient top-to-bottom for a tall rect by drawing multiple thin stripes
+            const gradRect = (x, y, w2, h, topRGB, botRGB, steps=16) => {
+                for (let i=0; i<steps; i++) {
+                    const t = i/steps;
+                    const r2 = Math.round(topRGB[0] + (botRGB[0]-topRGB[0])*t);
+                    const g2 = Math.round(topRGB[1] + (botRGB[1]-topRGB[1])*t);
+                    const b2 = Math.round(topRGB[2] + (botRGB[2]-topRGB[2])*t);
+                    doc.setFillColor(r2, g2, b2);
+                    doc.rect(x, y + i*(h/steps), w2, h/steps + 0.5, 'F');
+                }
+            };
+
+            // Rounded rect helper (jsPDF roundedRect supports fill 'F')
+            const card = (x, y, w2, h, radius=4) => {
+                setFill(BG2);
+                setDraw(BORD);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(x, y, w2, h, radius, radius, 'FD');
+            };
+
+            const accentLine = (x, y, w2) => {
+                doc.setFillColor(ar, ag, ab);
+                doc.rect(x, y, w2, 1, 'F');
+            };
+
+            // === PAGE BACKGROUND ===
+            gradRect(0, 0, PW, PH, BG, [20, 28, 50]);
+
+            // === HEADER AREA (0 - 52mm) ===
+            gradRect(0, 0, PW, 52, [ar, ag, ab].map(v=>Math.min(255,v+40)), [ar, ag, ab]);
+
+            // Brand stripe overlay (subtle dark mask on header)
+            doc.setFillColor(0, 0, 0);
+            doc.setGState && doc.setGState(doc.GState({ opacity: 0.32 }));
+            doc.rect(0, 0, PW, 52, 'F');
+            // Reset opacity
+            doc.setGState && doc.setGState(doc.GState({ opacity: 1.0 }));
+
+            // App name
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(24);
-            doc.text('F O C U S S I U M', 16, 17);
+            doc.setFontSize(26);
+            setText(TX1);
+            doc.text('FOCUSSIUM', 16, 20);
 
+            // Tagline
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-            doc.setTextColor(240, 240, 245);
-            doc.text('Your Zen Productivity Space • Weekly Performance Vibe', 16, 25);
+            doc.setFontSize(9.5);
+            setText(TX1);
+            doc.text('Weekly Productivity Report', 16, 29);
 
-            // Date Capsule Badge on Right
-            const range = `${new Date(dates[0] + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })} — ${new Date(dates[6] + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-            doc.setFillColor(255, 255, 255, 0.2);
-            doc.roundedRect(132, 13, 62, 9, 2.5, 2.5, 'F');
+            // User line
+            doc.setFontSize(8.5);
+            setText(TX2);
+            doc.text(`${userName}  |  Level ${userLevel}`, 16, 36);
+
+            // Date badge (dark pill on right)
+            const range = `${new Date(dates[0]+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})} - ${new Date(dates[6]+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+            setFill(BG); setDraw(TX2);
+            doc.setLineWidth(0.4);
+            doc.roundedRect(130, 14, 66, 11, 5, 5, 'FD');
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(8.5);
-            doc.setTextColor(255, 255, 255);
-            doc.text(range, 136, 19);
+            setText(TX1);
+            doc.text(range, 163, 21, { align: 'center' });
 
-            // 2. ROW 1: THE VIBE CORE (y = 48mm to 100mm)
-            // Left Column: Vibe Scorecard Card
-            doc.setFillColor(248, 249, 252);
-            doc.setDrawColor(228, 230, 238);
-            doc.roundedRect(15, 46, 85, 52, 4, 4, 'FD');
+            // Score big number on right of header
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(38);
+            setText(TX1);
+            doc.text(`${score}`, 180, 44, { align: 'right' });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            setText(TX2);
+            doc.text('/ 100', 183, 44);
+
+            let vibeLabel = 'Resting Flow';
+            if (score >= 80) vibeLabel = 'Deep Flow State';
+            else if (score >= 60) vibeLabel = 'High Momentum';
+            else if (score >= 35) vibeLabel = 'Rhythm Building';
+            else if (score > 0) vibeLabel = 'Mindful Recovery';
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            doc.setTextColor(ar, ag, ab);
+            doc.text(vibeLabel.toUpperCase(), 195, 49, { align: 'right' });
+
+            // === ROW 1: SCORE CARD + METRICS CARD (y=60 to y=100) ===
+            const ROW1Y = 60;
+
+            // --- Score Card ---
+            card(12, ROW1Y, 88, 42);
+            accentLine(12, ROW1Y, 88);
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.setTextColor(110, 110, 125);
-            doc.text('PRODUCTIVITY SCORE', 21, 55);
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('PRODUCTIVITY SCORE', 18, ROW1Y + 8);
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(30);
-            doc.setTextColor(r, g, b);
-            doc.text(`${score} / 100`, 21, 69);
+            doc.setTextColor(ar, ag, ab);
+            doc.text(`${score}`, 18, ROW1Y + 22);
 
-            // Custom Linear Progress bar
-            doc.setFillColor(228, 230, 235);
-            doc.roundedRect(21, 76, 73, 5, 2.5, 2.5, 'F');
-            doc.setFillColor(r, g, b);
-            doc.roundedRect(21, 76, Math.max(5, score * 0.73), 5, 2.5, 2.5, 'F');
-
-            let vibeTitle = "Resting Flow 🧘";
-            if (score >= 80) vibeTitle = "Deep Flow State 🧘";
-            else if (score >= 60) vibeTitle = "High Momentum ⚡";
-            else if (score >= 35) vibeTitle = "Rhythm Building 🏗️";
-            else if (score > 0) vibeTitle = "Mindful Recovery 📿";
-
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9.5);
-            doc.setTextColor(75, 75, 90);
-            doc.text(`Vibe Status: ${vibeTitle}`, 21, 89);
-
-            // Right Column: Key Metrics Card
-            doc.setFillColor(248, 249, 252);
-            doc.roundedRect(108, 46, 87, 52, 4, 4, 'FD');
-
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.setTextColor(110, 110, 125);
-            doc.text('WEEKLY KEY METRICS', 114, 55);
-
-            // Row 1 inside metrics
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9.5);
-            doc.setTextColor(60, 60, 70);
-            doc.text('Tasks Completed', 114, 67);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(r, g, b);
-            doc.text(`${w.totalTasks} tasks`, 188, 67, { align: 'right' });
-            doc.setDrawColor(226, 228, 236);
-            doc.line(114, 70, 188, 70);
+            doc.setFontSize(11);
+            setText(TX2);
+            doc.text('/ 100', 18 + doc.getTextWidth(`${score}`) + 2, ROW1Y + 22);
 
-            // Row 2 inside metrics
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(60, 60, 70);
-            doc.text('Total Focus Time', 114, 78);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(92, 190, 128); // Green
-            doc.text(`${w.totalFocus} min`, 188, 78, { align: 'right' });
-            doc.line(114, 81, 188, 81);
-
-            // Row 3 inside metrics
-            doc.setFont('helvetica', 'normal');
-            doc.setTextColor(60, 60, 70);
-            doc.text('Consistency Rhythm', 114, 89);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(229, 174, 92); // Gold
-            doc.text(`${w.activeDays} / 7 days`, 188, 89, { align: 'right' });
-
-            // 3. ROW 2: INNER WORKINGS (y = 106mm to 184mm)
-            // Left Column: Score Breakdown List
-            doc.setFillColor(253, 253, 254);
-            doc.roundedRect(15, 106, 85, 78, 4, 4, 'FD');
+            // Progress track
+            const BAR_X = 18, BAR_Y = ROW1Y + 27, BAR_W = 76, BAR_H = 5;
+            setFill(BG3); doc.roundedRect(BAR_X, BAR_Y, BAR_W, BAR_H, 2.5, 2.5, 'F');
+            doc.setFillColor(ar, ag, ab);
+            doc.roundedRect(BAR_X, BAR_Y, Math.max(4, score/100 * BAR_W), BAR_H, 2.5, 2.5, 'F');
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.setTextColor(110, 110, 125);
-            doc.text('SCORE BREAKDOWN', 21, 115);
+            doc.setFontSize(8);
+            setText(TX2);
+            doc.text(vibeLabel, 18, ROW1Y + 38);
 
-            const breakItems = [
-                { label: 'Tasks Done Points', val: `+${breakdown.tasks}`, pos: true },
-                { label: 'Focus Minutes Points', val: `+${breakdown.focus}`, pos: true },
-                { label: 'Consistency rhythm', val: `+${breakdown.consistency}`, pos: true },
-                { label: 'Task completion rate', val: `+${breakdown.completion}`, pos: true },
-                { label: 'Streak Bonus modifier', val: `+${breakdown.streak}`, pos: true },
-                { label: 'Overdue Penalty deduction', val: `-${breakdown.overdue}`, pos: false }
+            // --- Metrics Card ---
+            card(106, ROW1Y, 92, 42);
+            accentLine(106, ROW1Y, 92);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('WEEKLY KEY METRICS', 113, ROW1Y + 8);
+
+            const metrics = [
+                { label: 'Tasks Completed', value: `${w.totalTasks}`, color: [ar, ag, ab] },
+                { label: 'Focus Time',       value: `${w.totalFocus} min`, color: GRN },
+                { label: 'Active Days',      value: `${w.activeDays}/7`, color: AMB },
             ];
-
-            breakItems.forEach((item, idx) => {
-                const y_b = 124 + idx * 8.5;
+            metrics.forEach((m2, i) => {
+                const my = ROW1Y + 16 + i*9;
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(8.5);
-                doc.setTextColor(80, 80, 95);
-                doc.text(item.label, 21, y_b);
-
+                setText(TX2);
+                doc.text(m2.label, 113, my);
                 doc.setFont('helvetica', 'bold');
-                if (item.pos) {
-                    doc.setTextColor(50, 140, 95); // soft green
-                } else {
-                    doc.setTextColor(220, 80, 80); // soft red
-                }
-                doc.text(item.val, 92, y_b, { align: 'right' });
-
-                if (idx < 5) {
-                    doc.setDrawColor(240, 240, 244);
-                    doc.line(21, y_b + 2.5, 92, y_b + 2.5);
+                doc.setFontSize(8.5);
+                doc.setTextColor(m2.color[0], m2.color[1], m2.color[2]);
+                doc.text(m2.value, 192, my, { align: 'right' });
+                if (i < 2) {
+                    setDraw(BORD);
+                    doc.setLineWidth(0.2);
+                    doc.line(113, my + 2, 192, my + 2);
                 }
             });
 
-            // Right Column: Daily Week Rhythm Bullet Journal Log
-            doc.setFillColor(253, 253, 254);
-            doc.roundedRect(108, 106, 87, 78, 4, 4, 'FD');
+            // === ROW 2: BAR CHART (y=108 to y=160) ===
+            const ROW2Y = 108;
+            card(12, ROW2Y, 186, 54);
+            accentLine(12, ROW2Y, 186);
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.setTextColor(110, 110, 125);
-            doc.text('DAILY ACTIVITY LOG', 114, 115);
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('DAILY ACTIVITY  -  FOCUS MINUTES', 18, ROW2Y + 8);
+
+            const CHART_X = 18, CHART_Y = ROW2Y + 13, CHART_W = 174, CHART_H = 32;
+            const maxFocus = Math.max(...w.days.map(d=>d.focus), 30);
+            const barGap = 8, barW = (CHART_W - 6*barGap) / 7;
 
             w.days.forEach((day, idx) => {
-                const y_d = 124 + idx * 8.5;
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(8.5);
-                doc.setTextColor(70, 70, 85);
-                doc.text(day.name, 114, y_d);
+                const bx = CHART_X + idx * (barW + barGap);
+                const barH2 = Math.max(0, (day.focus / maxFocus) * CHART_H);
+                const by = CHART_Y + CHART_H - barH2;
 
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(8);
-                doc.setTextColor(110, 110, 125);
-                doc.text(`${day.tasks} tasks done  •  ${day.focus}m focus`, 128, y_d);
+                // Empty track
+                setFill(BG3);
+                doc.roundedRect(bx, CHART_Y, barW, CHART_H, 2, 2, 'F');
 
-                // Elegant indicator dot showing active vs restful days
-                const isActive = day.tasks > 0 || day.focus > 0;
-                if (isActive) {
-                    doc.setFillColor(r, g, b);
-                } else {
-                    doc.setFillColor(220, 220, 225);
+                // Filled bar
+                if (barH2 > 0) {
+                    doc.setFillColor(ar, ag, ab);
+                    doc.roundedRect(bx, by, barW, barH2, 2, 2, 'F');
                 }
-                doc.circle(184, y_d - 1, 1, 'F');
 
-                if (idx < 6) {
-                    doc.setDrawColor(240, 240, 244);
-                    doc.line(114, y_d + 2.5, 186, y_d + 2.5);
+                // Day label
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.5);
+                setText(TX3);
+                doc.text(day.name.substring(0,2), bx + barW/2, CHART_Y + CHART_H + 5, { align: 'center' });
+
+                // Value on top of bar
+                if (day.focus > 0) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(6);
+                    doc.setTextColor(ar, ag, ab);
+                    doc.text(`${day.focus}m`, bx + barW/2, Math.max(by - 1.5, CHART_Y + 4), { align: 'center' });
                 }
             });
 
-            // 4. ROW 3: AI INSIGHTS & MINDFULNESS BANNER (y = 192mm to 276mm)
-            doc.setFillColor(248, 249, 252);
-            doc.setDrawColor(228, 230, 238);
-            doc.roundedRect(15, 192, 180, 82, 4, 4, 'FD');
+            // === ROW 3: BREAKDOWN + DAILY LOG (y=168 to y=228) ===
+            const ROW3Y = 168;
+
+            // --- Score Breakdown Card ---
+            card(12, ROW3Y, 88, 62);
+            accentLine(12, ROW3Y, 88);
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(10);
-            doc.setTextColor(110, 110, 125);
-            doc.text('AI INSIGHTS & MINDFULNESS REFLECTIONS', 21, 201);
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('SCORE BREAKDOWN', 18, ROW3Y + 8);
 
-            const rawText = document.getElementById('aiInsightsContent')?.textContent || '';
-            const insightsText = rawText.replace(/\s+/g, ' ').trim() || 'Your mindful productivity vibe will appear here as you log tasks. Complete focus blocks, maintain lists, and review your daily logs to see insights customized for your focus style.';
+            const breakItems = [
+                { label: 'Tasks Done',        val: breakdown.tasks,        color: GRN },
+                { label: 'Focus Minutes',     val: breakdown.focus,        color: GRN },
+                { label: 'Consistency',       val: breakdown.consistency,  color: GRN },
+                { label: 'Completion Rate',   val: breakdown.completion,   color: GRN },
+                { label: 'Streak Bonus',      val: breakdown.streak,       color: AMB },
+                { label: 'Overdue Penalty',   val: -breakdown.overdue,     color: RSE },
+            ];
+
+            breakItems.forEach((bi, i) => {
+                const by2 = ROW3Y + 16 + i*7.5;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                setText(TX2);
+                doc.text(bi.label, 18, by2);
+
+                const sign = bi.val >= 0 ? '+' : '';
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(bi.color[0], bi.color[1], bi.color[2]);
+                doc.text(`${sign}${bi.val}`, 94, by2, { align: 'right' });
+
+                if (i < 5) {
+                    setDraw(BORD);
+                    doc.setLineWidth(0.15);
+                    doc.line(18, by2 + 1.5, 94, by2 + 1.5);
+                }
+            });
+
+            // --- Daily Activity Log Card ---
+            card(106, ROW3Y, 92, 62);
+            accentLine(106, ROW3Y, 92);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('DAILY ACTIVITY LOG', 113, ROW3Y + 8);
+
+            w.days.forEach((day, idx) => {
+                const dy = ROW3Y + 16 + idx*6.8;
+                const isActive = day.tasks > 0 || day.focus > 0;
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(7.5);
+                setText(isActive ? TX1 : TX3);
+                doc.text(day.name.substring(0,3), 113, dy);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7);
+                setText(TX2);
+                doc.text(`${day.tasks}t  |  ${day.focus}m`, 130, dy);
+
+                // Dot indicator
+                if (isActive) {
+                    doc.setFillColor(ar, ag, ab);
+                } else {
+                    setFill(BORD);
+                }
+                doc.circle(190, dy - 1.5, 1.5, 'F');
+
+                if (idx < 6) {
+                    setDraw(BORD);
+                    doc.setLineWidth(0.15);
+                    doc.line(113, dy + 1.5, 192, dy + 1.5);
+                }
+            });
+
+            // === ROW 4: REFLECTIONS (y=236 to y=276) ===
+            const ROW4Y = 236;
+            card(12, ROW4Y, 186, 46);
+            accentLine(12, ROW4Y, 186);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('AI INSIGHTS & REFLECTIONS', 18, ROW4Y + 8);
+
+            const rawInsights = document.getElementById('aiInsightsContent')?.textContent || 'Keep building your focus rhythm. Every session compounds.';
+            const cleanInsights = rawInsights.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ').trim();
+            const wrapped = doc.splitTextToSize(cleanInsights, 172);
 
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(9);
-            doc.setTextColor(60, 60, 75);
-            const wrapped = doc.splitTextToSize(insightsText, 168);
-            
-            // Limit to fit beautifully on page
-            doc.text(wrapped.slice(0, 5), 21, 210);
+            doc.setFontSize(8);
+            setText(TX2);
+            doc.text(wrapped.slice(0, 4), 18, ROW4Y + 16);
 
-            // Visual divider for quotes
-            doc.setDrawColor(226, 228, 236);
-            doc.line(21, 247, 189, 247);
+            // Quote
+            const rawQ = (document.getElementById('dailyQuoteText')?.textContent || '"Your mind is for having ideas, not holding them."')
+                .replace(/[^\x20-\x7E]/g, '');
+            const rawA = (document.getElementById('dailyQuoteAuthor')?.textContent || '- David Allen')
+                .replace(/[^\x20-\x7E]/g, '');
 
-            // Daily Quote block integration
-            const rawQuote = document.getElementById('dailyQuoteText')?.textContent || '"Your mind is for having ideas, not holding them."';
-            const rawAuthor = document.getElementById('dailyQuoteAuthor')?.textContent || '— David Allen';
+            setDraw(BORD);
+            doc.setLineWidth(0.3);
+            doc.line(18, ROW4Y + 34, 18, ROW4Y + 42);
 
             doc.setFont('helvetica', 'italic');
-            doc.setFontSize(8.5);
-            doc.setTextColor(r, g, b);
-            doc.text(rawQuote, 21, 255);
+            doc.setFontSize(8);
+            doc.setTextColor(ar, ag, ab);
+            doc.text(rawQ.substring(0, 100), 22, ROW4Y + 38);
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(8);
-            doc.setTextColor(100, 100, 115);
-            doc.text(rawAuthor, 21, 261);
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text(rawA, 22, ROW4Y + 44);
 
-            // 5. FOOTER
+            // === FOOTER (y=284) ===
+            setFill(BG3);
+            doc.rect(0, 283, PW, 14, 'F');
+            accentLine(0, 283, PW);
+
             doc.setFont('helvetica', 'normal');
-            doc.setFontSize(8);
-            doc.setTextColor(140, 140, 155);
-            doc.text('Designed for brains that work differently  •  Focussium v2 Pro', pageW / 2, 287, { align: 'center' });
+            doc.setFontSize(7);
+            setText(TX3);
+            doc.text('Focussium  |  Zen Productivity Space', PW/2, 291, { align: 'center' });
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(ar, ag, ab);
+            const generated = `Generated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+            doc.text(generated, 195, 291, { align: 'right' });
 
             doc.save(`Focussium_Report_${dates[0]}.pdf`);
             Sound.success();
-            Toast.show('Report downloaded');
+            Toast.show('Premium report downloaded!');
         } catch (e) {
             handleError('PDF generation', e);
             Toast.show('PDF generation failed');
         }
+    }
+};
+
+
+/* ─────────────────────────────────────────────────────────
+   ACCOUNT PROFILE & XP ENGINE
+───────────────────────────────────────────────────────── */
+const Account = {
+    calcXP() {
+        if (!State.data) {
+            return { totalXP: 0, level: 1, rankTitle: "Focus Initiate", currentThreshold: 0, nextThreshold: 800, xpInLevel: 0, xpNeeded: 800, percent: 0, totalFocus: 0, totalTasks: 0 };
+        }
+        const pomo = State.data.pomo || [];
+        const tasks = State.data.tasks || [];
+        const totalFocus = State.data.totalFocusMinutes || pomo.reduce((sum, p) => sum + (p ? (p.dur || 0) : 0), 0);
+        const totalTasks = State.data.totalTasksCompleted || tasks.filter(t => t && t.completed).length;
+        const totalXP = (totalFocus * 2) + (totalTasks * 5);
+
+        const divisor = CONFIG.XP_LEVEL_DIVISOR || 800;
+        const level = Math.max(1, Math.floor(Math.sqrt(totalXP / divisor)) + 1);
+        const currentThreshold = divisor * Math.pow(level - 1, 2);
+        const nextThreshold = divisor * Math.pow(level, 2);
+        
+        const xpInLevel = totalXP - currentThreshold;
+        const xpNeeded = Math.max(1, nextThreshold - currentThreshold);
+        const percent = Math.min(100, Math.max(0, Math.round((xpInLevel / xpNeeded) * 100)));
+
+        const rankInfo = CONFIG.RANKS[level] || CONFIG.RANKS[Math.min(20, level)] || { title: "Zen Operator" };
+
+        return {
+            totalXP,
+            level,
+            rankTitle: rankInfo.title,
+            currentThreshold,
+            nextThreshold,
+            xpInLevel,
+            xpNeeded,
+            percent,
+            totalFocus,
+            totalTasks
+        };
+    },
+
+    open() {
+        const modal = document.getElementById('accountModal');
+        if (!modal) return;
+
+        this.render();
+        modal.classList.add('on');
+        Sound.open();
+    },
+
+    close() {
+        const modal = document.getElementById('accountModal');
+        if (modal) modal.classList.remove('on');
+        Sound.click();
+    },
+
+    render() {
+        const xpData = this.calcXP();
+
+        // Update Level in state
+        State.data.level = xpData.level;
+
+        // User info
+        const nameEl = document.getElementById('accountModalName');
+        const emailEl = document.getElementById('accountModalEmail');
+        const rankEl = document.getElementById('accountModalRankPill');
+        const badgeEl = document.getElementById('accountModalLvlBadge');
+
+        if (nameEl) nameEl.textContent = State.data.name || State.user?.displayName || 'Focused Creator';
+        if (emailEl) emailEl.textContent = State.user?.email || 'Local Account (Offline)';
+        if (rankEl) rankEl.textContent = `Level ${xpData.level} • ${xpData.rankTitle}`;
+        if (badgeEl) badgeEl.textContent = xpData.level;
+
+        // Header level badge & XP bar on main layout
+        const mainBadge = document.getElementById('userLevelBadge');
+        if (mainBadge) mainBadge.textContent = xpData.level;
+        const mainXpFill = document.getElementById('xpBarFill');
+        if (mainXpFill) mainXpFill.style.width = `${xpData.percent}%`;
+
+        // Avatar setup in modal
+        const img = document.getElementById('accountModalAvatarImg');
+        const fb = document.getElementById('accountModalAvatarFallback');
+        const activeAvatar = State.data?.settings?.avatar || 'default';
+        const userPhoto = State.user?.photoURL;
+
+        if (img && fb) {
+            if (activeAvatar === 'google' && userPhoto) {
+                img.src = userPhoto;
+                img.style.display = 'block';
+                fb.style.display = 'none';
+            } else if (activeAvatar === 'seed') {
+                img.src = 'zen_focus_avatar.png';
+                img.style.display = 'block';
+                fb.style.display = 'none';
+            } else if (activeAvatar === 'custom' && State.data.settings?.customAvatarDataUrl) {
+                img.src = State.data.settings.customAvatarDataUrl;
+                img.style.display = 'block';
+                fb.style.display = 'none';
+            } else {
+                img.style.display = 'none';
+                fb.style.display = 'flex';
+                fb.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:28px; height:28px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`;
+            }
+        }
+
+        // XP Bar & Values
+        const xpValEl = document.getElementById('accountModalXpVal');
+        const xpBarEl = document.getElementById('accountModalXpBar');
+        const xpSubEl = document.getElementById('accountModalXpSub');
+
+        if (xpValEl) xpValEl.textContent = `${xpData.xpInLevel} / ${xpData.xpNeeded} XP`;
+        if (xpBarEl) xpBarEl.style.width = `${xpData.percent}%`;
+        if (xpSubEl) xpSubEl.textContent = `Level ${xpData.level + 1} unlocks in ${xpData.xpNeeded - xpData.xpInLevel} XP. Gain XP by completing focus sessions & tasks!`;
+
+        // Key stats grid
+        const w = Utils.weekData(0);
+        const score = Report.getScore(w);
+
+        const stTasks = document.getElementById('acStatTasks');
+        const stFocus = document.getElementById('acStatFocus');
+        const stStreak = document.getElementById('acStatStreak');
+        const stScore = document.getElementById('acStatScore');
+
+        if (stTasks) stTasks.textContent = xpData.totalTasks;
+        if (stFocus) stFocus.textContent = `${xpData.totalFocus}m`;
+        if (stStreak) stStreak.textContent = State.data.streak || 0;
+        if (stScore) stScore.textContent = score;
     }
 };
 
@@ -3148,6 +3487,11 @@ const Settings = {
         document.getElementById('settingsModal').classList.add('on');
         this.render();
         Sound.open();
+    },
+
+    close() {
+        document.getElementById('settingsModal').classList.remove('on');
+        Sound.close();
     },
 
     render() {
@@ -3167,36 +3511,18 @@ const Settings = {
     },
 
     renderAccents() {
-        const lvl = State.data?.level || 1;
-        const locks = {
-            royal: 1,
-            neon: 2,
-            sunset: 2,
-            lavender: 2,
-            matcha: 4,
-            void: 4,
-            rose: 4,
-            mint: 6,
-            sky: 6
-        };
-
         document.getElementById('accentButtons').innerHTML = ACCENTS.map(a => {
-            const req = locks[a.id] || 1;
-            const isLocked = lvl < req;
             const isActive = State.data.settings.accent === a.id;
-            
             return `
-            <div class="accent-btn ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}" 
+            <div class="accent-btn ${isActive ? 'active' : ''}" 
                  style="background:${a.c}" 
-                 onclick="${isLocked ? `Toast.show('Requires Level ${req} 🔒')` : `Settings.setAccent('${a.id}')`}"
-                 title="${a.n} ${isLocked ? `(Requires Level ${req})` : ''}"></div>
+                 onclick="Settings.setAccent('${a.id}')"
+                 title="${a.n}"></div>
             `;
         }).join('');
 
         const picker = document.getElementById('customColorPicker');
-        if (picker) {
-            picker.classList.toggle('locked', lvl < 5);
-        }
+        if (picker) picker.classList.remove('locked');
 
         const isCustom = State.data.settings.accent === 'custom';
         const swatch = document.getElementById('customColorSwatch');
@@ -3208,7 +3534,7 @@ const Settings = {
             swatch.classList.add('has-color');
             hexInput.value = State.data.settings.customHex.toUpperCase();
             nativeInput.value = `#${State.data.settings.customHex}`;
-            if (picker && lvl >= 5) picker.classList.add('active');
+            if (picker) picker.classList.add('active');
         } else {
             swatch.style.background = '';
             swatch.classList.remove('has-color');
@@ -3218,14 +3544,15 @@ const Settings = {
     },
 
     renderAvatars() {
-        const lvl = State.data?.level || 1;
+        const userPhoto = State.user?.photoURL;
         const avatars = [
-            { id: 'default', req: 1, n: 'Default Explorer', type: 'svg', icon: 'default' },
-            { id: 'seed', req: 2, n: 'Zen Focus Seed', type: 'img', src: 'zen_focus_avatar.png' },
-            { id: 'lotus', req: 2, n: 'Zen Lotus', type: 'svg', icon: 'lotus' },
-            { id: 'custom', req: 3, n: 'Custom Photo / Camera', type: 'custom' },
-            { id: 'voyager', req: 4, n: 'Astro Voyager', type: 'svg', icon: 'voyager' },
-            { id: 'deity', req: 8, n: 'Zen Deity', type: 'svg', icon: 'deity' }
+            { id: 'default', n: 'Explorer', type: 'svg', icon: 'default' },
+            ...(userPhoto ? [{ id: 'google', n: 'Google Profile', type: 'img', src: userPhoto }] : []),
+            { id: 'seed', n: 'Zen Focus Seed', type: 'svg', icon: 'seed' },
+            { id: 'lotus', n: 'Zen Lotus', type: 'svg', icon: 'lotus' },
+            { id: 'custom', n: 'Custom Photo', type: 'custom' },
+            { id: 'voyager', n: 'Astro Voyager', type: 'svg', icon: 'voyager' },
+            { id: 'deity', n: 'Zen Deity', type: 'svg', icon: 'deity' }
         ];
 
         const container = document.getElementById('avatarButtons');
@@ -3233,6 +3560,7 @@ const Settings = {
 
         const vectors = {
             default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`,
+            seed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:7px; color:var(--ac);"><path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z" /><path d="M12 2V22" /></svg>`,
             lotus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:var(--ac);"><path d="M12 2C8 6 8 13 12 22C16 13 16 6 12 2Z" /><path d="M12 8C5 11 5 16 12 22C19 16 19 11 12 8Z" /><path d="M12 13C2 15 2 18 12 22C22 18 22 15 12 13Z" /></svg>`,
             voyager: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:var(--ac);"><path d="M12 2L2 22l10-6 10 6L12 2z" /><path d="M12 2v14" /></svg>`,
             deity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:100%; height:100%; padding:8px; color:#ffd700;"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" /><path d="M3 20h18" stroke-width="2.5" /></svg>`,
@@ -3240,45 +3568,38 @@ const Settings = {
         };
 
         container.innerHTML = avatars.map(av => {
-            const isLocked = lvl < av.req;
             const isActive = (State.data.settings.avatar || 'default') === av.id;
 
             let innerContent = '';
             if (av.type === 'svg') {
                 innerContent = vectors[av.icon] || '';
             } else if (av.type === 'img') {
-                innerContent = `<img src="${av.src}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}">`;
+                innerContent = `<img src="${av.src}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}" onerror="this.style.display='none'">`;
             } else if (av.type === 'custom') {
                 const customUrl = State.data.settings?.customAvatarDataUrl;
-                if (customUrl) {
-                    innerContent = `<img src="${customUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}">`;
-                } else {
-                    innerContent = vectors.upload;
-                }
+                innerContent = customUrl
+                    ? `<img src="${customUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" alt="${av.n}" onerror="this.style.display='none'">`
+                    : vectors.upload;
             }
 
             return `
-            <button class="avatar-btn ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}"
-                    onclick="${isLocked ? `Toast.show('Requires Level ${av.req} 🔒')` : `Settings.setAvatar('${av.id}')`}"
-                    title="${av.n} ${isLocked ? `(Requires Level ${av.req})` : ''}">
+            <button class="avatar-btn ${isActive ? 'active' : ''}"
+                    onclick="Settings.setAvatar('${av.id}')"
+                    title="${av.n}">
                 ${innerContent}
             </button>
             `;
         }).join('');
 
-        // Render "Change custom photo..." link for users at level 3+
+        // Always show custom photo upload link
         let changeBtn = document.getElementById('changeAvatarUploadLink');
-        if (lvl >= 3) {
-            if (!changeBtn) {
-                changeBtn = document.createElement('div');
-                changeBtn.id = 'changeAvatarUploadLink';
-                changeBtn.style.cssText = 'font-size: 0.72rem; color: var(--ac); margin-top: 8px; cursor: pointer; font-weight: 600; text-align: left; width: 100%; display: inline-block; transition: opacity 0.2s;';
-                changeBtn.innerHTML = `<span>📸 Upload / snap custom photo...</span>`;
-                changeBtn.onclick = () => document.getElementById('avatarFileInput').click();
-                container.parentNode.appendChild(changeBtn);
-            }
-        } else if (changeBtn) {
-            changeBtn.remove();
+        if (!changeBtn) {
+            changeBtn = document.createElement('div');
+            changeBtn.id = 'changeAvatarUploadLink';
+            changeBtn.style.cssText = 'font-size: 0.72rem; color: var(--ac); margin-top: 8px; cursor: pointer; font-weight: 600; text-align: left; width: 100%; display: inline-block; transition: opacity 0.2s;';
+            changeBtn.innerHTML = `<span>📸 Upload / snap custom photo...</span>`;
+            changeBtn.onclick = () => document.getElementById('avatarFileInput').click();
+            container.parentNode.appendChild(changeBtn);
         }
 
         this.applyAvatarDisplay();
@@ -3346,8 +3667,19 @@ const Settings = {
         if (!img) return;
 
         const fallback = img.parentNode.querySelector('.avatar-fallback-txt');
+        const userPhoto = State.user?.photoURL;
 
-        if (active === 'seed') {
+        img.onerror = () => {
+            img.style.display = 'none';
+            if (fallback) fallback.style.display = 'flex';
+        };
+
+        if (active === 'google' && userPhoto) {
+            img.src = userPhoto;
+            img.style.display = 'block';
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--ac);';
+            if (fallback) fallback.style.display = 'none';
+        } else if (active === 'seed') {
             img.src = 'zen_focus_avatar.png';
             img.style.display = 'block';
             img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid var(--bd);';
@@ -3370,6 +3702,7 @@ const Settings = {
 
             const vectors = {
                 default: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tx2); width:100%; height:100%; padding:5px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>`,
+                seed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:100%; height:100%; padding:5px;"><path d="M12 22C12 22 20 18 20 12C20 6 12 2 12 2C12 2 4 6 4 12C4 18 12 22 12 22Z" /><path d="M12 2V22" /></svg>`,
                 lotus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:100%; height:100%; padding:5px;"><path d="M12 2C8 6 8 13 12 22C16 13 16 6 12 2Z" /><path d="M12 8C5 11 5 16 12 22C19 16 19 11 12 8Z" /><path d="M12 13C2 15 2 18 12 22C22 18 22 15 12 13Z" /></svg>`,
                 voyager: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ac); width:100%; height:100%; padding:5px;"><path d="M12 2L2 22l10-6 10 6L12 2z" /><path d="M12 2v14" /></svg>`,
                 deity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color:#ffd700; width:100%; height:100%; padding:5px;"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z" /><path d="M3 20h18" stroke-width="2.5" /></svg>`,
@@ -3386,18 +3719,16 @@ const Settings = {
     },
 
     renderSoundPalette() {
-        const lvl = State.data?.level || 1;
         const container = document.getElementById('paletteButtonsContainer');
         if (!container) return;
 
-        const isLocked = lvl < 3;
+        // All palettes unlocked — no level gate
         const current = State.data.settings.soundPalette || 'zen';
-
         container.innerHTML = `
             <button class="palette-btn ${current === 'zen' ? 'active' : ''}" 
                     onclick="Settings.setSoundPalette('zen')">Zen</button>
-            <button class="palette-btn ${current === 'retro' ? 'active' : ''} ${isLocked ? 'locked' : ''}" 
-                    onclick="${isLocked ? `Toast.show('Requires Level 3 🔒')` : `Settings.setSoundPalette('retro')`}">Retro</button>
+            <button class="palette-btn ${current === 'retro' ? 'active' : ''}" 
+                    onclick="Settings.setSoundPalette('retro')">Retro</button>
         `;
     },
 
@@ -3427,11 +3758,7 @@ const Settings = {
     },
 
     applyCustomColor() {
-        const lvl = State.data?.level || 1;
-        if (lvl < 5) {
-            Toast.show('Custom palette is locked until Level 5 🔒');
-            return;
-        }
+        // No level gate — custom color available to all users
         let hex = document.getElementById('customHexInput').value.trim().replace('#', '');
         if (!/^[0-9A-Fa-f]{6}$/.test(hex)) {
             Toast.show('Enter a valid 6-digit hex code');
@@ -3541,13 +3868,34 @@ document.querySelectorAll('.modal').forEach(modal => {
     });
 });
 
-// Close any open modal on Escape
+// BUG 5 FIX: Consolidated single Escape handler (handles fullscreen pomo + modals + cmdGlass)
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+        // Priority 1: Exit fullscreen pomo
+        const fsPomo = document.getElementById('fullscreenPomo');
+        if (fsPomo && fsPomo.classList.contains('on')) {
+            Pomo.exitFullscreen();
+            return;
+        }
+        // Priority 2: Close command glass
+        const glass = document.getElementById('cmdGlass');
+        if (glass && glass.classList.contains('show')) {
+            CommandGlass.close();
+            return;
+        }
+        // Priority 3: Close any open modals
         document.querySelectorAll('.modal.on').forEach(modal => {
             modal.classList.remove('on');
             Sound.close();
         });
+    }
+});
+
+// Backdrop click handler for all modals
+document.addEventListener('click', e => {
+    if (e.target.classList && e.target.classList.contains('modal') && e.target.classList.contains('on')) {
+        e.target.classList.remove('on');
+        if (typeof Sound !== 'undefined' && Sound.close) Sound.close();
     }
 });
 
@@ -3600,7 +3948,7 @@ const CommandGlass = {
                 date: Utils.today(),
                 time: '',
                 priority: 'none',
-                list: State.data.lists[0] || 'My Tasks',
+                list: (State.data.lists && State.data.lists[0]) ? State.data.lists[0] : 'My Tasks',
                 completed: false,
                 completedAt: null,
                 createdAt: Date.now(),
@@ -3649,13 +3997,6 @@ document.addEventListener('keydown', e => {
             CommandGlass.close();
         } else {
             CommandGlass.open();
-        }
-    }
-
-    if (e.key === 'Escape') {
-        const glass = document.getElementById('cmdGlass');
-        if (glass.classList.contains('show')) {
-            CommandGlass.close();
         }
     }
 });
@@ -3793,24 +4134,30 @@ const App = {
         }
 
         Theme.apply();
-        Clock.start();
+        if (typeof Clock !== 'undefined' && Clock.start) Clock.start();
 
-        Pomo.init();
-        Pomo.requestNotificationPermission();
-        Home.render();
-        Tasks.render();
-        Dump.render();
-        Report.render();
-        Settings.render();
-        Level.update();
-        Nav.updateBadges();
+        if (typeof Pomo !== 'undefined' && Pomo.init) Pomo.init();
+        if (typeof Pomo !== 'undefined' && Pomo.requestNotificationPermission) Pomo.requestNotificationPermission();
         
-        Particles.init();
+        if (typeof Home !== 'undefined' && Home.render) Home.render();
+        if (typeof Tasks !== 'undefined' && Tasks.render) Tasks.render();
+        if (typeof Dump !== 'undefined' && Dump.render) Dump.render();
+        if (typeof Report !== 'undefined' && Report.render) Report.render();
+        if (typeof Settings !== 'undefined' && Settings.render) Settings.render();
+        if (typeof Level !== 'undefined' && Level.update) Level.update();
+        if (typeof Nav !== 'undefined' && Nav.updateBadges) Nav.updateBadges();
+        if (typeof Particles !== 'undefined' && Particles.init) Particles.init();
+        if (typeof Quotes !== 'undefined' && Quotes.render) Quotes.render();
 
-        Utils.loadDailyQuote();
+        if (typeof Utils !== 'undefined' && Utils.loadDailyQuote) {
+            Utils.loadDailyQuote();
+        }
 
-        document.getElementById('taskDateInput').value = Utils.today();
-        document.getElementById('userEmailDisplay').textContent = State.user?.email || '—';
+        const dateInp = document.getElementById('taskDateInput');
+        if (dateInp) dateInp.value = Utils.today();
+
+        const emailDisp = document.getElementById('userEmailDisplay');
+        if (emailDisp) emailDisp.textContent = State.user?.email || '—';
     }
 };
 
