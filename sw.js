@@ -1,4 +1,4 @@
-const APP_VERSION = '2026.05.29.1';
+const APP_VERSION = '2026.07.29.v200';
 const CACHE_NAME = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -16,16 +16,16 @@ const ASSETS = [
     './icon-512.png'
 ];
 
-// Install: pre-cache all static assets
+// Install: pre-cache and activate immediately
 self.addEventListener('install', e => {
+    self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME)
             .then(c => c.addAll(ASSETS))
-            .then(() => self.skipWaiting())
     );
 });
 
-// Activate: purge old caches, claim clients immediately
+// Activate: purge ALL old caches and claim clients immediately
 self.addEventListener('activate', e => {
     e.waitUntil(
         caches.keys()
@@ -36,49 +36,29 @@ self.addEventListener('activate', e => {
     );
 });
 
-// Fetch: stale-while-revalidate for assets, network-first for navigation
+// Fetch: Network-First for ALL local assets (Instant GitHub Pages update mode)
 self.addEventListener('fetch', e => {
     if (e.request.method !== 'GET') return;
 
-    // Navigation: try network first, fall back to cached index
-    if (e.request.mode === 'navigate') {
-        e.respondWith(
-            fetch(e.request)
-                .then(res => {
-                    const copy = res.clone();
-                    caches.open(CACHE_NAME).then(c => c.put('./index.html', copy));
-                    return res;
-                })
-                .catch(() => caches.match('./index.html'))
-        );
-        return;
-    }
-
-    // Cross-origin (Firebase, Google Fonts, CDN): pass through, no cache
     const reqUrl = new URL(e.request.url);
+    // Ignore cross-origin (Firebase, Google Fonts, CDN)
     if (reqUrl.origin !== self.location.origin) return;
 
-    // Same-origin assets: cache-first with background revalidation
+    // Network-First: Try fresh network fetch first; fall back to cache when offline
     e.respondWith(
-        caches.open(CACHE_NAME).then(cache =>
-            cache.match(e.request).then(cached => {
-                const networkFetch = fetch(e.request)
-                    .then(res => {
-                        if (res && res.status === 200 && res.type !== 'opaque') {
-                            cache.put(e.request, res.clone());
-                        }
-                        return res;
-                    })
-                    .catch(() => cached);
-
-                // Return cached immediately; revalidate in background
-                return cached || networkFetch;
+        fetch(e.request)
+            .then(networkRes => {
+                if (networkRes && networkRes.status === 200 && networkRes.type !== 'opaque') {
+                    const copy = networkRes.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(e.request, copy));
+                }
+                return networkRes;
             })
-        )
+            .catch(() => caches.match(e.request))
     );
 });
 
-// Allow clients to force update
+// Force update signal handler
 self.addEventListener('message', e => {
     if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
