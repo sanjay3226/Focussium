@@ -54,8 +54,9 @@
 
 .pomo-ring-bg circle {
     fill: none;
-    stroke: var(--bg3);
-    stroke-width: 10;
+    stroke: var(--bg4);
+    stroke-width: 14;
+    opacity: 0.6;
 }
 
 .pomo-ring-fg {
@@ -68,16 +69,17 @@
 .pomo-ring-fg circle {
     fill: none;
     stroke: url(#pomoGradient);
-    stroke-width: 10;
+    stroke-width: 14;
     stroke-linecap: round;
     stroke-dasharray: 816.8;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset .4s ease;
-    filter: drop-shadow(0 0 8px rgba(var(--acr), .5));
+    filter: drop-shadow(0 0 12px rgba(var(--acr), .7)) drop-shadow(0 0 4px rgba(var(--acr), 1));
     animation: ringPulse 3s ease-in-out infinite;
 }
 
 .pomo-ring-fg circle.running {
+    filter: drop-shadow(0 0 16px rgba(var(--acr), .9)) drop-shadow(0 0 6px rgba(var(--acr), 1));
     animation: ringPulse 2s ease-in-out infinite;
 }
 
@@ -85,9 +87,14 @@
     position: absolute;
     inset: 20px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(var(--acr), .08), transparent 70%);
+    background: radial-gradient(circle, rgba(var(--acr), .15), transparent 65%);
     pointer-events: none;
-    transition: opacity .5s;
+    transition: opacity .5s, background .5s;
+}
+
+/* Running state glow boost */
+.pomo-timer.running .pomo-glow {
+    background: radial-gradient(circle, rgba(var(--acr), .22), transparent 65%);
 }
 
 .pomo-inner {
@@ -101,7 +108,7 @@
 }
 
 .pomo-time {
-    font-family: 'DM Serif Display', serif;
+    font-family: var(--font-serif);
     font-size: 3.4rem;
     font-weight: 400;
     color: var(--tx1);
@@ -317,6 +324,8 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity .5s;
+    /* Ensure it sits above everything */
+    isolation: isolate;
 }
 
 .fullscreen-pomo.on {
@@ -324,14 +333,22 @@
     pointer-events: auto;
 }
 
+/* When fullscreen is active, hide the background .fs-bg solid */
+.fullscreen-pomo.on .fs-bg {
+    backdrop-filter: blur(0px);
+}
+
 .fs-bg {
     position: absolute;
     inset: 0;
+    /* Solid base first — critical to prevent double-timer bleed */
+    background-color: var(--bg0);
     transition: background 1s ease;
 }
 
-.fs-bg.focus  { background: linear-gradient(135deg, rgba(var(--acr), .06), var(--bg0) 60%); }
-.fs-bg.break  { background: linear-gradient(135deg, rgba(var(--okr), .06), var(--bg0) 60%); }
+/* Fully opaque background to prevent double-timer bleed-through */
+.fs-bg.focus  { background: var(--bg0) linear-gradient(160deg, rgba(var(--acr), .12) 0%, transparent 50%); }
+.fs-bg.break  { background: var(--bg0) linear-gradient(160deg, rgba(34, 197, 94, .10) 0%, transparent 50%); }
 
 .fs-close-btn {
     position: absolute;
@@ -355,7 +372,7 @@
 .fs-time {
     position: relative;
     z-index: 1;
-    font-family: 'DM Serif Display', serif;
+    font-family: var(--font-serif);
     font-size: clamp(5rem, 20vw, 8rem);
     font-weight: 400;
     color: var(--tx1);

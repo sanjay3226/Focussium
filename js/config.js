@@ -59,10 +59,10 @@ const ACCENTS = [
    DEFAULT DAILY HABITS (v3.0 NEW)
 ───────────────────────────────────────────────────────── */
 const DEFAULT_HABITS = [
-    { id: 'workout',  label: 'Workout',       icon: '🏋️', enabled: true },
-    { id: 'water',    label: '3.5L Water',    icon: '💧', enabled: true },
-    { id: 'sleep',    label: '8h Sleep',      icon: '😴', enabled: true },
-    { id: 'noscreen', label: 'No Screens 1h', icon: '📵', enabled: false },
-    { id: 'study',    label: 'Deep Study',    icon: '📚', enabled: true },
-    { id: 'journal',  label: 'Journal',       icon: '📓', enabled: false }
+    { id: 'workout',  label: 'Workout',       icon: 'workout',  enabled: true  },
+    { id: 'water',    label: '3.5L Water',    icon: 'water',    enabled: true  },
+    { id: 'sleep',    label: '8h Sleep',      icon: 'sleep',    enabled: true  },
+    { id: 'noscreen', label: 'No Screens 1h', icon: 'noscreen', enabled: false },
+    { id: 'study',    label: 'Deep Study',    icon: 'study',    enabled: true  },
+    { id: 'journal',  label: 'Journal',       icon: 'journal',  enabled: false }
 ];

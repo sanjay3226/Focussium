@@ -34,10 +34,10 @@
     <meta name="twitter:title" content="Focussium 3.0">
     <meta name="twitter:image" content="https://sanjay3226.github.io/Focussium/icon-512.png">
 
-    <!-- Fonts -->
+    <!-- Fonts (DM Serif Display + Inter Hybrid) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS — modular (tokens first, then reset, then layout) -->
     <link rel="stylesheet" href="css/tokens.css">
@@ -172,7 +172,8 @@
             <div class="header-top">
                 <div class="header-left" id="headerProfileBtn" data-action="open-account" title="View Profile & XP">
                     <div class="avatar-wrapper">
-                        <img class="avatar" id="userAvatar" src="" alt="Avatar">
+                        <img class="avatar" id="userAvatar" src="" alt="Avatar" style="display:none;">
+                        <div class="avatar-fallback" id="userAvatarFallback"></div>
                         <div class="user-level-badge" id="userLevelBadge">1</div>
                     </div>
                     <div class="header-titles">
@@ -536,11 +537,20 @@
                         </div>
                         <span class="report-card-chevron" id="reportDayChevron"></span>
                     </div>
-                    <div class="report-card-body" id="reportCardDayDetail"></div>
+                    <div class="report-card-body" id="reportDayDetailBody"></div>
                 </div>
 
                 <!-- Habits heatmap (v3.0) -->
-                <div class="report-card expanded" id="reportHabitsHeatmap"></div>
+                <div class="report-card expanded" id="reportCardHabits">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardHabits">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportHabitsCardIcon"></span>
+                            <span>Weekly Habit Rhythm</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportHabitsChevron"></span>
+                    </div>
+                    <div class="report-card-body" id="reportHabitsHeatmap"></div>
+                </div>
 
                 <!-- AI Insights -->
                 <div class="ai-insights-card">
@@ -922,6 +932,39 @@
         </div>
     </div>
 
+    <!-- Export Studio Modal (Infographic Card & PDF / PNG Hybrid) -->
+    <div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-label="Export Productivity Report" data-action="modal-close" data-modal="exportModal">
+        <div class="modal-sheet export-studio-sheet" onclick="event.stopPropagation()">
+            <div class="modal-handle"></div>
+            <button class="account-close-btn" data-action="export-close" title="Close">✕</button>
+            <div class="modal-title">Export Studio</div>
+            <p class="export-studio-sub">Shareable Infographic Card & High-DPI Document</p>
+
+            <!-- Infographic Preview Container -->
+            <div class="export-preview-wrapper" id="exportPreviewWrapper">
+                <div class="infographic-card" id="infographicCard">
+                    <!-- Populated dynamically by Report.openExportStudio() -->
+                </div>
+            </div>
+
+            <!-- Export Action Buttons Group -->
+            <div class="export-actions-grid">
+                <button class="export-action-btn primary" data-action="export-download-png">
+                    <span id="exportIconPng"></span>
+                    <span>Save Image (PNG)</span>
+                </button>
+                <button class="export-action-btn secondary" data-action="export-download-pdf">
+                    <span id="exportIconPdf"></span>
+                    <span>Download PDF</span>
+                </button>
+                <button class="export-action-btn tertiary" data-action="export-copy-clipboard">
+                    <span id="exportIconCopy"></span>
+                    <span>Copy Card</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ══ SCRIPTS (load order matters) ══ -->
 
     <!-- Firebase -->
@@ -1029,13 +1072,17 @@
         if (action === 'pomo-exit-fullscreen') { Pomo.exitFullscreen(); return; }
         if (action === 'pomo-ambient')         { Pomo.setAmbient(el.dataset.sound); return; }
 
-        /* ── Report ── */
-        if (action === 'report-mode')      { Report.setMode(el.dataset.mode); return; }
-        if (action === 'report-week')      { Report.changeWeek(parseInt(el.dataset.dir, 10)); return; }
-        if (action === 'report-month')     { Report.changeMonth(parseInt(el.dataset.dir, 10)); return; }
-        if (action === 'report-collapse')  { Report.toggleCollapse(el.dataset.card); return; }
-        if (action === 'report-chart-tab') { Report.setChartTab(el.dataset.tab); return; }
-        if (action === 'report-download')  { Report.downloadPDF(); return; }
+        /* ── Report & Export Studio ── */
+        if (action === 'report-mode')           { Report.setMode(el.dataset.mode); return; }
+        if (action === 'report-week')           { Report.changeWeek(parseInt(el.dataset.dir, 10)); return; }
+        if (action === 'report-month')          { Report.changeMonth(parseInt(el.dataset.dir, 10)); return; }
+        if (action === 'report-collapse')       { Report.toggleCollapse(el.dataset.card); return; }
+        if (action === 'report-chart-tab')      { Report.setChartTab(el.dataset.tab); return; }
+        if (action === 'report-download')       { Report.openExportStudio(); return; }
+        if (action === 'export-close')          { Report.closeExportStudio(); return; }
+        if (action === 'export-download-png')   { Report.downloadPNG(); return; }
+        if (action === 'export-download-pdf')   { Report.downloadPDF(); return; }
+        if (action === 'export-copy-clipboard') { Report.copyImage(); return; }
 
         /* ── Level ── */
         if (action === 'level-claim') { Level.claimVibe(); return; }

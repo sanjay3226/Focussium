@@ -247,16 +247,16 @@
     gap: 20px;
     background: var(--bg2);
     border: 1px solid var(--bd);
-    border-radius: 22px;
-    padding: 18px 20px;
+    border-radius: 20px;
+    padding: 16px 18px;
     margin-bottom: 14px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-xs);
 }
 
 .progress-ring-container {
     position: relative;
-    width: 120px;
-    height: 120px;
+    width: 105px;
+    height: 105px;
     flex-shrink: 0;
 }
 
@@ -290,20 +290,29 @@
 }
 
 .progress-percent {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.5rem;
-    font-weight: 400;
+    font-family: var(--font-sans);
+    font-size: 1.4rem;
+    font-weight: 800;
     color: var(--ac);
     line-height: 1;
 }
 
-.progress-label { font-size: .62rem; color: var(--tx3); font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.progress-label { font-size: .60rem; color: var(--tx3); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 
-.progress-details { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.progress-details { display: flex; flex-direction: column; gap: 8px; flex: 1; }
 
-.progress-detail {}
-.progress-detail-value { font-size: 1.1rem; font-weight: 800; color: var(--tx1); line-height: 1.1; }
-.progress-detail-label { font-size: .65rem; color: var(--tx3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.progress-detail {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--bg3);
+    border-radius: 10px;
+    border: 1px solid var(--bd);
+}
+
+.progress-detail-value { font-size: .95rem; font-weight: 800; color: var(--tx1); line-height: 1; }
+.progress-detail-label { font-size: .60rem; color: var(--tx3); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 
 /* ── Quick stats grid ── */
 .stats-grid {
@@ -521,38 +530,48 @@
 .list-creator {
     display: flex;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 4px;
+    box-shadow: var(--shadow-xs);
 }
 
 .list-creator-input {
     flex: 1;
-    padding: 9px 13px;
+    padding: 8px 12px;
     border-radius: 12px;
-    background: var(--bg3);
-    border: 1.5px solid var(--bd);
+    background: transparent;
+    border: none;
     color: var(--tx1);
     font-size: .82rem;
+    font-family: inherit;
 }
 
 .list-creator-input:focus {
-    border-color: var(--ac);
-    box-shadow: 0 0 0 3px rgba(var(--acr),.12);
     outline: none;
 }
 
 .list-creator-btn {
-    padding: 9px 18px;
+    padding: 8px 16px;
     border-radius: 12px;
     background: var(--acgr);
     color: var(--ac-text, #fff);
-    font-size: .82rem;
+    font-size: .78rem;
     font-weight: 700;
     border: none;
     cursor: pointer;
-    transition: all .25s;
+    transition: all .25s ease;
+    box-shadow: 0 2px 8px rgba(var(--acr), .25);
 }
 
-.list-creator-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(var(--acr),.30); }
+.list-creator-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(var(--acr), .40);
+}
+
+.list-creator-btn:active { transform: translateY(0); }
 
 /* ── Danger button ── */
 .danger-btn {
@@ -572,37 +591,26 @@
 /* ── Task tools bar ── */
 .task-tools-bar {
     display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
     align-items: center;
-}
-
-.task-filter-btn {
-    padding: 5px 12px;
-    border-radius: 16px;
-    font-size: .7rem;
-    font-weight: 700;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 6px 12px;
+    background: var(--bg2);
+    border-radius: 14px;
     border: 1px solid var(--bd);
-    background: var(--bg3);
-    color: var(--tx3);
-    cursor: pointer;
-    transition: all .2s;
+    box-shadow: var(--shadow-xs);
 }
 
-.task-filter-btn:hover { color: var(--tx1); border-color: var(--bdh); }
-.task-filter-btn.active { background: var(--ac); color: var(--ac-text, #fff); border-color: var(--ac); }
-
-/* ── Progress KPI bar ── */
 .task-progress-kpi {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
+    flex: 1;
 }
 
 .task-progress-kpi-bar-container {
-    flex: 1;
+    width: 64px;
     height: 4px;
     border-radius: 2px;
     background: var(--bg4);
@@ -616,7 +624,37 @@
     transition: width .6s cubic-bezier(.34,1,.64,1);
 }
 
-.task-progress-kpi-text { font-size: .7rem; font-weight: 700; color: var(--tx3); flex-shrink: 0; }
+.task-progress-kpi-text { font-size: .68rem; font-weight: 700; color: var(--tx2); white-space: nowrap; }
+.task-progress-kpi-pct  { font-size: .68rem; font-weight: 800; color: var(--ac); }
+
+.task-filter-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-filter-btn {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: .68rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--tx3);
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.task-filter-btn:hover {
+    color: var(--tx1);
+    background: var(--bg3);
+}
+
+.task-filter-btn.active {
+    background: rgba(var(--acr), .12);
+    color: var(--ac);
+    border-color: rgba(var(--acr), .25);
+}
 
 /* ── Accent buttons (settings) ── */
 .accent-buttons {
@@ -701,7 +739,7 @@
     border: 1.5px solid var(--bd);
     color: var(--tx1);
     font-size: .82rem;
-    font-family: 'Space Grotesk', monospace;
+    font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: .05em;
     text-transform: uppercase;

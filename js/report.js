@@ -181,28 +181,28 @@ const Report = {
         const container = document.getElementById(containerId);
         if (!container) return;
         const max = Math.max(...values, 1);
-        const W = 320, H = 120, padX = 20, padY = 10, barGap = 6;
+        const W = 320, H = 120, padX = 14, padY = 8, barGap = 8;
         const chartW = W - padX * 2;
         const barW   = (chartW - (values.length - 1) * barGap) / values.length;
         const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#38B6FF';
         const unit = type === 'focus' ? 'm' : '';
 
         const bars = values.map((v, i) => {
-            const barH  = Math.max(0, (v / max) * (H - padY * 2));
+            const barH  = v > 0 ? Math.max(6, (v / max) * (H - padY * 2 - 16)) : 4;
             const bx    = padX + i * (barW + barGap);
-            const by    = H - padY - barH;
-            const alpha = v > 0 ? 1 : 0.18;
+            const by    = H - padY - 14 - barH;
+            const alpha = v > 0 ? 0.95 : 0.3;
             return `
-            <rect x="${bx}" y="${by}" width="${barW}" height="${barH}" rx="5" fill="${ac}" opacity="${alpha}"
-                  style="filter:${v > 0 ? `drop-shadow(0 0 6px ${ac}55)` : 'none'}"/>
-            ${v > 0 ? `<text x="${bx + barW/2}" y="${Math.max(by - 4, padY + 8)}" text-anchor="middle"
-                  fill="${ac}" font-size="7.5" font-weight="700">${v}${unit}</text>` : ''}
+            <rect x="${bx}" y="${by}" width="${barW}" height="${barH}" rx="4" fill="${v > 0 ? ac : 'var(--bg4)'}" opacity="${alpha}"
+                  style="filter:${v > 0 ? `drop-shadow(0 0 6px ${ac}44)` : 'none'}"/>
+            ${v > 0 ? `<text x="${bx + barW/2}" y="${Math.max(by - 4, padY + 6)}" text-anchor="middle"
+                  fill="${ac}" font-size="8" font-weight="700">${v}${unit}</text>` : ''}
             <text x="${bx + barW/2}" y="${H - 2}" text-anchor="middle"
                   fill="var(--tx3)" font-size="8" font-weight="700">${labels[i].substring(0,2)}</text>`;
         }).join('');
 
         container.innerHTML = `
-        <svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="none">
+        <svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
             ${bars}
         </svg>`;
     },
@@ -273,16 +273,16 @@ const Report = {
     renderDayDetails(w, m) {
         const sel = State.selectedReportDate || Utils.today();
         const dayData = w.days.find(d => d.date === sel) || m.days.find(d => d.key === sel);
-        const container = document.getElementById('reportCardDayDetail');
+        const container = document.getElementById('reportDayDetailBody') || document.getElementById('reportCardDayDetail');
         if (!container) return;
 
         if (!dayData) {
-            container.innerHTML = `<div class="empty-state"><p>Select a day on the heatmap to see details.</p></div>`;
+            container.innerHTML = `<div class="empty-state small"><p>Select a day on the heatmap to see details.</p></div>`;
             return;
         }
 
         const date = new Date((dayData.date || dayData.key) + 'T00:00:00');
-        const dayLabel = date.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' });
+        const dayLabel = date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
         const completedTasks = State.data.tasks.filter(t =>
             t.completed && t.completedAt &&
@@ -293,19 +293,32 @@ const Report = {
         const moodLabels = { focused: '🧠 Focused', good: '😊 Good', okay: '😐 Okay', low: '😔 Low', epic: '🔥 Epic' };
 
         container.innerHTML = `
-        <div class="day-detail-header">
-            <div class="day-detail-date">${dayLabel}</div>
-            ${mood ? `<span class="day-detail-mood">${moodLabels[mood] || mood}</span>` : ''}
-        </div>
-        <div class="day-detail-stats">
-            <div class="day-detail-stat"><span class="day-stat-val">${dayData.tasks || 0}</span><span class="day-stat-label">tasks done</span></div>
-            <div class="day-detail-stat"><span class="day-stat-val">${dayData.focus || 0}m</span><span class="day-stat-label">focus</span></div>
-        </div>
-        ${completedTasks.length ? `
-        <div class="day-detail-tasks-list">
-            ${completedTasks.slice(0, 6).map(t => `<div class="day-detail-task">✓ ${Utils.escape(t.text)}</div>`).join('')}
-            ${completedTasks.length > 6 ? `<div class="day-detail-more">+${completedTasks.length - 6} more</div>` : ''}
-        </div>` : '<div class="day-detail-empty">No tasks completed this day.</div>'}`;
+        <div class="day-detail-content">
+            <div class="day-detail-header">
+                <div class="day-detail-date">${dayLabel}</div>
+                ${mood ? `<span class="day-detail-mood">${moodLabels[mood] || mood}</span>` : ''}
+            </div>
+            <div class="day-detail-stats">
+                <div class="day-detail-stat">
+                    <span class="day-stat-val">${dayData.tasks || 0}</span>
+                    <span class="day-stat-label">Tasks Done</span>
+                </div>
+                <div class="day-detail-stat">
+                    <span class="day-stat-val">${dayData.focus || 0}m</span>
+                    <span class="day-stat-label">Focus Logged</span>
+                </div>
+            </div>
+            ${completedTasks.length ? `
+            <div class="day-detail-tasks-list">
+                <div class="day-detail-tasks-title">Completed Tasks</div>
+                ${completedTasks.slice(0, 8).map(t => `
+                    <div class="day-detail-task">
+                        <span class="day-task-check">${Icons.check(12)}</span>
+                        <span class="day-task-text">${Utils.escape(t.text)}</span>
+                    </div>`).join('')}
+                ${completedTasks.length > 8 ? `<div class="day-detail-more">+${completedTasks.length - 8} more completed</div>` : ''}
+            </div>` : '<div class="day-detail-empty">No tasks completed on this day.</div>'}
+        </div>`;
     },
 
     renderInsights(w, m) {
@@ -347,82 +360,307 @@ const Report = {
         const config  = State.data.habitConfig || DEFAULT_HABITS;
         const enabled = config.filter(h => h.enabled);
         const dates   = Utils.weekDates(State.weekOffset);
+        const dayHeaders = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
         container.innerHTML = `
         <div class="habits-heatmap-grid">
+            <div class="habits-heatmap-header-row">
+                <span class="habits-heatmap-title-col">Habit</span>
+                <div class="habits-heatmap-day-labels">
+                    ${dayHeaders.map(dh => `<span class="habits-heatmap-day-label">${dh}</span>`).join('')}
+                </div>
+            </div>
             ${enabled.map(h => `
             <div class="habits-heatmap-row">
-                <span class="habits-heatmap-icon">${h.icon}</span>
-                <span class="habits-heatmap-label">${Utils.escape(h.label)}</span>
+                <div class="habits-heatmap-meta">
+                    <span class="habits-heatmap-icon">${Icons.getHabitIcon(h.icon, 16)}</span>
+                    <span class="habits-heatmap-label">${Utils.escape(h.label)}</span>
+                </div>
                 <div class="habits-heatmap-dots">
                     ${dates.map(date => {
                         const done = (State.data.habits?.[date] || []).includes(h.id);
-                        return `<div class="habits-heatmap-dot ${done ? 'done' : ''}" title="${date}"></div>`;
+                        return `<div class="habits-heatmap-dot ${done ? 'done' : ''}" title="${date}: ${done ? 'Completed' : 'Missed'}"></div>`;
                     }).join('')}
                 </div>
             </div>`).join('')}
         </div>`;
     },
 
-    /* ─── PDF EXPORT ─── */
-    async downloadPDF() {
-        if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
-            Toast.show('Loading PDF engine…');
-            await new Promise(resolve => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                script.onload = resolve;
-                document.head.appendChild(script);
-            });
-        }
+    /* ─── EXPORT STUDIO (HYBRID 2 + 5: INFOGRAPHIC CARD & HIGH-DPI PDF/PNG) ─── */
+    openExportStudio() {
+        const modal = document.getElementById('exportModal');
+        if (!modal) return;
 
+        // Inject icons into action buttons
+        const pngIcon = document.getElementById('exportIconPng');
+        const pdfIcon = document.getElementById('exportIconPdf');
+        const copyIcon = document.getElementById('exportIconCopy');
+        if (pngIcon && Icons.camera) pngIcon.innerHTML = Icons.camera(16);
+        if (pdfIcon && Icons.filePdf) pdfIcon.innerHTML = Icons.filePdf(16);
+        if (copyIcon && Icons.copy) copyIcon.innerHTML = Icons.copy(16);
+
+        // Generate Infographic Card HTML
+        this.renderInfographicPreview();
+
+        modal.classList.add('on');
+        Sound.open();
+    },
+
+    closeExportStudio() {
+        const modal = document.getElementById('exportModal');
+        if (modal) modal.classList.remove('on');
+        Sound.close();
+    },
+
+    renderInfographicPreview() {
+        const card = document.getElementById('infographicCard');
+        if (!card) return;
+
+        const w = Utils.weekData(State.weekOffset);
+        const dates = Utils.weekDates(State.weekOffset);
+        const score = this.getScore(w);
+        const breakdown = this.getScoreBreakdown(w);
+
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const start = new Date(dates[0] + 'T00:00:00');
+        const end = new Date(dates[6] + 'T00:00:00');
+        const dateRangeStr = `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+
+        const username = State.user?.displayName || State.data?.settings?.userName || 'Focus Disciple';
+        const userInitial = username.charAt(0).toUpperCase();
+        const levelData = (typeof Level !== 'undefined' && Level.getXPInfo) ? Level.getXPInfo() : { level: 1, rank: 'Focus Initiate' };
+        const levelNum = levelData.level || 1;
+        const rankTitle = levelData.rank || 'Focus Initiate';
+
+        const totalFocusMins = w.days.reduce((s, d) => s + d.focus, 0);
+        const totalTasksDone = w.days.reduce((s, d) => s + d.tasks, 0);
+        const totalSessions = (State.data?.pomo || []).filter(p => dates.includes(p.date)).length;
+        const habitActiveDays = dates.filter(d => (State.data?.habits?.[d] || []).length > 0).length;
+        const habitRate = Math.round((habitActiveDays / 7) * 100);
+
+        const velocityTier = score >= 90 ? '⚡ S-TIER DISCIPLINE' : score >= 75 ? '🔥 HIGH VELOCITY' : score >= 50 ? '🌱 STEADY MOMENTUM' : '🚀 IN PROGRESS';
+
+        // Top completed tasks of the week
+        const completedTasksThisWeek = (State.data?.tasks || [])
+            .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]))
+            .slice(0, 3);
+
+        const maxDailyFocus = Math.max(...w.days.map(d => d.focus), 1);
+        const daysLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+
+        // Seneca / Marcus Stoic quote for insight footer
+        const stoicQuotes = [
+            "“We suffer more often in imagination than in reality.” — Seneca",
+            "“You have power over your mind, not outside events.” — Marcus Aurelius",
+            "“First say to yourself what you would be; and then do what you have to do.” — Epictetus",
+            "“Action is the true measure of discipline.” — Toji"
+        ];
+        const quote = stoicQuotes[Math.floor(Math.random() * stoicQuotes.length)];
+
+        card.innerHTML = `
+            <!-- Header: Brand + User Pill -->
+            <div class="info-header">
+                <div class="info-brand">
+                    <div class="info-logo-disc">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="info-brand-title">Focussium</div>
+                        <div class="info-brand-sub">Weekly Vibe Report</div>
+                    </div>
+                </div>
+                <div class="info-user-pill">
+                    <div class="info-user-avatar">${userInitial}</div>
+                    <div>
+                        <div class="info-user-name">${Utils.escape(username)}</div>
+                        <div class="info-user-rank">LVL ${levelNum} • ${rankTitle}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Range Badge -->
+            <div class="info-date-range">📅 ${dateRangeStr}</div>
+
+            <!-- Hero Score & Velocity -->
+            <div class="info-hero-score">
+                <div class="info-score-left">
+                    <span class="info-score-label">VIBE SCORE</span>
+                    <span class="info-score-digits">${score}<span style="font-size:1.1rem;color:var(--tx3);font-family:var(--font-sans);font-weight:700;">/100</span></span>
+                    <span class="info-score-sub">${breakdown.tasks} task pts • ${breakdown.focus} focus pts • ${breakdown.streak} rhythm pts</span>
+                </div>
+                <div class="info-score-badge">${velocityTier}</div>
+            </div>
+
+            <!-- Triad KPIs -->
+            <div class="info-triad">
+                <div class="info-kpi">
+                    <span class="info-kpi-val">${totalFocusMins}m</span>
+                    <span class="info-kpi-lbl">Focus Time (${totalSessions} sesh)</span>
+                </div>
+                <div class="info-kpi">
+                    <span class="info-kpi-val">${totalTasksDone}</span>
+                    <span class="info-kpi-lbl">Tasks Crushed</span>
+                </div>
+                <div class="info-kpi">
+                    <span class="info-kpi-val">${habitRate}%</span>
+                    <span class="info-kpi-lbl">Habit Rhythm (${habitActiveDays}/7d)</span>
+                </div>
+            </div>
+
+            <!-- Rhythm Bar Mini Visualizer -->
+            <div class="info-rhythm-section">
+                <div class="info-section-title">WEEKLY FOCUS DISTRIBUTION</div>
+                <div class="info-bars-grid">
+                    ${w.days.map((d, i) => {
+                        const pct = d.focus > 0 ? Math.max(12, Math.min(100, Math.round((d.focus / maxDailyFocus) * 100))) : 6;
+                        const hasFocus = d.focus > 0;
+                        return `
+                        <div class="info-bar-col">
+                            <div class="info-bar-track">
+                                <div class="info-bar-fill" style="height:${pct}%;opacity:${hasFocus ? 1 : 0.2};${hasFocus ? 'box-shadow:0 0 8px var(--ac);' : ''}"></div>
+                            </div>
+                            <span class="info-bar-day">${daysLabels[i]}</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Accomplishments Highlight -->
+            <div class="info-tasks-list">
+                <div class="info-section-title">KEY ACCOMPLISHMENTS</div>
+                ${completedTasksThisWeek.length > 0 ? completedTasksThisWeek.map(t => `
+                    <div class="info-task-item">
+                        <span class="info-task-check">✓</span>
+                        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${Utils.escape(t.text)}</span>
+                    </div>
+                `).join('') : `
+                    <div class="info-task-item" style="color:var(--tx3);font-style:italic;">
+                        No completed tasks logged this week. Time to build momentum!
+                    </div>
+                `}
+            </div>
+
+            <!-- Seneca Stoic Wisdom -->
+            <div class="info-quote-box">${quote}</div>
+
+            <!-- Watermark Footer -->
+            <div class="info-footer-watermark">
+                <span>focussium.app</span>
+                <span>Tracked with Discipline</span>
+            </div>
+        `;
+    },
+
+    async loadHtml2Canvas() {
+        if (typeof window.html2canvas !== 'undefined') return window.html2canvas;
+        Toast.show('Preparing visual engine…');
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = () => resolve(window.html2canvas);
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+        return window.html2canvas;
+    },
+
+    async generateCardCanvas() {
+        const h2c = await this.loadHtml2Canvas();
+        const card = document.getElementById('infographicCard');
+        if (!card) throw new Error('Infographic card not found');
+        return await h2c(card, {
+            scale: 2.5,
+            useCORS: true,
+            backgroundColor: null,
+            logging: false
+        });
+    },
+
+    async downloadPNG() {
         try {
+            Toast.show('Rendering high-res card… 🎨');
+            const canvas = await this.generateCardCanvas();
+            const dates = Utils.weekDates(State.weekOffset);
+            const link = document.createElement('a');
+            link.download = `Focussium_Vibe_${dates[0]}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            Sound.success();
+            Toast.show('Infographic Card downloaded! 📸');
+        } catch(e) {
+            handleError('PNG Export', e);
+            Toast.show('Export failed. Please try again.');
+        }
+    },
+
+    async downloadPDF() {
+        try {
+            Toast.show('Generating PDF document… 📄');
+            if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                await new Promise(resolve => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+
+            const canvas = await this.generateCardCanvas();
+            const imgData = canvas.toDataURL('image/png');
             const { jsPDF } = window.jspdf || window;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            const w   = Utils.weekData(State.weekOffset);
+
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // Background fill
+            doc.setFillColor(3, 4, 11);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+            // Center image nicely on A4
+            const imgWidth = 170;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            const posX = (pageWidth - imgWidth) / 2;
+            const posY = Math.max(15, (pageHeight - imgHeight) / 2);
+
+            doc.addImage(imgData, 'PNG', posX, posY, imgWidth, imgHeight);
+
             const dates = Utils.weekDates(State.weekOffset);
-            const score = this.getScore(w);
-            const breakdown = this.getScoreBreakdown(w);
-
-            // Colours from CSS
-            const css = getComputedStyle(document.documentElement);
-            const acHex = (css.getPropertyValue('--ac').trim() || '#f5c842').replace('#','');
-            const acRGB = parseInt(acHex.substring(0,2),16), acGGB = parseInt(acHex.substring(2,4),16), acBGB = parseInt(acHex.substring(4,6),16);
-            const PW = 210;
-
-            const setFill = (c) => doc.setFillColor(c[0], c[1], c[2]);
-            const setText = (c) => doc.setTextColor(c[0], c[1], c[2]);
-            const BG0  = [8,10,26], BG2 = [15,19,40], BG3 = [22,28,58];
-            const TX1  = [255,255,255], TX2 = [226,232,240], TX3 = [148,163,184], BORD = [255,255,255,0.12];
-            const GRN  = [76,175,80], AMB = [255,193,7], RSE = [244,67,54];
-
-            // Header
-            setFill(BG0); doc.rect(0,0,PW,297,'F');
-            setFill(BG2); doc.rect(0,0,PW,56,'F');
-            doc.setFillColor(acRGB, acGGB, acBGB);
-            doc.rect(0,0,PW,3,'F');
-            doc.addImage('icon-192.png','PNG',12,10,28,28).catch?.();
-            doc.setFont('helvetica','bold'); doc.setFontSize(20); setText(TX1);
-            doc.text('Focussium 3.0',44,20);
-            doc.setFont('helvetica','normal'); doc.setFontSize(8); setText(TX3);
-            doc.text('Weekly Productivity Report',44,27);
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            const start  = new Date(dates[0]+'T00:00:00'), end = new Date(dates[6]+'T00:00:00');
-            const range  = `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
-            doc.text(range, PW/2, 21, { align: 'center' });
-
-            // Big score
-            doc.setFont('helvetica','bold'); doc.setFontSize(38); setText(TX1);
-            doc.text(`${score}`,180,44,{align:'right'});
-            doc.setFont('helvetica','normal'); doc.setFontSize(9); setText(TX2);
-            doc.text('/ 100',183,44);
-
             doc.save(`Focussium_Report_${dates[0]}.pdf`);
             Sound.success();
-            Toast.show('Report downloaded!');
+            Toast.show('PDF Report downloaded! 📄');
         } catch(e) {
-            handleError('PDF generation', e);
+            handleError('PDF Export', e);
             Toast.show('PDF generation failed');
+        }
+    },
+
+    async copyImage() {
+        try {
+            Toast.show('Capturing card… 📋');
+            const canvas = await this.generateCardCanvas();
+            canvas.toBlob(async (blob) => {
+                if (!blob) throw new Error('Blob generation failed');
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    Sound.success();
+                    Toast.show('Infographic copied to clipboard! 📋');
+                } catch(clipErr) {
+                    const dates = Utils.weekDates(State.weekOffset);
+                    const link = document.createElement('a');
+                    link.download = `Focussium_Vibe_${dates[0]}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    Toast.show('Downloaded image (Clipboard permission restricted)');
+                }
+            }, 'image/png');
+        } catch(e) {
+            handleError('Copy image', e);
+            Toast.show('Failed to copy card');
         }
     }
 };

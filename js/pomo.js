@@ -28,6 +28,14 @@ const Pomo = {
         this.updatePlayButton(false);
         this.cycleInsight(true);
         this.initAmbientUI();
+
+        // Inject fullscreen overlay icons
+        const fsClose = document.getElementById('fsCloseIcon');
+        const fsReset = document.getElementById('fsResetIcon');
+        const fsSkip  = document.getElementById('fsSkipIcon');
+        if (fsClose) fsClose.innerHTML = Icons.close(18);
+        if (fsReset) fsReset.innerHTML = Icons.reset(20);
+        if (fsSkip)  fsSkip.innerHTML  = Icons.skip(20);
     },
 
     initAmbientUI() {

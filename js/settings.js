@@ -236,17 +236,32 @@ const Settings = {
     },
 
     applyAvatarDisplay() {
-        const active  = State.data?.settings?.avatar || 'default';
-        const imgEl   = document.getElementById('userAvatar');
-        const userPhoto = State.user?.photoURL;
+        const active     = State.data?.settings?.avatar || 'default';
+        const imgEl      = document.getElementById('userAvatar');
+        const fallbackEl = document.getElementById('userAvatarFallback');
+        const userPhoto  = State.user?.photoURL;
         if (!imgEl) return;
 
+        let hasPhoto = false;
         if (active === 'google' && userPhoto) {
-            imgEl.src = userPhoto; imgEl.style.display = 'block';
+            imgEl.src = userPhoto;
+            hasPhoto = true;
         } else if (active === 'custom' && State.data.settings?.customAvatarDataUrl) {
-            imgEl.src = State.data.settings.customAvatarDataUrl; imgEl.style.display = 'block';
+            imgEl.src = State.data.settings.customAvatarDataUrl;
+            hasPhoto = true;
+        }
+
+        if (hasPhoto) {
+            imgEl.style.display = 'block';
+            if (fallbackEl) fallbackEl.style.display = 'none';
         } else {
             imgEl.style.display = 'none';
+            if (fallbackEl) {
+                fallbackEl.style.display = 'flex';
+                const name = State.data?.name || State.user?.displayName || '';
+                const initial = name ? name.trim().charAt(0).toUpperCase() : '';
+                fallbackEl.innerHTML = initial ? `<span class="avatar-initial">${initial}</span>` : Icons.user(18);
+            }
         }
     },
 

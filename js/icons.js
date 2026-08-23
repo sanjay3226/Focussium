@@ -288,6 +288,32 @@ const Icons = {
         </svg>`;
     },
 
+    camera(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+        </svg>`;
+    },
+
+    copy(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="13" height="13" x="9" y="9" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>`;
+    },
+
+    filePdf(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>`;
+    },
+
     user(size = 16) {
         return `
         <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
@@ -406,14 +432,86 @@ const Icons = {
         </svg>`;
     },
 
-    medal(size = 16) {
+    // Habits-specific SVG icons (replacing emoji in habits list)
+    habitWorkout(size = 22) {
         return `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 21s2.5-3 4-3 4 3 4 3"/>
-            <path d="M12 2v6"/>
-            <circle cx="12" cy="12" r="3"/>
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3H4a1 1 0 0 0-1 1v2"/>
+            <path d="M18 3h2a1 1 0 0 1 1 1v2"/>
+            <path d="M6 21H4a1 1 0 0 1-1-1v-2"/>
+            <path d="M18 21h2a1 1 0 0 0 1-1v-2"/>
+            <path d="M7 12h10"/>
+            <circle cx="7" cy="12" r="3"/>
+            <circle cx="17" cy="12" r="3"/>
         </svg>`;
+    },
+
+    habitWater(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L5 10C5 14.4 8.1 18 12 18C15.9 18 19 14.4 19 10L12 2Z"/>
+            <path d="M8 14C8.5 16 10 17 12 17"/>
+        </svg>`;
+    },
+
+    habitSleep(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+        </svg>`;
+    },
+
+    habitNoScreen(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="14" rx="2"/>
+            <path d="M2 20h20"/>
+            <path d="M2 2L22 22"/>
+        </svg>`;
+    },
+
+    habitStudy(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19V6C4 4.9 4.9 4 6 4H18C19.1 4 20 4.9 20 6V19"/>
+            <path d="M2 19H22"/>
+            <path d="M8 8H16"/>
+            <path d="M8 12H16"/>
+            <path d="M8 16H12"/>
+        </svg>`;
+    },
+
+    habitJournal(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 3H19C20.1 3 21 3.9 21 5V19C21 20.1 20.1 21 19 21H5C3.9 21 3 20.1 3 19V5C3 3.9 3.9 3 5 3Z"/>
+            <path d="M8 8H16"/>
+            <path d="M8 12H16"/>
+            <path d="M8 16H12"/>
+            <path d="M3 7H5"/>
+        </svg>`;
+    },
+
+    // Generic habit fallback (plant/growth)
+    habitDefault(size = 22) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22V12"/>
+            <path d="M12 12C12 7 8 4 4 4C4 8 7 12 12 12Z"/>
+            <path d="M12 12C12 7 16 4 20 4C20 8 17 12 12 12Z"/>
+        </svg>`;
+    },
+
+    getHabitIcon(name, size = 20) {
+        if (!name) return this.habitDefault(size);
+        const clean = String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (clean.includes('workout') || clean.includes('gym') || clean.includes('exercise')) return this.habitWorkout(size);
+        if (clean.includes('water') || clean.includes('hydrate') || clean.includes('drink')) return this.habitWater(size);
+        if (clean.includes('sleep') || clean.includes('rest') || clean.includes('bed')) return this.habitSleep(size);
+        if (clean.includes('screen') || clean.includes('phone') || clean.includes('digital')) return this.habitNoScreen(size);
+        if (clean.includes('study') || clean.includes('read') || clean.includes('learn') || clean.includes('book')) return this.habitStudy(size);
+        if (clean.includes('journal') || clean.includes('write') || clean.includes('diary')) return this.habitJournal(size);
+        return this.habitDefault(size);
     }
 };
 
@@ -428,20 +526,26 @@ function injectIcons() {
 
         'pageIconHome': () => Icons.spark(24),
         'pageIconTasks': () => Icons.tasks(24),
+        'pageIconHabits': () => Icons.shield(24),
         'pageIconDump': () => Icons.brain(24),
         'pageIconFocus': () => Icons.target(24),
         'pageIconReport': () => Icons.chart(24),
+
+        'userAvatarFallback': () => Icons.user(20),
 
         'weekArrowIcon': () => Icons.arrowRight(12),
 
         'navIconHome': () => Icons.home(20),
         'navIconTasks': () => Icons.tasks(20),
+        'navIconHabits': () => Icons.shield(20),
         'navIconDump': () => Icons.dump(20),
         'navIconFocus': () => Icons.focus(20),
         'navIconReport': () => Icons.report(20),
 
         'fabIcon': () => Icons.plus(22),
         'dumpSendBtn': () => Icons.sendUp(16),
+        'moodLoggerIcon': () => Icons.fire(16),
+        'quoteSparkleIcon': () => Icons.spark(16),
 
         'pomoResetBtn': () => Icons.reset(18),
         'pomoSkipBtn': () => Icons.skip(18),
@@ -461,6 +565,7 @@ function injectIcons() {
         'reportChartIcon1': () => Icons.fire(16),
         'reportMonthIcon': () => Icons.calendar(16),
         'reportDayIcon': () => Icons.calendar(16),
+        'reportHabitsCardIcon': () => Icons.shield(16),
         'aiInsightsIcon': () => Icons.spark(12),
         'downloadIcon': () => Icons.download(18),
 

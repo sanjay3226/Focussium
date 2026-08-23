@@ -49,9 +49,9 @@ const Habits = {
                 <button class="habit-item ${done ? 'done' : ''}"
                         data-action="toggle-habit" data-habit-id="${habit.id}"
                         aria-pressed="${done}">
-                    <span class="habit-icon">${habit.icon}</span>
+                    <span class="habit-icon">${Icons.getHabitIcon(habit.icon, 20)}</span>
                     <span class="habit-label">${Utils.escape(habit.label)}</span>
-                    <span class="habit-check">${Icons.check(16)}</span>
+                    <span class="habit-check">${Icons.check(14)}</span>
                 </button>`;
             }).join('')}
         </div>
@@ -162,9 +162,9 @@ const Habits = {
         const pct  = enabled.length ? Math.round((done / enabled.length) * 100) : 0;
 
         return `
-        <div class="home-habits-card">
+        <div class="home-habits-card" data-action="nav-go" data-page="habits">
             <div class="home-habits-header">
-                <span class="home-habits-title">${Icons.fire(12)} Daily Habits</span>
+                <span class="home-habits-title">${Icons.shield(13)} Daily Habits</span>
                 <span class="home-habits-count">${done}/${enabled.length}</span>
             </div>
             <div class="home-habits-progress-bar">
@@ -173,7 +173,11 @@ const Habits = {
             <div class="home-habits-dots">
                 ${enabled.map(h => {
                     const isDone = (State.data.habits?.[today] || []).includes(h.id);
-                    return `<span class="home-habit-dot ${isDone ? 'done' : ''}" title="${h.label}">${h.icon}</span>`;
+                    return `
+                    <div class="home-habit-chip ${isDone ? 'done' : ''}" title="${Utils.escape(h.label)}">
+                        <span class="home-habit-icon">${Icons.getHabitIcon(h.icon, 14)}</span>
+                        <span class="home-habit-name">${Utils.escape(h.label)}</span>
+                    </div>`;
                 }).join('')}
             </div>
         </div>`;

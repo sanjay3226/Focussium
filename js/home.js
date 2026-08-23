@@ -93,7 +93,7 @@ const Home = {
         const labelsHTML = w.days.map((d, i) => `
             <text x="${points[i].x}" y="${H+12}" text-anchor="middle"
                   fill="var(--tx3)" font-size="8" font-weight="700"
-                  font-family="'Space Grotesk','Inter',sans-serif" letter-spacing="0.04em">${d.name}</text>
+                  font-family="var(--font-sans), sans-serif" letter-spacing="0.04em">${d.name}</text>
         `).join('');
 
         const chartEl = document.getElementById('weekMiniChart');

@@ -19,7 +19,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Space Grotesk', sans-serif;
+    font-family: var(--font-sans);
     height: 100%;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
