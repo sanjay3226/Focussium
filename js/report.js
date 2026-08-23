@@ -438,7 +438,13 @@ const Report = {
         const habitActiveDays = dates.filter(d => (State.data?.habits?.[d] || []).length > 0).length;
         const habitRate = Math.round((habitActiveDays / 7) * 100);
 
-        const velocityTier = score >= 90 ? '⚡ S-TIER DISCIPLINE' : score >= 75 ? '🔥 HIGH VELOCITY' : score >= 50 ? '🌱 STEADY MOMENTUM' : '🚀 IN PROGRESS';
+        const velocityBadge = score >= 90 
+            ? '⚡ S-TIER FLOW' 
+            : score >= 70 
+            ? '🔥 HIGH VELOCITY' 
+            : score >= 40 
+            ? '✨ STEADY RHYTHM' 
+            : '🌱 BUILDING MOMENTUM';
 
         // Top completed tasks of the week
         const completedTasksThisWeek = (State.data?.tasks || [])
@@ -446,14 +452,14 @@ const Report = {
             .slice(0, 3);
 
         const maxDailyFocus = Math.max(...w.days.map(d => d.focus), 1);
-        const daysLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+        const daysLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
         // Seneca / Marcus Stoic quote for insight footer
         const stoicQuotes = [
-            "“We suffer more often in imagination than in reality.” — Seneca",
-            "“You have power over your mind, not outside events.” — Marcus Aurelius",
-            "“First say to yourself what you would be; and then do what you have to do.” — Epictetus",
-            "“Action is the true measure of discipline.” — Toji"
+            "We suffer more often in imagination than in reality. — Seneca",
+            "You have power over your mind, not outside events. — Marcus Aurelius",
+            "First say to yourself what you would be; and then do what you have to do. — Epictetus",
+            "Action is the true measure of discipline. — Toji"
         ];
         const quote = stoicQuotes[Math.floor(Math.random() * stoicQuotes.length)];
 
@@ -462,88 +468,104 @@ const Report = {
             <div class="info-header">
                 <div class="info-brand">
                     <div class="info-logo-disc">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                         </svg>
                     </div>
                     <div>
                         <div class="info-brand-title">Focussium</div>
-                        <div class="info-brand-sub">Weekly Vibe Report</div>
+                        <div class="info-brand-sub">WEEKLY PRODUCTIVITY VIBE</div>
                     </div>
                 </div>
                 <div class="info-user-pill">
                     <div class="info-user-avatar">${userInitial}</div>
-                    <div>
+                    <div class="info-user-meta">
                         <div class="info-user-name">${Utils.escape(username)}</div>
                         <div class="info-user-rank">LVL ${levelNum} • ${rankTitle}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Date Range Badge -->
-            <div class="info-date-range">📅 ${dateRangeStr}</div>
-
-            <!-- Hero Score & Velocity -->
-            <div class="info-hero-score">
-                <div class="info-score-left">
-                    <span class="info-score-label">VIBE SCORE</span>
-                    <span class="info-score-digits">${score}<span style="font-size:1.1rem;color:var(--tx3);font-family:var(--font-sans);font-weight:700;">/100</span></span>
-                    <span class="info-score-sub">${breakdown.tasks} task pts • ${breakdown.focus} focus pts • ${breakdown.streak} rhythm pts</span>
-                </div>
-                <div class="info-score-badge">${velocityTier}</div>
+            <!-- Date & Velocity Sub-header Row -->
+            <div class="info-sub-row">
+                <div class="info-date-range">📅 ${dateRangeStr}</div>
+                <div class="info-velocity-chip">${velocityBadge}</div>
             </div>
 
-            <!-- Triad KPIs -->
+            <!-- Hero Score Card -->
+            <div class="info-hero-score">
+                <div class="info-score-left">
+                    <span class="info-score-label">VIBE PERFORMANCE SCORE</span>
+                    <div class="info-score-value-row">
+                        <span class="info-score-digits">${score}</span>
+                        <span class="info-score-max">/100</span>
+                    </div>
+                    <span class="info-score-sub">${breakdown.tasks} Task pts • ${breakdown.focus} Focus pts • ${breakdown.streak} Streak pts</span>
+                </div>
+                <div class="info-score-graphic">
+                    <div class="info-score-ring" style="--ring-pct:${Math.max(8, score)}%">
+                        <div class="info-score-ring-inner">⚡</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triad Key Metrics -->
             <div class="info-triad">
                 <div class="info-kpi">
                     <span class="info-kpi-val">${totalFocusMins}m</span>
-                    <span class="info-kpi-lbl">Focus Time (${totalSessions} sesh)</span>
+                    <span class="info-kpi-lbl">Focus Time</span>
+                    <span class="info-kpi-sub">${totalSessions} deep sessions</span>
                 </div>
                 <div class="info-kpi">
                     <span class="info-kpi-val">${totalTasksDone}</span>
                     <span class="info-kpi-lbl">Tasks Crushed</span>
+                    <span class="info-kpi-sub">Completed</span>
                 </div>
                 <div class="info-kpi">
                     <span class="info-kpi-val">${habitRate}%</span>
-                    <span class="info-kpi-lbl">Habit Rhythm (${habitActiveDays}/7d)</span>
+                    <span class="info-kpi-lbl">Habit Rhythm</span>
+                    <span class="info-kpi-sub">${habitActiveDays}/7 days logged</span>
                 </div>
             </div>
 
-            <!-- Rhythm Bar Mini Visualizer -->
+            <!-- Rhythm Bar Visualizer -->
             <div class="info-rhythm-section">
-                <div class="info-section-title">WEEKLY FOCUS DISTRIBUTION</div>
+                <div class="info-section-title">WEEKLY FOCUS MOMENTUM</div>
                 <div class="info-bars-grid">
                     ${w.days.map((d, i) => {
-                        const pct = d.focus > 0 ? Math.max(12, Math.min(100, Math.round((d.focus / maxDailyFocus) * 100))) : 6;
+                        const pct = d.focus > 0 ? Math.max(14, Math.min(100, Math.round((d.focus / maxDailyFocus) * 100))) : 8;
                         const hasFocus = d.focus > 0;
                         return `
                         <div class="info-bar-col">
                             <div class="info-bar-track">
-                                <div class="info-bar-fill" style="height:${pct}%;opacity:${hasFocus ? 1 : 0.2};${hasFocus ? 'box-shadow:0 0 8px var(--ac);' : ''}"></div>
+                                <div class="info-bar-fill ${hasFocus ? 'active' : ''}" style="height:${pct}%;"></div>
                             </div>
-                            <span class="info-bar-day">${daysLabels[i]}</span>
+                            <span class="info-bar-day ${hasFocus ? 'active' : ''}">${daysLabels[i]}</span>
                         </div>`;
                     }).join('')}
                 </div>
             </div>
 
-            <!-- Accomplishments Highlight -->
+            <!-- Key Accomplishments -->
             <div class="info-tasks-list">
                 <div class="info-section-title">KEY ACCOMPLISHMENTS</div>
                 ${completedTasksThisWeek.length > 0 ? completedTasksThisWeek.map(t => `
                     <div class="info-task-item">
                         <span class="info-task-check">✓</span>
-                        <span style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${Utils.escape(t.text)}</span>
+                        <span class="info-task-text">${Utils.escape(t.text)}</span>
                     </div>
                 `).join('') : `
-                    <div class="info-task-item" style="color:var(--tx3);font-style:italic;">
-                        No completed tasks logged this week. Time to build momentum!
+                    <div class="info-task-empty">
+                        <span>🌱</span>
+                        <span>Momentum is building. Complete your first focus session this week!</span>
                     </div>
                 `}
             </div>
 
-            <!-- Seneca Stoic Wisdom -->
-            <div class="info-quote-box">${quote}</div>
+            <!-- Seneca Stoic Reflection -->
+            <div class="info-quote-box">
+                <span class="info-quote-text">“${quote}”</span>
+            </div>
 
             <!-- Watermark Footer -->
             <div class="info-footer-watermark">

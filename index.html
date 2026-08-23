@@ -933,8 +933,8 @@
     </div>
 
     <!-- Export Studio Modal (Infographic Card & PDF / PNG Hybrid) -->
-    <div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-label="Export Productivity Report" data-action="modal-close" data-modal="exportModal">
-        <div class="modal-sheet export-studio-sheet" onclick="event.stopPropagation()">
+    <div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-label="Export Productivity Report">
+        <div class="modal-sheet export-studio-sheet">
             <div class="modal-handle"></div>
             <button class="account-close-btn" data-action="export-close" title="Close">✕</button>
             <div class="modal-title">Export Studio</div>
@@ -1098,6 +1098,14 @@
             document.getElementById(el.dataset.modal)?.classList.remove('on');
             Sound.close();
             return;
+        }
+    });
+
+    // Close modal when tapping outside the sheet on any modal backdrop
+    document.addEventListener('click', (e) => {
+        if (e.target.classList && e.target.classList.contains('modal') && e.target.classList.contains('on')) {
+            e.target.classList.remove('on');
+            if (typeof Sound !== 'undefined' && Sound.close) Sound.close();
         }
     });
 
