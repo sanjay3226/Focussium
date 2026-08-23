@@ -725,13 +725,13 @@
 .infographic-card {
     width: 100%;
     max-width: 440px;
-    background: linear-gradient(165deg, #0A0D1F 0%, #03040B 100%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(165deg, #0B0F24 0%, #060814 60%, #020308 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 24px;
-    padding: 24px 20px 20px;
+    padding: 22px 18px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     position: relative;
     box-shadow: 0 16px 40px rgba(0,0,0,0.6);
     box-sizing: border-box;

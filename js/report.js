@@ -553,29 +553,339 @@ const Report = {
         `;
     },
 
-    async loadHtml2Canvas() {
-        if (typeof window.html2canvas !== 'undefined') return window.html2canvas;
-        Toast.show('Preparing visual engine…');
-        await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-            script.onload = () => resolve(window.html2canvas);
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-        return window.html2canvas;
-    },
-
     async generateCardCanvas() {
-        const h2c = await this.loadHtml2Canvas();
-        const card = document.getElementById('infographicCard');
-        if (!card) throw new Error('Infographic card not found');
-        return await h2c(card, {
-            scale: 2.5,
-            useCORS: true,
-            backgroundColor: null,
-            logging: false
+        const W = 1080;
+        const H = 1440;
+        const canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        // Extract active CSS variables
+        const css = getComputedStyle(document.documentElement);
+        const ac = css.getPropertyValue('--ac').trim() || '#38B6FF';
+        const acRgb = css.getPropertyValue('--acr').trim() || '56, 182, 255';
+
+        // Gather week data
+        const w = Utils.weekData(State.weekOffset);
+        const dates = Utils.weekDates(State.weekOffset);
+        const score = this.getScore(w);
+        const breakdown = this.getScoreBreakdown(w);
+
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const start = new Date(dates[0] + 'T00:00:00');
+        const end = new Date(dates[6] + 'T00:00:00');
+        const dateRangeStr = `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+
+        const username = State.user?.displayName || State.data?.settings?.userName || 'Focus Disciple';
+        const userInitial = username.charAt(0).toUpperCase();
+        const levelData = (typeof Level !== 'undefined' && Level.getXPInfo) ? Level.getXPInfo() : { level: 1, rank: 'Focus Initiate' };
+        const levelNum = levelData.level || 1;
+        const rankTitle = levelData.rank || 'Focus Initiate';
+
+        const totalFocusMins = w.days.reduce((s, d) => s + d.focus, 0);
+        const totalTasksDone = w.days.reduce((s, d) => s + d.tasks, 0);
+        const totalSessions = (State.data?.pomo || []).filter(p => dates.includes(p.date)).length;
+        const habitActiveDays = dates.filter(d => (State.data?.habits?.[d] || []).length > 0).length;
+        const habitRate = Math.round((habitActiveDays / 7) * 100);
+        const velocityTier = score >= 90 ? '⚡ S-TIER DISCIPLINE' : score >= 75 ? '🔥 HIGH VELOCITY' : score >= 50 ? '🌱 STEADY MOMENTUM' : '🚀 IN PROGRESS';
+
+        const completedTasks = (State.data?.tasks || [])
+            .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]))
+            .slice(0, 3);
+
+        // Helper: rounded rectangle
+        function roundRect(x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        // 1. Deep Soothing Dark Background
+        const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+        bgGrad.addColorStop(0, '#0B0F24');
+        bgGrad.addColorStop(0.5, '#060814');
+        bgGrad.addColorStop(1, '#020308');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // 2. Ambient Color Glows (Top Right & Bottom Left)
+        const glowTR = ctx.createRadialGradient(W * 0.85, H * 0.08, 0, W * 0.85, H * 0.08, 480);
+        glowTR.addColorStop(0, `rgba(${acRgb}, 0.22)`);
+        glowTR.addColorStop(0.6, `rgba(${acRgb}, 0.04)`);
+        glowTR.addColorStop(1, 'transparent');
+        ctx.fillStyle = glowTR;
+        ctx.fillRect(0, 0, W, H);
+
+        const glowBL = ctx.createRadialGradient(W * 0.15, H * 0.92, 0, W * 0.15, H * 0.92, 420);
+        glowBL.addColorStop(0, `rgba(${acRgb}, 0.15)`);
+        glowBL.addColorStop(0.6, `rgba(${acRgb}, 0.03)`);
+        glowBL.addColorStop(1, 'transparent');
+        ctx.fillStyle = glowBL;
+        ctx.fillRect(0, 0, W, H);
+
+        // 3. Outer Glass Frame
+        roundRect(36, 36, W - 72, H - 72, 32);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 4. Header Bar
+        // Logo badge
+        roundRect(72, 72, 54, 54, 16);
+        const logoGrad = ctx.createLinearGradient(72, 72, 126, 126);
+        logoGrad.addColorStop(0, ac);
+        logoGrad.addColorStop(1, '#60A5FA');
+        ctx.fillStyle = logoGrad;
+        ctx.fill();
+
+        // Logo Lightning
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(102, 82);
+        ctx.lineTo(90, 100);
+        ctx.lineTo(99, 100);
+        ctx.lineTo(96, 116);
+        ctx.lineTo(110, 96);
+        ctx.lineTo(100, 96);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Brand Title
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '700 28px "DM Serif Display", Georgia, serif';
+        ctx.fillText('Focussium', 142, 98);
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '700 12px "Inter", -apple-system, sans-serif';
+        ctx.fillText('WEEKLY VIBE REPORT', 144, 118);
+
+        // User Capsule on Right
+        roundRect(W - 380, 72, 308, 54, 27);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.stroke();
+
+        // User Avatar Disc
+        ctx.beginPath();
+        ctx.arc(W - 352, 99, 18, 0, Math.PI * 2);
+        ctx.fillStyle = ac;
+        ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.font = '800 16px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(userInitial, W - 352, 100);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+
+        // Username & Rank
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '700 16px "Inter", sans-serif';
+        const displayUser = username.length > 14 ? username.substring(0, 12) + '…' : username;
+        ctx.fillText(displayUser, W - 322, 94);
+        ctx.fillStyle = ac;
+        ctx.font = '700 11px "Inter", sans-serif';
+        ctx.fillText(`LVL ${levelNum} • ${rankTitle}`, W - 322, 114);
+
+        // 5. Date Range Pill
+        roundRect(72, 150, 260, 36, 12);
+        ctx.fillStyle = `rgba(${acRgb}, 0.12)`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${acRgb}, 0.28)`;
+        ctx.stroke();
+        ctx.fillStyle = ac;
+        ctx.font = '700 13px "Inter", sans-serif';
+        ctx.fillText(`📅  ${dateRangeStr}`, 88, 173);
+
+        // 6. Score Hero Card
+        roundRect(72, 208, W - 144, 185, 24);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+        ctx.stroke();
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '800 13px "Inter", sans-serif';
+        ctx.fillText('PRODUCTIVITY VIBE SCORE', 104, 248);
+
+        ctx.fillStyle = ac;
+        ctx.font = '700 68px "DM Serif Display", Georgia, serif';
+        ctx.fillText(`${score}`, 104, 320);
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '700 22px "Inter", sans-serif';
+        const scoreWidth = ctx.measureText(`${score}`).width;
+        ctx.fillText('/100', 104 + scoreWidth + 8, 316);
+
+        ctx.fillStyle = '#CBD5E1';
+        ctx.font = '600 14px "Inter", sans-serif';
+        ctx.fillText(`${breakdown.tasks} task pts  •  ${breakdown.focus} focus pts  •  ${breakdown.streak} rhythm pts`, 104, 362);
+
+        // Velocity Tier Badge
+        roundRect(W - 360, 248, 250, 48, 16);
+        const tierGrad = ctx.createLinearGradient(W - 360, 248, W - 110, 296);
+        tierGrad.addColorStop(0, ac);
+        tierGrad.addColorStop(1, '#3B82F6');
+        ctx.fillStyle = tierGrad;
+        ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.font = '800 14px "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(velocityTier, W - 235, 278);
+        ctx.textAlign = 'left';
+
+        // 7. Triad KPI Cards
+        const cardW = (W - 144 - 32) / 3;
+        const kpiData = [
+            { label: 'FOCUS TIME', value: `${totalFocusMins}m`, sub: `${totalSessions} deep sessions` },
+            { label: 'TASKS CRUSHED', value: `${totalTasksDone}`, sub: 'Tasks completed' },
+            { label: 'HABIT RHYTHM', value: `${habitRate}%`, sub: `${habitActiveDays}/7 days consistent` }
+        ];
+
+        kpiData.forEach((kpi, i) => {
+            const kx = 72 + i * (cardW + 16);
+            roundRect(kx, 415, cardW, 140, 20);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.stroke();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '800 30px "Inter", sans-serif';
+            ctx.fillText(kpi.value, kx + 24, 468);
+
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '700 12px "Inter", sans-serif';
+            ctx.fillText(kpi.label, kx + 24, 498);
+
+            ctx.fillStyle = ac;
+            ctx.font = '600 12px "Inter", sans-serif';
+            ctx.fillText(kpi.sub, kx + 24, 526);
         });
+
+        // 8. Weekly Focus Momentum (Mini Bars)
+        roundRect(72, 578, W - 144, 220, 24);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+        ctx.stroke();
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '800 13px "Inter", sans-serif';
+        ctx.fillText('WEEKLY FOCUS DISTRIBUTION', 104, 616);
+
+        const maxDaily = Math.max(...w.days.map(d => d.focus), 1);
+        const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        const barSlotW = (W - 144 - 64) / 7;
+
+        w.days.forEach((d, i) => {
+            const bx = 104 + i * barSlotW;
+            const barW = barSlotW - 16;
+            const trackH = 100;
+            const fillH = d.focus > 0 ? Math.max(12, Math.round((d.focus / maxDaily) * trackH)) : 6;
+            const by = 640;
+
+            // Track background
+            roundRect(bx, by, barW, trackH, 8);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fill();
+
+            // Filled Bar
+            if (d.focus > 0) {
+                roundRect(bx, by + trackH - fillH, barW, fillH, 8);
+                ctx.fillStyle = ac;
+                ctx.fill();
+            }
+
+            // Day label
+            ctx.fillStyle = d.focus > 0 ? '#FFFFFF' : '#64748B';
+            ctx.font = '700 12px "Inter", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(dayNames[i], bx + barW / 2, by + trackH + 24);
+            ctx.textAlign = 'left';
+        });
+
+        // 9. Key Accomplishments
+        roundRect(72, 822, W - 144, 240, 24);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+        ctx.stroke();
+
+        ctx.fillStyle = '#94A3B8';
+        ctx.font = '800 13px "Inter", sans-serif';
+        ctx.fillText('KEY ACCOMPLISHMENTS', 104, 860);
+
+        if (completedTasks.length > 0) {
+            completedTasks.forEach((t, i) => {
+                const ty = 880 + i * 48;
+                roundRect(104, ty, W - 208, 40, 12);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.fill();
+
+                ctx.fillStyle = ac;
+                ctx.font = '800 16px "Inter", sans-serif';
+                ctx.fillText('✓', 124, ty + 25);
+
+                ctx.fillStyle = '#E2E8F0';
+                ctx.font = '600 14px "Inter", sans-serif';
+                const text = t.text.length > 50 ? t.text.substring(0, 48) + '…' : t.text;
+                ctx.fillText(text, 154, ty + 25);
+            });
+        } else {
+            roundRect(104, 880, W - 208, 48, 12);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.fill();
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 14px "Inter", sans-serif';
+            ctx.fillText('No completed tasks logged this week. Ready to build momentum!', 124, 910);
+        }
+
+        // 10. Stoic Wisdom Quote Card
+        roundRect(72, 1086, W - 144, 110, 20);
+        const quoteGrad = ctx.createLinearGradient(72, 1086, W - 72, 1196);
+        quoteGrad.addColorStop(0, `rgba(${acRgb}, 0.14)`);
+        quoteGrad.addColorStop(1, `rgba(${acRgb}, 0.02)`);
+        ctx.fillStyle = quoteGrad;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(${acRgb}, 0.22)`;
+        ctx.stroke();
+
+        ctx.fillStyle = '#E2E8F0';
+        ctx.font = 'italic 20px "DM Serif Display", Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('“We suffer more often in imagination than in reality.” — Seneca', W / 2, 1148);
+        ctx.textAlign = 'left';
+
+        // 11. Footer Line & Watermark
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(72, 1220);
+        ctx.lineTo(W - 72, 1220);
+        ctx.stroke();
+
+        ctx.fillStyle = '#64748B';
+        ctx.font = '700 12px "Inter", sans-serif';
+        ctx.fillText('focussium.app', 72, 1248);
+
+        ctx.textAlign = 'right';
+        ctx.fillText('DESIGNED FOR FOCUS & DISCIPLINE', W - 72, 1248);
+        ctx.textAlign = 'left';
+
+        return canvas;
     },
 
     async downloadPNG() {
@@ -586,8 +896,10 @@ const Report = {
             const link = document.createElement('a');
             link.download = `Focussium_Vibe_${dates[0]}.png`;
             link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
             link.click();
-            Sound.success();
+            document.body.removeChild(link);
+            if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
             Toast.show('Infographic Card downloaded! 📸');
         } catch(e) {
             handleError('PNG Export', e);
@@ -598,38 +910,29 @@ const Report = {
     async downloadPDF() {
         try {
             Toast.show('Generating PDF document… 📄');
-            if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
-                await new Promise(resolve => {
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                    script.onload = resolve;
-                    document.head.appendChild(script);
-                });
-            }
-
             const canvas = await this.generateCardCanvas();
-            const imgData = canvas.toDataURL('image/png');
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
             const { jsPDF } = window.jspdf || window;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
 
-            // Background fill
-            doc.setFillColor(3, 4, 11);
+            // Soothing background fill matching card
+            doc.setFillColor(6, 8, 20);
             doc.rect(0, 0, pageWidth, pageHeight, 'F');
 
             // Center image nicely on A4
-            const imgWidth = 170;
+            const imgWidth = 175;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             const posX = (pageWidth - imgWidth) / 2;
-            const posY = Math.max(15, (pageHeight - imgHeight) / 2);
+            const posY = Math.max(10, (pageHeight - imgHeight) / 2);
 
-            doc.addImage(imgData, 'PNG', posX, posY, imgWidth, imgHeight);
+            doc.addImage(imgData, 'JPEG', posX, posY, imgWidth, imgHeight);
 
             const dates = Utils.weekDates(State.weekOffset);
             doc.save(`Focussium_Report_${dates[0]}.pdf`);
-            Sound.success();
+            if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
             Toast.show('PDF Report downloaded! 📄');
         } catch(e) {
             handleError('PDF Export', e);
@@ -647,14 +950,16 @@ const Report = {
                     await navigator.clipboard.write([
                         new ClipboardItem({ 'image/png': blob })
                     ]);
-                    Sound.success();
+                    if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
                     Toast.show('Infographic copied to clipboard! 📋');
                 } catch(clipErr) {
                     const dates = Utils.weekDates(State.weekOffset);
                     const link = document.createElement('a');
                     link.download = `Focussium_Vibe_${dates[0]}.png`;
                     link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
                     link.click();
+                    document.body.removeChild(link);
                     Toast.show('Downloaded image (Clipboard permission restricted)');
                 }
             }, 'image/png');
