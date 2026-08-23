@@ -1,0 +1,484 @@
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.0 — DESIGN TOKENS
+   Single source of truth — theme × accent × panel system
+   NO PARTICLE EFFECTS — removed for cleaner aesthetic
+═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────
+   DARK THEME  (Deep Space — WCAG AA+ contrast)
+───────────────────────────────────────────────────────── */
+:root,
+[data-theme="dark"] {
+    /* Surfaces — near-black navy layered hierarchy */
+    --bg0: #03040B;    /* deepest bg — body/app shell */
+    --bg1: #07091A;    /* content bg */
+    --bg2: #0E1228;    /* cards */
+    --bg3: #151A36;    /* input/raised surface */
+    --bg4: #1C2244;    /* hover/elevated */
+    --bg5: #232C56;    /* highest elevation */
+
+    /* Text — all WCAG AA+ against dark surfaces */
+    --tx1: #FFFFFF;    /* headings/values — 21:1 */
+    --tx2: #E2E8F0;    /* body text — 14:1 */
+    --tx3: #94A3B8;    /* muted/labels — 7:1 */
+    --tx4: #64748B;    /* placeholders — 4.5:1 */
+
+    /* Borders */
+    --bd:  rgba(255, 255, 255, 0.10);
+    --bdh: rgba(255, 255, 255, 0.22);
+    --bds: rgba(255, 255, 255, 0.36);
+
+    /* Shadows */
+    --shadow-xs: 0 2px 8px rgba(0, 0, 0, .35);
+    --shadow-sm: 0 4px 16px rgba(0, 0, 0, .50);
+    --shadow-md: 0 12px 36px rgba(0, 0, 0, .60);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, .75);
+
+    /* Glass / modal / nav surfaces */
+    --glass:     rgba(14, 18, 40, 0.80);
+    --glassh:    rgba(21, 26, 54, 0.95);
+    --nav-bg:    rgba(5, 7, 18, 0.96);
+    --modal-bg:  rgba(2, 3, 10, 0.85);
+
+    /* Chart colours */
+    --chart-grid: rgba(255, 255, 255, 0.08);
+    --chart-text: #94A3B8;
+
+    /* Accent-tinted panel tints (used in cards/progress-card etc) */
+    --panel-tint:    rgba(var(--acr), 0.08);
+    --panel-tint-md: rgba(var(--acr), 0.14);
+
+    /* Surface layer for cards */
+    --surface: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.01));
+}
+
+/* ─────────────────────────────────────────────────────────
+   LIGHT THEME  (Clean Paper — WCAG AA+ contrast)
+───────────────────────────────────────────────────────── */
+[data-theme="light"] {
+    /* Surfaces — warm off-white paper hierarchy */
+    --bg0: #F2F0ED;    /* body */
+    --bg1: #F8F6F3;    /* content bg */
+    --bg2: #FFFFFF;    /* cards */
+    --bg3: #F4F1ED;    /* input bg */
+    --bg4: #EBE8E3;    /* hover */
+    --bg5: #E2DED9;    /* elevated */
+
+    /* Text — pure black → slate hierarchy, all WCAG AA+ */
+    --tx1: #141210;    /* main text — 18:1 */
+    --tx2: #3D3A36;    /* body — 11:1 */
+    --tx3: #7A756E;    /* muted — 5:1 */
+    --tx4: #B0AAA4;    /* placeholders — 3:1 */
+
+    /* Borders */
+    --bd:  rgba(0, 0, 0, 0.08);
+    --bdh: rgba(0, 0, 0, 0.16);
+    --bds: rgba(0, 0, 0, 0.22);
+
+    /* Shadows */
+    --shadow-xs: 0 1px 4px rgba(0, 0, 0, .06);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, .08);
+    --shadow-md: 0 8px 28px rgba(0, 0, 0, .10);
+    --shadow-lg: 0 16px 56px rgba(0, 0, 0, .13);
+
+    /* Glass / modal / nav surfaces */
+    --glass:     rgba(255, 255, 255, 0.82);
+    --glassh:    rgba(255, 255, 255, 0.97);
+    --nav-bg:    rgba(242, 240, 237, 0.96);
+    --modal-bg:  rgba(0, 0, 0, 0.30);
+
+    /* Chart colours */
+    --chart-grid: rgba(0, 0, 0, 0.07);
+    --chart-text: #7A756E;
+
+    /* Accent-tinted panel tints */
+    --panel-tint:    rgba(var(--acr), 0.07);
+    --panel-tint-md: rgba(var(--acr), 0.12);
+
+    /* Surface layer for cards */
+    --surface: linear-gradient(145deg, rgba(255,255,255,0.80), rgba(255,255,255,0.40));
+}
+
+/* ─────────────────────────────────────────────────────────
+   ACCENT COLOUR SYSTEM — Full Dual-Theme Visibility Fix
+   
+   PROBLEM: Many accent colours (gold, white, yellow) become
+   invisible on light bg, or too dark on very dark panels.
+   
+   SOLUTION: Each accent has BOTH a dark-safe and light-safe
+   version via [data-theme] scoped overrides.
+   
+   Variables:
+   --ac      : Main accent (used on surfaces)
+   --acr     : RGB components of --ac (for rgba() usage)
+   --acl     : Lighter variant (for hover glows on dark)
+   --acd     : Darker variant (for hover glows on light)
+   --acg     : Transparent glow colour (always low alpha)
+   --acgr    : Gradient string (used in buttons, FAB, etc)
+   --acs     : Subtle tint background (for nav active, badges)
+   --ac-text : Forced contrast text ON the accent colour
+              (white or black depending on accent luminosity)
+───────────────────────────────────────────────────────── */
+
+/* ── ROYAL (Gold) ── */
+/* Gold is bright — visible on dark, needs darkening on light */
+[data-accent="royal"] {
+    --ac:      #E8B923;
+    --acr:     232, 185, 35;
+    --acl:     #FFDA5F;
+    --acd:     #B8900F;
+    --acg:     rgba(232, 185, 35, 0.22);
+    --acgr:    linear-gradient(135deg, #E8B923, #FF8C00);
+    --acs:     rgba(232, 185, 35, 0.12);
+    --ac-text: #000000;
+}
+[data-theme="light"][data-accent="royal"] {
+    --ac:      #9A6A00;   /* darkened gold — readable on white */
+    --acr:     154, 106, 0;
+    --acl:     #C68D0A;
+    --acd:     #6B4900;
+    --acg:     rgba(154, 106, 0, 0.15);
+    --acgr:    linear-gradient(135deg, #9A6A00, #C05000);
+    --acs:     rgba(154, 106, 0, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── NEON (Cyan) ── */
+/* Cyan is bright on dark, needs darkening on light */
+[data-accent="neon"] {
+    --ac:      #00CFEB;
+    --acr:     0, 207, 235;
+    --acl:     #5FF0FF;
+    --acd:     #009AB0;
+    --acg:     rgba(0, 207, 235, 0.22);
+    --acgr:    linear-gradient(135deg, #00CFEB, #7B2DFF);
+    --acs:     rgba(0, 207, 235, 0.12);
+    --ac-text: #000000;
+}
+[data-theme="light"][data-accent="neon"] {
+    --ac:      #007A8C;
+    --acr:     0, 122, 140;
+    --acl:     #009CB3;
+    --acd:     #005968;
+    --acg:     rgba(0, 122, 140, 0.15);
+    --acgr:    linear-gradient(135deg, #007A8C, #4400CC);
+    --acs:     rgba(0, 122, 140, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── MATCHA (Green) ── */
+/* Lime green — needs darker shade on light */
+[data-accent="matcha"] {
+    --ac:      #8DD85A;
+    --acr:     141, 216, 90;
+    --acl:     #AEED7A;
+    --acd:     #60AA30;
+    --acg:     rgba(141, 216, 90, 0.22);
+    --acgr:    linear-gradient(135deg, #8DD85A, #1DB954);
+    --acs:     rgba(141, 216, 90, 0.12);
+    --ac-text: #000000;
+}
+[data-theme="light"][data-accent="matcha"] {
+    --ac:      #3A7D1E;
+    --acr:     58, 125, 30;
+    --acl:     #53A830;
+    --acd:     #245510;
+    --acg:     rgba(58, 125, 30, 0.15);
+    --acgr:    linear-gradient(135deg, #3A7D1E, #0F6430);
+    --acs:     rgba(58, 125, 30, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── SUNSET (Red-Orange) ── */
+/* Works well on both — minor tune for light */
+[data-accent="sunset"] {
+    --ac:      #FF4F4F;
+    --acr:     255, 79, 79;
+    --acl:     #FF8080;
+    --acd:     #CC2B2B;
+    --acg:     rgba(255, 79, 79, 0.22);
+    --acgr:    linear-gradient(135deg, #FF4F4F, #FF8C00);
+    --acs:     rgba(255, 79, 79, 0.12);
+    --ac-text: #FFFFFF;
+}
+[data-theme="light"][data-accent="sunset"] {
+    --ac:      #C0200F;
+    --acr:     192, 32, 15;
+    --acl:     #E03020;
+    --acd:     #8A0A00;
+    --acg:     rgba(192, 32, 15, 0.15);
+    --acgr:    linear-gradient(135deg, #C0200F, #AA4A00);
+    --acs:     rgba(192, 32, 15, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── LAVENDER (Purple) ── */
+/* Works on dark; needs deeper shade on light */
+[data-accent="lavender"] {
+    --ac:      #9B6DFF;
+    --acr:     155, 109, 255;
+    --acl:     #BC98FF;
+    --acd:     #7048D0;
+    --acg:     rgba(155, 109, 255, 0.22);
+    --acgr:    linear-gradient(135deg, #9B6DFF, #E040FB);
+    --acs:     rgba(155, 109, 255, 0.12);
+    --ac-text: #FFFFFF;
+}
+[data-theme="light"][data-accent="lavender"] {
+    --ac:      #5C24CC;
+    --acr:     92, 36, 204;
+    --acl:     #7840E0;
+    --acd:     #3A0A9A;
+    --acg:     rgba(92, 36, 204, 0.15);
+    --acgr:    linear-gradient(135deg, #5C24CC, #A000D0);
+    --acs:     rgba(92, 36, 204, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── SKY (Blue) ── */
+/* Light blue — works on dark; too pale on light */
+[data-accent="sky"] {
+    --ac:      #32AAFF;
+    --acr:     50, 170, 255;
+    --acl:     #6EC9FF;
+    --acd:     #1280CC;
+    --acg:     rgba(50, 170, 255, 0.22);
+    --acgr:    linear-gradient(135deg, #32AAFF, #5C6CFF);
+    --acs:     rgba(50, 170, 255, 0.12);
+    --ac-text: #FFFFFF;
+}
+[data-theme="light"][data-accent="sky"] {
+    --ac:      #005BAA;
+    --acr:     0, 91, 170;
+    --acl:     #1A7FD4;
+    --acd:     #003A7A;
+    --acg:     rgba(0, 91, 170, 0.15);
+    --acgr:    linear-gradient(135deg, #005BAA, #1A20CC);
+    --acs:     rgba(0, 91, 170, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── ROSE (Pink) ── */
+/* Hot pink — works on dark; needs deepening on light */
+[data-accent="rose"] {
+    --ac:      #FF4D8D;
+    --acr:     255, 77, 141;
+    --acl:     #FF80AB;
+    --acd:     #CC1A5E;
+    --acg:     rgba(255, 77, 141, 0.22);
+    --acgr:    linear-gradient(135deg, #FF4D8D, #FF6060);
+    --acs:     rgba(255, 77, 141, 0.12);
+    --ac-text: #FFFFFF;
+}
+[data-theme="light"][data-accent="rose"] {
+    --ac:      #B8005A;
+    --acr:     184, 0, 90;
+    --acl:     #D42080;
+    --acd:     #800040;
+    --acg:     rgba(184, 0, 90, 0.15);
+    --acgr:    linear-gradient(135deg, #B8005A, #CC1010);
+    --acs:     rgba(184, 0, 90, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── MINT (Teal-Green) ── */
+/* Bright teal — works on dark; too pale on light */
+[data-accent="mint"] {
+    --ac:      #30CCA8;
+    --acr:     48, 204, 168;
+    --acl:     #60E8CC;
+    --acd:     #1A9E7C;
+    --acg:     rgba(48, 204, 168, 0.22);
+    --acgr:    linear-gradient(135deg, #30CCA8, #10D460);
+    --acs:     rgba(48, 204, 168, 0.12);
+    --ac-text: #000000;
+}
+[data-theme="light"][data-accent="mint"] {
+    --ac:      #0A7A5C;
+    --acr:     10, 122, 92;
+    --acl:     #189E78;
+    --acd:     #025438;
+    --acg:     rgba(10, 122, 92, 0.15);
+    --acgr:    linear-gradient(135deg, #0A7A5C, #026030);
+    --acs:     rgba(10, 122, 92, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ── VOID (Slate-Grey) ── */
+/* Neutral slate — works on dark; totally invisible on light */
+[data-accent="void"] {
+    --ac:      #7E8FA8;
+    --acr:     126, 143, 168;
+    --acl:     #A0B0C8;
+    --acd:     #546070;
+    --acg:     rgba(126, 143, 168, 0.22);
+    --acgr:    linear-gradient(135deg, #7E8FA8, #445060);
+    --acs:     rgba(126, 143, 168, 0.12);
+    --ac-text: #FFFFFF;
+}
+[data-theme="light"][data-accent="void"] {
+    --ac:      #3A4A60;
+    --acr:     58, 74, 96;
+    --acl:     #526280;
+    --acd:     #1E2C42;
+    --acg:     rgba(58, 74, 96, 0.15);
+    --acgr:    linear-gradient(135deg, #3A4A60, #1A2438);
+    --acs:     rgba(58, 74, 96, 0.10);
+    --ac-text: #FFFFFF;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CUSTOM HEX ACCENT — via JS Theme.applyCustomAccent()
+   --ac-text defaults to white; JS overrides to black if
+   luminance is above threshold
+───────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────
+   SEMANTIC / STATUS COLOURS (theme-invariant)
+───────────────────────────────────────────────────────── */
+:root {
+    --ok:    #4DB87A;
+    --okr:   77, 184, 122;
+    --warn:  #D4A73E;
+    --warnr: 212, 167, 62;
+    --err:   #D05555;
+    --errr:  208, 85, 85;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Z-INDEX SCALE (prevents z-fighting across modules)
+───────────────────────────────────────────────────────── */
+:root {
+    --z-base:       1;
+    --z-header:     10;
+    --z-nav:        20;
+    --z-fab:        30;
+    --z-toast:      100;
+    --z-cmdglass:   200;
+    --z-modal:      300;
+    --z-fullscreen: 400;
+    --z-onboard:    700;
+    --z-login:      800;
+    --z-loading:    999;
+    /* NO confetti/particles z-index — removed from v3.0 */
+}
+
+/* ─────────────────────────────────────────────────────────
+   LIGHT-THEME PANEL OVERRIDES
+   Makes cards/modals properly feel like paper, not washed
+───────────────────────────────────────────────────────── */
+[data-theme="light"] .progress-card,
+[data-theme="light"] .week-snapshot,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .task-item,
+[data-theme="light"] .dump-card,
+[data-theme="light"] .modal-card,
+[data-theme="light"] .report-card,
+[data-theme="light"] .home-habits-card {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.05);
+    border-color: rgba(0, 0, 0, 0.09);
+}
+
+[data-theme="light"] .bottom-nav {
+    box-shadow: 0 -1px 0 rgba(0,0,0,0.06), 0 -4px 16px rgba(0,0,0,0.04);
+}
+
+[data-theme="light"] .nav-item.active {
+    background: rgba(var(--acr), 0.10);
+}
+
+/* Light theme: accent on tabs must be readable — use --acd for pill bg */
+[data-theme="light"] .tab.active {
+    background: var(--ac);
+    color: var(--ac-text);
+    border-color: var(--ac);
+}
+
+/* Light theme: input focus rings use darker accent */
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+    border-color: var(--acd);
+    box-shadow: 0 0 0 3px rgba(var(--acr), 0.15);
+}
+
+/* Light theme: list creator add button */
+[data-theme="light"] .list-creator-btn {
+    background: var(--ac);
+    color: var(--ac-text);
+}
+
+/* Light theme: Task badges */
+[data-theme="light"] .task-badge {
+    color: var(--tx2);
+    background: var(--bg3);
+    border-color: var(--bd);
+}
+
+[data-theme="light"] .task-badge.priority-high {
+    color: var(--err);
+    background: rgba(var(--errr), 0.10);
+}
+
+/* Light theme: Pomo ring/timer colour */
+[data-theme="light"] #pomoRingCircle {
+    stroke: var(--ac);
+}
+
+/* Light theme: Settings accent buttons */
+[data-theme="light"] .accent-btn {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+/* Light theme: modal backdrop needs to be fully readable */
+[data-theme="light"] .modal {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .modal-card,
+[data-theme="light"] .login-card,
+[data-theme="light"] .onboard-card {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+}
+
+/* Light theme: XP bar and header badges */
+[data-theme="light"] .user-level-badge {
+    background: var(--bg2);
+    color: var(--ac);
+    border-color: var(--bd);
+}
+
+/* Light theme: sync indicator */
+[data-theme="light"] .sync-indicator {
+    background: var(--ok);
+}
+
+/* Light theme: quote card */
+[data-theme="light"] #dailyQuoteCard {
+    background: var(--bg2);
+    border-color: rgba(var(--acr), 0.15);
+}
+
+/* ─────────────────────────────────────────────────────────
+   CUSTOM HEX PICKER — contrast-aware text helper
+   JS sets --ac-text to #000 or #fff based on luminance
+───────────────────────────────────────────────────────── */
+.btn-accent-text { color: var(--ac-text, #fff); }
+
+/* ─────────────────────────────────────────────────────────
+   HABITS PAGE TOKENS (v3.0 new — no particles)
+───────────────────────────────────────────────────────── */
+:root {
+    --habit-done-bg:    rgba(var(--acr), 0.14);
+    --habit-done-bd:    rgba(var(--acr), 0.40);
+    --habit-done-tx:    var(--ac);
+    --habit-streak-ac:  var(--ac);
+}
+
+[data-theme="light"] {
+    --habit-done-bg:    rgba(var(--acr), 0.10);
+    --habit-done-bd:    var(--acd);
+    --habit-done-tx:    var(--acd);
+}

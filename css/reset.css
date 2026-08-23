@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.0 — RESET + BASE TYPOGRAPHY
+═══════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    height: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Space Grotesk', sans-serif;
+    height: 100%;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg0);
+    color: var(--tx1);
+    transition: background .4s ease, color .4s ease;
+}
+
+/* ── Form elements ── */
+input,
+textarea,
+button,
+select {
+    font-family: inherit;
+    border: none;
+    outline: none;
+    background: none;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+    user-select: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+a {
+    color: var(--ac);
+    text-decoration: none;
+}
+
+/* ── Focus-visible (accessibility — only shows for keyboard nav) ── */
+:focus-visible {
+    outline: 2px solid var(--ac);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Hide mouse focus rings */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, .22);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, .40);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128,128,128,.22) transparent;
+}
+
+/* ── Selection ── */
+::selection {
+    background: rgba(var(--acr), 0.30);
+    color: var(--tx1);
+}

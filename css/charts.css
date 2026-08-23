@@ -1,0 +1,338 @@
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.0 — CHARTS + HEATMAP + CALENDAR
+═══════════════════════════════════════════════════════════ */
+
+/* ── Report stats bar ── */
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.report-stat {
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 14px;
+    padding: 10px 12px;
+    text-align: center;
+}
+
+.report-stat-val {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--ac);
+    line-height: 1;
+}
+
+.report-stat-lbl {
+    font-size: .6rem;
+    color: var(--tx3);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-top: 4px;
+}
+
+/* ── Heatmap ── */
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.heatmap-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.heat-day-label {
+    font-size: .55rem;
+    font-weight: 700;
+    color: var(--tx4);
+    text-align: center;
+    letter-spacing: .03em;
+}
+
+.heat-cell {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background: var(--bg3);
+    border: 1px solid rgba(var(--acr), .05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .55rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--tx3);
+}
+
+.heat-cell:hover { transform: scale(1.15); z-index: 1; position: relative; }
+.heat-cell:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg1);
+    color: var(--tx1);
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: .6rem;
+    white-space: nowrap;
+    border: 1px solid var(--bd);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.heat-cell.heat-0 { background: var(--bg3); color: var(--tx4); }
+.heat-cell.heat-1 { background: rgba(var(--acr), .15); color: var(--ac); }
+.heat-cell.heat-2 { background: rgba(var(--acr), .30); color: var(--ac); }
+.heat-cell.heat-3 { background: rgba(var(--acr), .55); color: var(--ac-text, #fff); }
+.heat-cell.heat-4 { background: var(--ac); color: var(--ac-text, #fff); box-shadow: 0 0 8px rgba(var(--acr), .4); }
+
+.heat-cell.today {
+    border-color: var(--ac);
+    outline: 1.5px solid var(--ac);
+}
+
+.heat-cell.selected {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(var(--acr), .5);
+}
+
+/* ── Line chart ── */
+.chart-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.chart-tab-btn {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: .72rem;
+    font-weight: 700;
+    border: 1.5px solid var(--bd);
+    background: var(--bg3);
+    color: var(--tx3);
+    cursor: pointer;
+    transition: all .2s;
+}
+
+.chart-tab-btn.active { background: var(--ac); color: var(--ac-text, #fff); border-color: var(--ac); }
+
+.line-chart-container {
+    width: 100%;
+    height: 160px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.chart-grid-line {
+    stroke: var(--bd);
+    stroke-width: 1;
+    stroke-dasharray: 4, 4;
+}
+
+.chart-line {
+    fill: none;
+    stroke: var(--ac);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: lineDrawIn 1s cubic-bezier(.25,1,.25,1) forwards;
+}
+
+.chart-area {
+    fill: url(#chartGrad);
+    opacity: .25;
+}
+
+.chart-point {
+    fill: var(--ac);
+    stroke: var(--bg0);
+    stroke-width: 2.5;
+    cursor: pointer;
+    transition: r .2s, transform .2s;
+}
+
+.chart-point:hover { r: 6; transform-origin: center; }
+
+.chart-label {
+    font-size: 9px;
+    fill: var(--tx3);
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+.chart-value-label {
+    font-size: 10px;
+    fill: var(--ac);
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    opacity: 0;
+    transition: opacity .2s;
+}
+
+.chart-point:hover + .chart-value-label { opacity: 1; }
+
+/* ── Week mini chart (home dashboard) ── */
+.week-mini-chart svg { width: 100%; height: 80px; }
+
+.mini-bar {
+    fill: rgba(var(--acr), .15);
+    rx: 4;
+    transition: fill .3s;
+}
+
+.mini-bar.active { fill: var(--ac); filter: drop-shadow(0 0 4px rgba(var(--acr), .4)); }
+
+/* ── Monthly calendar ── */
+.month-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.cal-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+.cal-day-label { font-size: .55rem; font-weight: 700; color: var(--tx4); text-align: center; }
+
+.cal-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background: var(--bg3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: .6rem;
+    color: var(--tx3);
+    font-weight: 600;
+    border: 1px solid transparent;
+    position: relative;
+}
+
+.cal-cell:hover { transform: scale(1.12); z-index: 1; }
+.cal-cell.today { border-color: var(--ac); color: var(--ac); font-weight: 800; }
+.cal-cell.blank { background: transparent; pointer-events: none; }
+
+.cal-cell.cal-int-0 { background: var(--bg3); color: var(--tx4); }
+.cal-cell.cal-int-1 { background: rgba(var(--acr), .12); color: var(--ac); }
+.cal-cell.cal-int-2 { background: rgba(var(--acr), .25); color: var(--ac); }
+.cal-cell.cal-int-3 { background: rgba(var(--acr), .45); color: var(--ac-text, #fff); }
+.cal-cell.cal-int-4 { background: var(--ac); color: var(--ac-text, #fff); box-shadow: 0 0 8px rgba(var(--acr), .3); }
+
+.month-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.month-stat-box {
+    background: var(--bg3);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+.month-stat-val { font-size: 1.1rem; font-weight: 800; color: var(--ac); }
+.month-stat-lbl { font-size: .6rem; color: var(--tx3); font-weight: 600; margin-top: 2px; }
+
+.month-insight {
+    font-size: .74rem;
+    color: var(--tx3);
+    line-height: 1.5;
+    text-align: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--bd);
+}
+
+/* ── Day drilldown ── */
+.day-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.day-detail-chip {
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: .68rem;
+    font-weight: 700;
+    background: var(--bg3);
+    color: var(--tx2);
+    border: 1px solid var(--bd);
+}
+
+.day-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.day-detail-stat {
+    background: var(--bg3);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+.day-detail-stat-val { font-size: 1rem; font-weight: 800; color: var(--ac); }
+.day-detail-stat-lbl { font-size: .6rem; color: var(--tx3); font-weight: 600; margin-top: 2px; }
+
+.day-detail-list { display: flex; flex-direction: column; gap: 5px; }
+
+.day-detail-task {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--bg3);
+    border-radius: 10px;
+    font-size: .75rem;
+    color: var(--tx2);
+    font-weight: 500;
+}
+
+.day-detail-task.done .day-task-text { text-decoration: line-through; opacity: .6; }
+.day-task-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ac); flex-shrink: 0; }
+.day-task-done-dot { background: var(--ok); }
+
+/* ── Score breakdown list ── */
+.breakdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bd);
+    font-size: .75rem;
+}
+
+.breakdown-item:last-child { border-bottom: none; }
+.breakdown-label { color: var(--tx2); font-weight: 600; }
+.breakdown-value { color: var(--ac); font-weight: 800; }

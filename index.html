@@ -1,124 +1,176 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark" data-accent="royal">
+<html lang="en" data-theme="dark" data-accent="neon">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-    <title>Focussium</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
+    <meta name="description" content="Focussium 3.0 — High-contrast offline-first productivity PWA. Deep focus timer, tasks, brain dump, habits tracker & vibe analytics.">
+    <meta name="keywords" content="productivity, pomodoro, focus timer, task manager, PWA, offline, habits">
+    <meta name="color-scheme" content="dark light">
+    <title>Focussium 3.0 — Deep Focus Productivity</title>
 
+    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#03040B" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F2F0ED" media="(prefers-color-scheme: light)">
+
+    <!-- Apple Mobile -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Focussium">
-    <link rel="icon" type="image/png" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="shortcut icon" href="icon-192.png">
 
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Focussium 3.0 — Deep Focus Productivity">
+    <meta property="og:description" content="High-contrast offline-first PWA. Focus timer, tasks, habits & vibe reports.">
+    <meta property="og:image" content="https://sanjay3226.github.io/Focussium/icon-512.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Focussium 3.0">
+    <meta name="twitter:image" content="https://sanjay3226.github.io/Focussium/icon-512.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS — modular (tokens first, then reset, then layout) -->
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/timer.css">
+    <link rel="stylesheet" href="css/charts.css">
 </head>
 
 <body>
-    <!-- Loading Screen -->
+    <!-- Three.js Background Layer -->
+    <div id="threeJsBg"></div>
+
+    <!-- CSS Fallback orbs (shown while Three.js loads) -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- NO particle canvas — removed in v3.0 -->
+
+    <!-- ── Loading Screen ── -->
     <div class="ld-scr" id="loadingScreen">
-        <img class="ld-logo" id="loadingLogo" src="icon-512.png" alt="Focussium Logo">
+        <img class="ld-logo" src="icon-512.png" alt="Focussium Logo">
         <div class="ld-title">Focussium</div>
         <div class="ld-sub">Your zen productivity space</div>
         <div class="ld-dots"><span></span><span></span><span></span></div>
     </div>
 
-    <!-- Login Screen -->
+    <!-- ── Login Screen ── -->
     <div class="login-screen" id="loginScreen">
-        <div class="login-bg"></div>
         <div class="login-card">
-            <img class="login-logo" id="loginLogo" src="icon-512.png" alt="Focussium Logo">
+            <div class="login-badge-header">
+                <img class="login-logo" src="icon-512.png" alt="Focussium Logo">
+                <span class="login-version-pill">v3.0 Deep Focus</span>
+            </div>
             <h1 class="login-title">Focussium</h1>
-            <p class="login-desc">Your <strong>zen space</strong> for getting things done.<br>Built for brains that work
-                differently.</p>
+            <p class="login-desc">Your <strong>zen sanctuary</strong> for deep work.<br>Built for brains that work differently.</p>
 
-            <div id="googleAuthSection">
-                <button class="google-btn" id="googleBtn" onclick="Auth.signInGoogle()">
+            <div class="auth-box">
+                <button class="google-btn" id="googleBtn" data-action="auth-google">
                     <span class="google-btn-icon" id="googleIcon"></span>
                     <span>Continue with Google</span>
                 </button>
-                <div class="login-toggle" onclick="Auth.toggleEmail(true)">Or use email address</div>
-            </div>
-
-            <div class="email-form" id="emailForm">
-                <input type="email" class="form-input" id="loginEmail" placeholder="Email address" autocomplete="email">
-                <input type="password" class="form-input" id="loginPassword" placeholder="Password">
-                <div class="email-btns">
-                    <button class="btn-primary" id="emailSignInBtn" onclick="Auth.signInEmail()">Sign In</button>
-                    <button class="btn-secondary" id="emailSignUpBtn" onclick="Auth.signUp()">Sign Up</button>
-                </div>
-                <div class="login-toggle" onclick="Auth.toggleEmail(false)">Use Google instead</div>
             </div>
 
             <div class="login-error" id="loginError"></div>
-            <p class="login-footer">Sync your progress across all your devices</p>
+
+            <div class="login-footer-row">
+                <span class="login-footer-badge">🔒 Cloud Encrypted Sync</span>
+                <span class="login-footer-badge">⚡ Offline Mode</span>
+            </div>
         </div>
     </div>
 
-    <!-- Onboarding -->
+    <!-- ── Onboarding ── -->
     <div class="onboard-screen" id="onboardScreen">
         <div class="onboard-card">
             <div class="onboard-step active" data-step="0">
-                <div class="onboard-emoji" id="onboardEmoji0"></div>
-                <h2 class="onboard-title">Welcome!</h2>
-                <p class="onboard-desc">Let's set up your space in 30 seconds. Pick what feels right — you can always
-                    change later.</p>
-                <button class="onboard-btn" onclick="Onboard.next()">Let's Go</button>
-            </div>
-            <div class="onboard-step" data-step="1">
-                <div class="onboard-emoji" id="onboardEmoji1"></div>
-                <h2 class="onboard-title">What's your name?</h2>
-                <p class="onboard-desc">We'll use this for greetings.</p>
-                <input class="onboard-input" id="onboardName" placeholder="Your first name..." maxlength="20"
-                    autocomplete="off">
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
-                <button class="onboard-skip" onclick="Onboard.next()">Skip</button>
-            </div>
-            <div class="onboard-step" data-step="2">
-                <div class="onboard-emoji" id="onboardEmoji2"></div>
-                <h2 class="onboard-title">Pick your vibe</h2>
-                <p class="onboard-desc">Choose a color that speaks to you.</p>
-                <div class="onboard-colors" id="onboardColors"></div>
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
-            </div>
-            <div class="onboard-step" data-step="3">
-                <div class="onboard-emoji" id="onboardEmoji3"></div>
-                <h2 class="onboard-title">Light or dark?</h2>
-                <p class="onboard-desc">Pick your preferred mode.</p>
-                <div class="onboard-themes">
-                    <button class="onboard-theme active" data-theme="dark"
-                        onclick="Onboard.setTheme('dark')">Dark</button>
-                    <button class="onboard-theme" data-theme="light" onclick="Onboard.setTheme('light')">Light</button>
-                    <button class="onboard-theme" data-theme="system" onclick="Onboard.setTheme('system')">Auto</button>
+                <div class="onboard-hero-badge">
+                    <img src="icon-512.png" alt="Focussium" class="onboard-logo-img">
                 </div>
-                <button class="onboard-btn" onclick="Onboard.next()">Continue</button>
+                <h2 class="onboard-title">Welcome to Focussium</h2>
+                <p class="onboard-desc">Your 30-second zen setup. Tailored for your unique rhythm.</p>
+                <div class="onboard-feature-pills">
+                    <span class="feat-pill">⏱️ Focus Timer</span>
+                    <span class="feat-pill">📋 Task Manager</span>
+                    <span class="feat-pill">🧠 Brain Dump</span>
+                    <span class="feat-pill">🌱 Habits</span>
+                    <span class="feat-pill">📊 Vibe Analytics</span>
+                </div>
+                <button class="onboard-btn primary" data-action="onboard-next">Begin Setup →</button>
             </div>
+
+            <div class="onboard-step" data-step="1">
+                <div class="onboard-step-num">Step 1 of 3</div>
+                <h2 class="onboard-title">What should we call you?</h2>
+                <p class="onboard-desc">We'll use your name for greetings and vibe reports.</p>
+                <input class="onboard-input" id="onboardName" placeholder="Your first name..." maxlength="20" autocomplete="off">
+                <div class="onboard-btn-group">
+                    <button class="onboard-btn primary" data-action="onboard-next">Continue</button>
+                    <button class="onboard-skip" data-action="onboard-next">Skip for now</button>
+                </div>
+            </div>
+
+            <div class="onboard-step" data-step="2">
+                <div class="onboard-step-num">Step 2 of 3</div>
+                <h2 class="onboard-title">Pick your accent vibe</h2>
+                <p class="onboard-desc">Choose a colour tone that calms your mind.</p>
+                <div class="onboard-colors" id="onboardColors"></div>
+                <button class="onboard-btn primary" data-action="onboard-next">Continue</button>
+            </div>
+
+            <div class="onboard-step" data-step="3">
+                <div class="onboard-step-num">Step 3 of 3</div>
+                <h2 class="onboard-title">Light or Dark mode?</h2>
+                <p class="onboard-desc">Select your preferred space aesthetic.</p>
+                <div class="onboard-themes">
+                    <button class="onboard-theme active" data-theme="dark" data-action="onboard-theme">
+                        <span class="theme-icon">🌙</span> Dark
+                    </button>
+                    <button class="onboard-theme" data-theme="light" data-action="onboard-theme">
+                        <span class="theme-icon">☀️</span> Light
+                    </button>
+                    <button class="onboard-theme" data-theme="system" data-action="onboard-theme">
+                        <span class="theme-icon">⚙️</span> Auto
+                    </button>
+                </div>
+                <button class="onboard-btn primary" data-action="onboard-next">Continue</button>
+            </div>
+
             <div class="onboard-step" data-step="4">
-                <div class="onboard-emoji" id="onboardEmoji4"></div>
-                <h2 class="onboard-title">You're all set!</h2>
-                <p class="onboard-desc">Your zen productivity space is ready. Let's start flowing.</p>
-                <button class="onboard-btn" onclick="Onboard.done()">Start Flowing</button>
+                <div class="onboard-hero-badge final-badge"><span>🧘✨</span></div>
+                <h2 class="onboard-title">You're All Set!</h2>
+                <p class="onboard-desc">Your customised zen space is ready for deep flow.</p>
+                <button class="onboard-btn primary pulse" data-action="onboard-done">Enter Zen Space ✨</button>
             </div>
+
             <div class="onboard-dots" id="onboardDots"></div>
         </div>
     </div>
 
-    <!-- Main App -->
+    <!-- ══════════════════════ MAIN APP ══════════════════════ -->
     <div class="app" id="app">
         <div class="sync-indicator" id="syncIndicator" title="Sync status"></div>
 
         <!-- Header -->
         <header class="header">
             <div class="header-top">
-                <div class="header-left">
+                <div class="header-left" id="headerProfileBtn" data-action="open-account" title="View Profile & XP">
                     <div class="avatar-wrapper">
                         <img class="avatar" id="userAvatar" src="" alt="Avatar">
                         <div class="user-level-badge" id="userLevelBadge">1</div>
@@ -131,35 +183,45 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="header-btn" onclick="Nav.go('dump')" title="Brain Dump" id="headerDumpBtn"></button>
-                    <button class="header-btn" onclick="Settings.open()" id="headerSettingsBtn"></button>
+                    <button class="header-btn" id="headerDumpBtn" data-action="nav-dump" title="Brain Dump"></button>
+                    <button class="header-btn" id="headerSettingsBtn" data-action="open-settings" title="Settings"></button>
                 </div>
             </div>
             <div class="clock" id="clock">12:00<span class="clock-period">AM</span></div>
-            <div class="date" id="dateDisplay">Monday, Jan 1</div>
+            <div class="date" id="dateDisplay">Sunday, Aug 23</div>
         </header>
 
         <!-- Content -->
         <main class="content">
-            <!-- Home Page -->
+
+            <!-- ── HOME ── -->
             <section class="page active" data-page="home">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconHome"></span>
                     <h2>Dashboard</h2>
                 </div>
 
-                <!-- Today's Progress Ring -->
+                <!-- Quote -->
+                <div class="daily-quote-card" id="dailyQuoteCard" style="display:none;">
+                    <div class="quote-sparkle" id="quoteSparkleIcon"></div>
+                    <div class="quote-content">
+                        <p class="quote-text" id="dailyQuoteText">"Loading your zen space..."</p>
+                        <p class="quote-author" id="dailyQuoteAuthor">— Focussium</p>
+                    </div>
+                </div>
+
+                <!-- Progress Ring -->
                 <div class="progress-card">
                     <div class="progress-ring-container">
                         <svg class="progress-ring" viewBox="0 0 120 120">
                             <defs>
                                 <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="var(--ac)" />
-                                    <stop offset="100%" stop-color="var(--acl)" />
+                                    <stop offset="0%" stop-color="var(--ac)"/>
+                                    <stop offset="100%" stop-color="var(--acl)"/>
                                 </linearGradient>
                             </defs>
-                            <circle class="progress-ring-bg" cx="60" cy="60" r="52" />
-                            <circle class="progress-ring-fg" cx="60" cy="60" r="52" id="progressRingCircle" />
+                            <circle class="progress-ring-bg" cx="60" cy="60" r="52"/>
+                            <circle class="progress-ring-fg" cx="60" cy="60" r="52" id="progressRingCircle"/>
                         </svg>
                         <div class="progress-ring-inner">
                             <div class="progress-percent" id="progressPercent">0%</div>
@@ -192,7 +254,7 @@
                                 <div class="week-snapshot-trend" id="homeWeekTrend"></div>
                             </div>
                         </div>
-                        <button class="week-snapshot-link" onclick="Nav.go('report')">
+                        <button class="week-snapshot-link" data-action="nav-report">
                             <span>Full Report</span>
                             <span id="weekArrowIcon"></span>
                         </button>
@@ -201,8 +263,7 @@
                     <div class="week-insight" id="weekInsight">Start your week strong.</div>
                 </div>
 
-
-                <!-- Quick Stats Grid -->
+                <!-- Stats Grid -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon" id="statIcon0"></div>
@@ -226,73 +287,99 @@
                     </div>
                 </div>
 
-                <!-- Up Next -->
+                <!-- Habits Preview (v3.0) -->
                 <div class="section-header">
+                    <div class="section-title">Today's Habits</div>
+                    <button class="section-link" data-action="nav-habits">View all</button>
+                </div>
+                <div class="home-habits-card" id="homeHabitsPreview"></div>
+
+                <!-- Up Next -->
+                <div class="section-header" style="margin-top:18px;">
                     <div class="section-title">Up Next</div>
-                    <button class="section-link" onclick="Nav.go('tasks')">View all</button>
+                    <button class="section-link" data-action="nav-tasks">View all</button>
                 </div>
                 <div class="tasks-container" id="homeTasksPreview"></div>
             </section>
 
-            <!-- Tasks Page -->
+            <!-- ── TASKS ── -->
             <section class="page" data-page="tasks">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconTasks"></span>
                     <h2>Tasks</h2>
                 </div>
-
                 <div class="list-creator">
                     <input class="list-creator-input" id="newListInput" placeholder="New list..." maxlength="20">
-                    <button class="list-creator-btn" onclick="Tasks.createList()">Add</button>
+                    <button class="list-creator-btn" data-action="tasks-create-list">Add</button>
                 </div>
-
                 <div class="tabs-container" id="taskTabs"></div>
+                <div class="task-tools-bar" id="taskToolsBar"></div>
                 <div class="tasks-container" id="tasksContainer"></div>
             </section>
 
-            <!-- Brain Dump Page -->
+            <!-- ── BRAIN DUMP ── -->
             <section class="page" data-page="dump">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconDump"></span>
                     <h2>Brain Dump</h2>
                 </div>
-
                 <div class="dump-composer">
-                    <textarea class="dump-textarea" id="dumpTextarea"
-                        placeholder="What's on your mind? Just dump it here..." maxlength="500"></textarea>
-                    <button class="dump-send-btn" onclick="Dump.add()" id="dumpSendBtn"></button>
+                    <textarea class="dump-textarea" id="dumpTextarea" placeholder="What's on your mind? Just dump it here..." maxlength="500"></textarea>
+                    <button class="dump-send-btn" id="dumpSendBtn" data-action="dump-add"></button>
                 </div>
-
                 <div class="dumps-container" id="dumpsContainer"></div>
+
+                <!-- Mood Logger -->
+                <div class="mood-logger-card">
+                    <div class="mood-logger-header">
+                        <span class="mood-logger-icon" id="moodLoggerIcon"></span>
+                        <span style="font-weight:700;">Daily Energy Vibe</span>
+                    </div>
+                    <p class="mood-logger-subtitle">Log your current mental frequency to trace focus trends.</p>
+                    <div class="mood-selectors" id="moodSelectors">
+                        <button class="mood-btn calm"    data-action="log-mood" data-mood="calm"    title="Calm Zen">🧘 Calm</button>
+                        <button class="mood-btn high"    data-action="log-mood" data-mood="high"    title="High Energy">⚡ Sparked</button>
+                        <button class="mood-btn flow"    data-action="log-mood" data-mood="flow"    title="Deep Flow">🌊 Flow</button>
+                        <button class="mood-btn tired"   data-action="log-mood" data-mood="tired"   title="Resting">💤 Resting</button>
+                        <button class="mood-btn clouded" data-action="log-mood" data-mood="clouded" title="Overwhelmed">☁️ Clouded</button>
+                    </div>
+                </div>
             </section>
 
-            <!-- Focus Page -->
+            <!-- ── HABITS (v3.0 new page) ── -->
+            <section class="page" data-page="habits">
+                <div class="page-header">
+                    <span class="page-icon" id="pageIconHabits"></span>
+                    <h2>Habits</h2>
+                </div>
+                <div id="habitsContainer"></div>
+            </section>
+
+            <!-- ── FOCUS ── -->
             <section class="page" data-page="focus">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconFocus"></span>
                     <h2>Focus</h2>
                 </div>
-
                 <div class="pomo-container">
                     <div class="pomo-mode-tabs">
-                        <button class="pomo-mode-tab active" data-mode="focus"
-                            onclick="Pomo.setMode('focus')">Focus</button>
-                        <button class="pomo-mode-tab" data-mode="break" onclick="Pomo.setMode('break')">Break</button>
-                        <button class="pomo-mode-tab" data-mode="long" onclick="Pomo.setMode('long')">Long</button>
+                        <button class="pomo-mode-tab active" data-mode="focus"  data-action="pomo-mode">Focus</button>
+                        <button class="pomo-mode-tab"        data-mode="break"  data-action="pomo-mode">Break</button>
+                        <button class="pomo-mode-tab"        data-mode="long"   data-action="pomo-mode">Long</button>
                     </div>
 
                     <div class="pomo-timer" id="pomoTimer">
                         <svg class="pomo-ring-bg" viewBox="0 0 280 280">
-                            <circle cx="140" cy="140" r="130" />
+                            <circle cx="140" cy="140" r="130"/>
                         </svg>
                         <svg class="pomo-ring-fg" viewBox="0 0 280 280">
                             <defs>
                                 <linearGradient id="pomoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" stop-color="var(--ac)" />
-                                    <stop offset="100%" stop-color="var(--acl)" />
+                                    <stop offset="0%" stop-color="var(--ac)"/>
+                                    <stop offset="100%" stop-color="var(--acl)"/>
                                 </linearGradient>
                             </defs>
-                            <circle cx="140" cy="140" r="130" id="pomoRingCircle" />
+                            <circle cx="140" cy="140" r="130" id="pomoRingCircle"/>
                         </svg>
                         <div class="pomo-glow"></div>
                         <div class="pomo-inner">
@@ -302,117 +389,158 @@
                     </div>
 
                     <div class="pomo-controls">
-                        <button class="pomo-ctrl-btn secondary" onclick="Pomo.reset()" id="pomoResetBtn"></button>
-                        <button class="pomo-ctrl-btn primary" onclick="Pomo.toggle()" id="pomoPlayBtn"></button>
-                        <button class="pomo-ctrl-btn secondary" onclick="Pomo.skip()" id="pomoSkipBtn"></button>
+                        <button class="pomo-ctrl-btn secondary" data-action="pomo-reset" id="pomoResetBtn"></button>
+                        <button class="pomo-ctrl-btn primary"   data-action="pomo-toggle" id="pomoPlayBtn"></button>
+                        <button class="pomo-ctrl-btn secondary" data-action="pomo-skip"  id="pomoSkipBtn"></button>
                     </div>
 
                     <div class="pomo-session-dots" id="pomoSessionDots"></div>
-                    
+
                     <div class="pomo-live-insight-wrapper">
                         <div class="pomo-live-insight" id="pomoLiveInsight"></div>
                     </div>
 
-                    <button class="pomo-fullscreen-btn" onclick="Pomo.enterFullscreen()">
+                    <!-- Ambient sounds -->
+                    <div class="ambient-compact-row">
+                        <div class="ambient-icons-group">
+                            <button class="ambient-icon-btn active" data-sound="none"     data-action="pomo-ambient" title="Silence">🔇</button>
+                            <button class="ambient-icon-btn"        data-sound="rain"     data-action="pomo-ambient" title="Rainfall">🌧️</button>
+                            <button class="ambient-icon-btn"        data-sound="waves"    data-action="pomo-ambient" title="Ocean Waves">🌊</button>
+                            <button class="ambient-icon-btn"        data-sound="binaural" data-action="pomo-ambient" title="Binaural">🧘</button>
+                            <button class="ambient-icon-btn"        data-sound="brown"    data-action="pomo-ambient" title="Deep Hum">📿</button>
+                        </div>
+                        <div class="ambient-slider-container">
+                            <span class="ambient-slider-icon" id="ambientVolIcon"></span>
+                            <input type="range" class="ambient-slider-premium" id="ambientVolumeSlider"
+                                   min="0" max="100" value="40" style="--val:40%"
+                                   data-action="pomo-ambient-vol">
+                        </div>
+                    </div>
+
+                    <button class="pomo-fullscreen-btn" data-action="pomo-fullscreen">
                         <span id="pomoFullscreenIcon"></span>
                         <span>Focus Mode</span>
                     </button>
                 </div>
             </section>
 
-            <!-- Report Page -->
+            <!-- ── REPORT ── -->
             <section class="page" data-page="report">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconReport"></span>
                     <h2>Weekly Vibe</h2>
                 </div>
 
-                <!-- Report Mode Panel -->
                 <div class="report-mode-panel">
                     <div class="report-mode-switch">
-                        <button class="report-mode-btn active" id="reportModeWeekBtn" onclick="Report.setMode('week')">Week</button>
-                        <button class="report-mode-btn" id="reportModeMonthBtn" onclick="Report.setMode('month')">Month</button>
+                        <button class="report-mode-btn active" id="reportModeWeekBtn"  data-action="report-mode" data-mode="week">Week</button>
+                        <button class="report-mode-btn"        id="reportModeMonthBtn" data-action="report-mode" data-mode="month">Month</button>
                     </div>
-                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum in detail with daily drill-down.</div>
+                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum in detail.</div>
                     <div class="report-mode-metrics" id="reportModeMetrics"></div>
                 </div>
 
-                <!-- Week Navigation -->
                 <div class="week-nav report-week-only">
-                    <button class="week-nav-btn" onclick="Report.changeWeek(-1)" id="weekPrevBtn"></button>
+                    <button class="week-nav-btn" data-action="report-week" data-dir="-1" id="weekPrevBtn"></button>
                     <span class="week-nav-label" id="weekNavLabel">This Week</span>
-                    <button class="week-nav-btn" onclick="Report.changeWeek(1)" id="weekNextBtn"></button>
+                    <button class="week-nav-btn" data-action="report-week" data-dir="1"  id="weekNextBtn"></button>
                 </div>
 
-                <!-- Month Navigation -->
                 <div class="week-nav report-month-only">
-                    <button class="week-nav-btn" onclick="Report.changeMonth(-1)" id="monthPrevBtn"></button>
+                    <button class="week-nav-btn" data-action="report-month" data-dir="-1" id="monthPrevBtn"></button>
                     <span class="week-nav-label" id="monthNavLabel">This Month</span>
-                    <button class="week-nav-btn" onclick="Report.changeMonth(1)" id="monthNextBtn"></button>
+                    <button class="week-nav-btn" data-action="report-month" data-dir="1"  id="monthNextBtn"></button>
                 </div>
 
                 <!-- Score Hero -->
                 <div class="score-hero report-week-only">
                     <div class="score-hero-main">
-                        <div class="score-hero-label">Productivity Score</div>
-                        <div class="score-hero-value" id="reportScoreValue">0</div>
-                        <div class="score-hero-bar">
-                            <div class="score-hero-fill" id="reportScoreFill"></div>
+                        <div class="score-hero-label">Weekly Productivity Vibe</div>
+                        <div class="vibe-gauge-wrapper">
+                            <svg class="vibe-gauge-svg" viewBox="0 0 140 140">
+                                <defs>
+                                    <linearGradient id="vibeGaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="var(--ac)"/>
+                                        <stop offset="100%" stop-color="var(--acl)"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle class="vibe-gauge-bg"   cx="70" cy="70" r="60"/>
+                                <circle class="vibe-gauge-fill" cx="70" cy="70" r="60" id="reportVibeGaugeCircle"/>
+                            </svg>
+                            <div class="vibe-gauge-inner">
+                                <div class="vibe-gauge-score" id="reportScoreValue">0</div>
+                                <div class="vibe-gauge-label">Score</div>
+                            </div>
                         </div>
+                        <div class="vibe-rating-title" id="reportVibeTitle">Resting Flow</div>
                     </div>
-                    <div class="score-breakdown" id="scoreBreakdown"></div>
+                    <div class="score-breakdown" id="scoreBreakdownList"></div>
                 </div>
 
-                <!-- Quick Stats -->
                 <div class="report-stats report-week-only" id="reportStats"></div>
 
-                <!-- Activity Heatmap -->
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportHeatIcon"></span>
-                        <span>Activity Map</span>
+                <!-- Heatmap -->
+                <div class="report-card report-week-only expanded" id="reportCardHeatmap">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardHeatmap">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportHeatIcon"></span>
+                            <span>Activity Map</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportHeatChevron"></span>
                     </div>
-                    <div class="heatmap-grid" id="heatmapGrid"></div>
+                    <div class="report-card-body">
+                        <div class="heatmap-grid" id="reportHeatGrid"></div>
+                    </div>
                 </div>
 
-                <!-- Charts -->
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon0"></span>
-                        <span>Tasks Completed</span>
+                <!-- Analytics chart -->
+                <div class="report-card report-week-only expanded" id="reportCardAnalytics">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardAnalytics">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportChartIcon0"></span>
+                            <span>Productivity Analytics</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportAnalyticsChevron"></span>
                     </div>
-                    <div class="line-chart-container" id="tasksChart"></div>
+                    <div class="report-card-body">
+                        <div class="chart-tabs">
+                            <button class="chart-tab-btn active" id="chartTabTasksBtn" data-action="report-chart-tab" data-tab="tasks">Tasks Done</button>
+                            <button class="chart-tab-btn"        id="chartTabFocusBtn" data-action="report-chart-tab" data-tab="focus">Focus Minutes</button>
+                        </div>
+                        <div class="line-chart-container" id="analyticsChart"></div>
+                    </div>
                 </div>
 
-                <div class="report-card report-week-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportChartIcon1"></span>
-                        <span>Focus Minutes</span>
+                <!-- Monthly calendar -->
+                <div class="report-card monthly-card report-month-only expanded" id="reportCardMonth">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardMonth">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportMonthIcon"></span>
+                            <span id="monthLabel">Monthly Overview</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportMonthChevron"></span>
                     </div>
-                    <div class="line-chart-container" id="focusChart"></div>
+                    <div class="report-card-body">
+                        <div class="month-stats" id="monthStats"></div>
+                        <div class="month-calendar" id="monthCalendar"></div>
+                        <div class="month-insight" id="monthInsight"></div>
+                    </div>
                 </div>
 
-                <!-- Monthly Overview -->
-                <div class="report-card monthly-card report-month-only">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportMonthIcon"></span>
-                        <span id="monthLabel">Monthly Overview</span>
+                <!-- Day drill-down -->
+                <div class="report-card expanded" id="reportCardDayDetail">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardDayDetail">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportDayIcon"></span>
+                            <span>Day Details</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportDayChevron"></span>
                     </div>
-                    <div class="month-stats" id="monthStats"></div>
-                    <div class="month-heatmap" id="monthHeatmap"></div>
-                    <div class="month-insight" id="monthInsight">Your month pattern will appear here.</div>
+                    <div class="report-card-body" id="reportCardDayDetail"></div>
                 </div>
 
-                <!-- Day Drilldown -->
-                <div class="report-card report-day-detail-card">
-                    <div class="report-card-header">
-                        <span class="report-card-icon" id="reportDayIcon"></span>
-                        <span id="reportDayLabel">Day Details</span>
-                    </div>
-                    <div class="day-detail-meta" id="dayDetailMeta"></div>
-                    <div class="day-detail-grid" id="dayDetailGrid"></div>
-                    <div class="day-detail-list" id="dayDetailList"></div>
-                </div>
+                <!-- Habits heatmap (v3.0) -->
+                <div class="report-card expanded" id="reportHabitsHeatmap"></div>
 
                 <!-- AI Insights -->
                 <div class="ai-insights-card">
@@ -423,48 +551,52 @@
                     <div class="ai-insights-content" id="aiInsightsContent"></div>
                 </div>
 
-                <!-- Download -->
-                <button class="download-btn" onclick="Report.downloadPDF()">
+                <button class="download-btn" data-action="report-download">
                     <span id="downloadIcon"></span>
                     <span>Download Report</span>
                 </button>
             </section>
+
         </main>
 
-        <!-- Bottom Navigation -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-page="home" onclick="Nav.go('home')">
+        <!-- ── Bottom Nav ── -->
+        <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+            <button class="nav-item active" data-page="home"   data-action="nav-go" aria-label="Home">
                 <span class="nav-icon" id="navIconHome"></span>
                 <span class="nav-label">Home</span>
             </button>
-            <button class="nav-item" data-page="tasks" onclick="Nav.go('tasks')">
+            <button class="nav-item" data-page="tasks"  data-action="nav-go" aria-label="Tasks">
                 <span class="nav-icon" id="navIconTasks"></span>
                 <span class="nav-label">Tasks</span>
+                <span class="nav-badge" id="navBadgeTasks"></span>
             </button>
-            <button class="nav-item" data-page="dump" onclick="Nav.go('dump')">
-                <span class="nav-icon" id="navIconDump"></span>
-                <span class="nav-label">Dump</span>
+            <button class="nav-item" data-page="habits" data-action="nav-go" aria-label="Habits">
+                <span class="nav-icon" id="navIconHabits"></span>
+                <span class="nav-label">Habits</span>
             </button>
-            <button class="nav-item" data-page="focus" onclick="Nav.go('focus')">
+            <button class="nav-item" data-page="focus"  data-action="nav-go" aria-label="Focus timer">
                 <span class="nav-icon" id="navIconFocus"></span>
                 <span class="nav-label">Focus</span>
             </button>
-            <button class="nav-item" data-page="report" onclick="Nav.go('report')">
+            <button class="nav-item" data-page="report" data-action="nav-go" aria-label="Weekly report">
                 <span class="nav-icon" id="navIconReport"></span>
                 <span class="nav-label">Vibe</span>
             </button>
         </nav>
 
         <!-- FAB -->
-        <button class="fab" id="fabButton" onclick="Tasks.openAddModal()">
+        <button class="fab" id="fabButton" data-action="tasks-open-add" aria-label="Add new task">
             <span id="fabIcon"></span>
         </button>
     </div>
 
-    <!-- Add Task Modal -->
-    <div class="modal" id="addTaskModal">
+    <!-- ══ MODALS ══ -->
+
+    <!-- Add/Edit Task -->
+    <div class="modal" id="addTaskModal" role="dialog" aria-modal="true" aria-label="Task editor">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
+            <button class="account-close-btn" data-action="modal-close" data-modal="addTaskModal" title="Close">✕</button>
             <div class="modal-title" id="taskModalTitle">New Task</div>
 
             <div class="form-group">
@@ -472,18 +604,15 @@
                     <span id="formIconTitle"></span>
                     What needs doing?
                 </label>
-                <input class="form-input" id="taskTitleInput" placeholder="Reply to emails, Read chapter..."
-                    maxlength="100" autocomplete="off">
+                <input class="form-input" id="taskTitleInput" placeholder="Reply to emails, Read chapter..." maxlength="100" autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label class="form-label">
                     <span id="formIconNotes"></span>
-                    Notes
-                    <span class="form-hint">optional</span>
+                    Notes <span class="form-hint">optional</span>
                 </label>
-                <input class="form-input" id="taskNotesInput" placeholder="Extra details..." maxlength="200"
-                    autocomplete="off">
+                <input class="form-input" id="taskNotesInput" placeholder="Extra details..." maxlength="200" autocomplete="off">
             </div>
 
             <div class="form-row">
@@ -521,8 +650,7 @@
 
             <div class="form-group">
                 <label class="form-label">
-                    Repeat?
-                    <span class="form-hint">auto-creates next</span>
+                    Repeat? <span class="form-hint">auto-creates next</span>
                 </label>
                 <div class="pills-container" id="repeatPills"></div>
                 <div class="custom-repeat-row" id="customRepeatRow">
@@ -534,28 +662,26 @@
 
             <div class="form-group">
                 <label class="form-label">
-                    Steps
-                    <span class="form-hint">break it down</span>
+                    Steps <span class="form-hint">break it down</span>
                 </label>
                 <div class="subtasks-list" id="subtasksList"></div>
                 <div class="subtask-adder">
-                    <input class="subtask-adder-input" id="subtaskInput" placeholder="Add step..." maxlength="60"
-                        autocomplete="off">
-                    <button class="subtask-adder-btn" onclick="Tasks.addTempSubtask()">+</button>
+                    <input class="subtask-adder-input" id="subtaskInput" placeholder="Add step..." maxlength="60" autocomplete="off">
+                    <button class="subtask-adder-btn" data-action="tasks-add-subtask">+</button>
                 </div>
             </div>
 
             <input type="hidden" id="editingTaskId" value="">
-            <button class="form-submit-btn" id="taskSubmitBtn" onclick="Tasks.submitTask()">Add Task</button>
-            <button class="form-delete-btn" id="taskDeleteBtn" onclick="Tasks.deleteFromModal()"
-                style="display:none">Delete Task</button>
+            <button class="form-submit-btn" id="taskSubmitBtn" data-action="tasks-submit">Add Task</button>
+            <button class="form-delete-btn" id="taskDeleteBtn" data-action="tasks-delete-from-modal" style="display:none">Delete Task</button>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal" id="settingsModal">
+    <!-- Settings -->
+    <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
+            <button class="account-close-btn" data-action="settings-close" title="Close Settings">✕</button>
             <div class="modal-title">Settings</div>
 
             <div class="settings-section">
@@ -565,15 +691,13 @@
                     <div class="settings-row-left">
                         <div class="settings-row-icon" id="settingsThemeIcon"></div>
                         <div class="settings-row-text">
-                            <h4>Theme</h4>
-                            <p>Light, dark or auto</p>
+                            <h4>Theme</h4><p>Light, dark or auto</p>
                         </div>
                     </div>
                     <div class="theme-buttons">
-                        <button class="theme-btn" data-theme="dark" onclick="Settings.setTheme('dark')">Dark</button>
-                        <button class="theme-btn" data-theme="light" onclick="Settings.setTheme('light')">Light</button>
-                        <button class="theme-btn" data-theme="system"
-                            onclick="Settings.setTheme('system')">Auto</button>
+                        <button class="theme-btn" data-theme="dark"   data-action="settings-theme">Dark</button>
+                        <button class="theme-btn" data-theme="light"  data-action="settings-theme">Light</button>
+                        <button class="theme-btn" data-theme="system" data-action="settings-theme">Auto</button>
                     </div>
                 </div>
 
@@ -581,8 +705,7 @@
                     <div class="settings-row-left">
                         <div class="settings-row-icon" id="settingsAccentIcon"></div>
                         <div class="settings-row-text">
-                            <h4>Accent Color</h4>
-                            <p>Pick your vibe</p>
+                            <h4>Accent Color</h4><p>Pick your vibe</p>
                         </div>
                     </div>
                     <div class="accent-buttons" id="accentButtons"></div>
@@ -593,15 +716,22 @@
                         </div>
                         <div class="custom-color-input-row">
                             <span class="custom-color-hash">#</span>
-                            <input type="text" class="custom-color-input" id="customHexInput" 
-                                   placeholder="FF5733" maxlength="6" autocomplete="off" 
-                                   spellcheck="false">
-                            <input type="color" class="custom-color-native" id="customColorNative" 
-                                   value="#f5c842" title="Pick from palette">
-                            <button class="custom-color-apply" id="customColorApply" 
-                                    onclick="Settings.applyCustomColor()">Apply</button>
+                            <input type="text"  class="custom-color-input"  id="customHexInput"    placeholder="FF5733" maxlength="6" autocomplete="off" spellcheck="false">
+                            <input type="color" class="custom-color-native" id="customColorNative" value="#00cfeb" title="Pick from palette">
+                            <button class="custom-color-apply" id="customColorApply" data-action="settings-apply-custom-color">Apply</button>
                         </div>
                     </div>
+                </div>
+
+                <div class="settings-row column">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon" id="settingsAvatarIcon"></div>
+                        <div class="settings-row-text">
+                            <h4>Profile Avatar</h4><p>Choose your identity</p>
+                        </div>
+                    </div>
+                    <div class="avatar-buttons" id="avatarButtons"></div>
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" data-action="settings-avatar-upload">
                 </div>
             </div>
 
@@ -611,145 +741,326 @@
                     <div class="settings-row-left">
                         <div class="settings-row-icon" id="settingsSoundIcon"></div>
                         <div class="settings-row-text">
-                            <h4>Sound Effects</h4>
-                            <p>Clicks & chimes</p>
+                            <h4>Sound Effects</h4><p>Clicks &amp; chimes</p>
                         </div>
                     </div>
-                    <div class="toggle" id="soundToggle" onclick="Settings.toggleSound()"></div>
+                    <div class="toggle" id="soundToggle" data-action="settings-toggle-sound" role="switch"></div>
+                </div>
+                <div class="settings-row column">
+                    <div class="settings-row-left">
+                        <div class="settings-row-text">
+                            <h4>Sound Palette</h4><p>Zen Chimes or Retro Synth</p>
+                        </div>
+                    </div>
+                    <div class="palette-buttons" id="paletteButtonsContainer"></div>
                 </div>
             </div>
 
             <div class="settings-section">
                 <div class="settings-section-title">Pomodoro</div>
-
                 <div class="settings-row">
-                    <div class="settings-row-left">
-                        <div class="settings-row-text">
-                            <h4>Focus Duration</h4>
-                            <p>Minutes per session</p>
-                        </div>
-                    </div>
+                    <div class="settings-row-left"><div class="settings-row-text"><h4>Focus Duration</h4><p>Minutes per session</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" onclick="Settings.adjust('focusDur', -5)">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="focusDur" data-delta="-5">−</button>
                         <span class="stepper-value" id="focusDurValue">25</span>
                         <span class="stepper-unit">min</span>
-                        <button class="stepper-btn" onclick="Settings.adjust('focusDur', 5)">+</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="focusDur" data-delta="5">+</button>
                     </div>
                 </div>
-
                 <div class="settings-row">
-                    <div class="settings-row-left">
-                        <div class="settings-row-text">
-                            <h4>Short Break</h4>
-                            <p>Rest between sessions</p>
-                        </div>
-                    </div>
+                    <div class="settings-row-left"><div class="settings-row-text"><h4>Short Break</h4><p>Rest between sessions</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" onclick="Settings.adjust('breakDur', -1)">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="breakDur" data-delta="-1">−</button>
                         <span class="stepper-value" id="breakDurValue">5</span>
                         <span class="stepper-unit">min</span>
-                        <button class="stepper-btn" onclick="Settings.adjust('breakDur', 1)">+</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="breakDur" data-delta="1">+</button>
                     </div>
                 </div>
-
                 <div class="settings-row">
-                    <div class="settings-row-left">
-                        <div class="settings-row-text">
-                            <h4>Long Break</h4>
-                            <p>After completing a set</p>
-                        </div>
-                    </div>
+                    <div class="settings-row-left"><div class="settings-row-text"><h4>Long Break</h4><p>After completing a set</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" onclick="Settings.adjust('longDur', -5)">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="longDur" data-delta="-5">−</button>
                         <span class="stepper-value" id="longDurValue">15</span>
                         <span class="stepper-unit">min</span>
-                        <button class="stepper-btn" onclick="Settings.adjust('longDur', 5)">+</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="longDur" data-delta="5">+</button>
                     </div>
                 </div>
-
                 <div class="settings-row">
-                    <div class="settings-row-left">
-                        <div class="settings-row-text">
-                            <h4>Sessions per Set</h4>
-                            <p>Before long break</p>
-                        </div>
-                    </div>
+                    <div class="settings-row-left"><div class="settings-row-text"><h4>Sessions per Set</h4><p>Before long break</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" onclick="Settings.adjust('sessions', -1)">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="sessions" data-delta="-1">−</button>
                         <span class="stepper-value" id="sessionsValue">4</span>
-                        <button class="stepper-btn" onclick="Settings.adjust('sessions', 1)">+</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="sessions" data-delta="1">+</button>
                     </div>
                 </div>
             </div>
-
 
             <div class="settings-section">
                 <div class="settings-section-title">Account</div>
                 <div class="settings-row">
                     <div class="settings-row-left">
                         <div class="settings-row-text">
-                            <h4>Email</h4>
-                            <p id="userEmailDisplay">—</p>
+                            <h4>Email</h4><p id="userEmailDisplay">—</p>
                         </div>
                     </div>
                 </div>
                 <div class="settings-row">
                     <div class="settings-row-left">
-                        <div class="settings-row-text">
-                            <h4>Clear All Data</h4>
-                        </div>
+                        <div class="settings-row-text"><h4>Clear All Data</h4></div>
                     </div>
-                    <button class="danger-btn" onclick="Settings.clearData()">Clear</button>
+                    <button class="danger-btn" data-action="settings-clear-data">Clear</button>
                 </div>
             </div>
 
-            <button class="signout-btn" onclick="Auth.signOut()">Sign Out</button>
+            <button class="signout-btn" data-action="auth-signout">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Account Profile -->
+    <div class="modal" id="accountModal" role="dialog" aria-modal="true" aria-label="Account Profile">
+        <div class="modal-sheet account-sheet">
+            <div class="modal-handle"></div>
+            <button class="account-close-btn" data-action="account-close" title="Close Profile">✕</button>
+
+            <div class="account-card-header">
+                <div class="account-avatar-ring">
+                    <img id="accountAvatar" src="" alt="Avatar">
+                    <div class="account-lvl-badge" id="accountLevel">1</div>
+                </div>
+                <div class="account-identity">
+                    <h3 class="account-name" id="accountName">Focus Warrior</h3>
+                    <p class="account-email" id="accountEmail">—</p>
+                    <span class="account-rank-pill" id="accountRank"></span>
+                </div>
+            </div>
+
+            <div class="account-xp-card">
+                <div class="account-xp-top">
+                    <span class="account-xp-label">EXPERIENCE POINTS (XP)</span>
+                    <span class="account-xp-val" id="accountXpText">0 / 800 XP</span>
+                </div>
+                <div class="account-xp-track">
+                    <div class="account-xp-bar" id="accountXpFill"></div>
+                </div>
+                <div class="account-xp-sub">Gain XP by completing focus sessions (+50 XP) &amp; tasks (+5 XP).</div>
+            </div>
+
+            <div class="account-stats-section">
+                <div class="account-stats-title">KEY PERFORMANCE</div>
+                <div class="account-stats-grid">
+                    <div class="ac-stat-box"><div class="ac-stat-num" id="accountStatTasks">0</div><div class="ac-stat-lbl">Tasks Done</div></div>
+                    <div class="ac-stat-box"><div class="ac-stat-num" id="accountStatFocus">0m</div><div class="ac-stat-lbl">Focus Time</div></div>
+                    <div class="ac-stat-box"><div class="ac-stat-num" id="accountStatStreak">0</div><div class="ac-stat-lbl">Day Streak</div></div>
+                    <div class="ac-stat-box"><div class="ac-stat-num" id="accountStatHabits">0</div><div class="ac-stat-lbl">Habit Days</div></div>
+                </div>
+            </div>
+
+            <div class="account-actions">
+                <button class="account-btn secondary" data-action="account-export">Export Data</button>
+                <button class="account-btn" id="accountSignBtn" data-action="account-sign-out">Sign Out</button>
+            </div>
         </div>
     </div>
 
     <!-- Fullscreen Pomodoro -->
     <div class="fullscreen-pomo" id="fullscreenPomo">
         <div class="fs-bg" id="fsBg"></div>
-        <button class="fs-close-btn" onclick="Pomo.exitFullscreen()" id="fsCloseBtn"></button>
+        <button class="fs-close-btn" data-action="pomo-exit-fullscreen" id="fsCloseBtn" title="Exit Focus Mode">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
         <div class="fs-time" id="fsTime">25:00</div>
         <div class="fs-label" id="fsLabel">Focus Time</div>
         <div class="fs-controls">
-            <button class="pomo-ctrl-btn secondary" onclick="Pomo.reset()" id="fsResetBtn"></button>
-            <button class="pomo-ctrl-btn primary" onclick="Pomo.toggle()" id="fsPlayBtn"></button>
-            <button class="pomo-ctrl-btn secondary" onclick="Pomo.skip()" id="fsSkipBtn"></button>
+            <button class="pomo-ctrl-btn secondary" data-action="pomo-reset" id="fsResetBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="pomo-ctrl-btn primary" data-action="pomo-toggle" id="fsPlayBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:24px;height:24px;"><polygon points="5,3 19,12 5,21"/></svg>
+            </button>
+            <button class="pomo-ctrl-btn secondary" data-action="pomo-skip" id="fsSkipBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
         </div>
     </div>
 
-    <!-- Quick Add (Command Glass) -->
-    <div class="cmd-glass" id="cmdGlass">
-        <div class="cmd-glass-bg" onclick="CommandGlass.close()"></div>
+    <!-- Command Glass (Ctrl+K) -->
+    <div class="cmd-glass" id="cmdGlass" role="dialog" aria-modal="true" aria-label="Quick add">
+        <div class="cmd-glass-bg" data-action="cmdglass-close"></div>
         <div class="cmd-card">
             <div class="cmd-header">
                 <span class="cmd-icon" id="cmdIcon"></span>
                 <span class="cmd-title">Quick Add</span>
                 <span class="cmd-badge">Ctrl+K</span>
             </div>
-            <input type="text" class="cmd-input" id="cmdInput" placeholder="Type a task or thought..." aria-label="Quick action input">
+            <input type="text" class="cmd-input" id="cmdInput"
+                   placeholder='Task, or "dump <text>"...'
+                   aria-label="Quick action input">
             <div class="cmd-footer">
-                <span class="cmd-hint">Press <strong>Enter</strong> to save, <strong>Esc</strong> to cancel</span>
+                <span class="cmd-hint">Press <strong>Enter</strong> to save • <strong>Esc</strong> to cancel</span>
             </div>
         </div>
     </div>
 
     <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="alert" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- SVG Confetti Layer -->
+    <div id="svgConfettiLayer" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;overflow:hidden;"></div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Level Up Modal -->
+    <div class="modal level-up-modal" id="levelUpModal" role="dialog" aria-modal="true" aria-label="Level Up">
+        <div class="level-up-card">
+            <div class="level-up-glow"></div>
+            <div class="level-up-ribbon">LEVEL UP</div>
+            <div class="level-up-badge-wrapper">
+                <div class="level-up-badge" id="levelUpBadgeVal">1</div>
+            </div>
+            <h2 class="level-up-title" id="levelUpTitleText">Focus Initiate</h2>
+            <p class="level-up-subtitle" id="levelUpSubText">Level 1 reached.</p>
+            <div id="levelUpUnlockText" style="display:none"></div>
+            <button class="level-up-btn" data-action="level-claim">Continue</button>
+        </div>
+    </div>
+
+    <!-- ══ SCRIPTS (load order matters) ══ -->
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+
+    <!-- Core utilities (no dependencies) -->
     <script src="js/icons.js"></script>
     <script src="js/sounds.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script src="js/app.js"></script>
-</body>
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/toast.js"></script>
 
+    <!-- Features (depend on core) -->
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/clock.js"></script>
+    <script src="js/confetti.js"></script>
+    <script src="js/quotes.js"></script>
+    <script src="js/level.js"></script>
+    <script src="js/tasks.js"></script>
+    <script src="js/dump.js"></script>
+    <script src="js/pomo.js"></script>
+    <script src="js/habits.js"></script>
+    <script src="js/home.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/account.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/onboard.js"></script>
+    <script src="js/command-glass.js"></script>
+
+    <!-- Background scenes -->
+    <script src="js/threebg_dark.js"></script>
+    <script src="js/threebg_light.js"></script>
+
+    <!-- Boot (last — all modules must be defined first) -->
+    <script src="js/app.js"></script>
+
+    <!-- Global data-action event bus (replaces all inline onclick) -->
+    <script>
+    document.addEventListener('click', (e) => {
+        const el     = e.target.closest('[data-action]');
+        if (!el) return;
+        const action = el.dataset.action;
+
+        /* ── Navigation ── */
+        if (action === 'nav-go')       { Nav.go(el.dataset.page); return; }
+        if (action === 'nav-dump')     { Nav.go('dump'); return; }
+        if (action === 'nav-tasks')    { Nav.go('tasks'); return; }
+        if (action === 'nav-habits')   { Nav.go('habits'); return; }
+        if (action === 'nav-report')   { Nav.go('report'); return; }
+
+        /* ── Auth ── */
+        if (action === 'auth-google')  { Auth.signInGoogle(); return; }
+        if (action === 'auth-signout') { Auth.signOut(); return; }
+
+        /* ── Account modal ── */
+        if (action === 'open-account')  { Account.open(); return; }
+        if (action === 'account-close') { Account.close(); return; }
+        if (action === 'account-export') { Account.exportData(); return; }
+        if (action === 'account-sign-out') { Auth.signOut(); Account.close(); return; }
+        if (action === 'account-sign-in')  { Auth.signInGoogle(); return; }
+
+        /* ── Settings ── */
+        if (action === 'open-settings')             { Settings.open(); return; }
+        if (action === 'settings-close')             { Settings.close(); return; }
+        if (action === 'settings-theme')             { Settings.setTheme(el.dataset.theme); return; }
+        if (action === 'settings-toggle-sound')      { Settings.toggleSound(); return; }
+        if (action === 'settings-apply-custom-color'){ Settings.applyCustomColor(); return; }
+        if (action === 'settings-clear-data')        { Settings.clearData(); return; }
+        if (action === 'settings-adjust') {
+            Settings.adjust(el.dataset.key, parseInt(el.dataset.delta, 10)); return;
+        }
+
+        /* ── Onboarding ── */
+        if (action === 'onboard-next')  { Onboard.next(); return; }
+        if (action === 'onboard-done')  { Onboard.done(); return; }
+        if (action === 'onboard-theme') { Onboard.setTheme(el.dataset.theme); return; }
+
+        /* ── Tasks ── */
+        if (action === 'tasks-create-list')       { Tasks.createList(); return; }
+        if (action === 'tasks-open-add')          { Tasks.openAddModal(); return; }
+        if (action === 'tasks-submit')            { Tasks.submitTask(); return; }
+        if (action === 'tasks-delete-from-modal') { Tasks.deleteFromModal(); return; }
+        if (action === 'tasks-add-subtask')       { Tasks.addTempSubtask(); return; }
+
+        /* ── Dump ── */
+        if (action === 'dump-add')   { Dump.add(); return; }
+        if (action === 'log-mood')   { Dump.logMood(el.dataset.mood); return; }
+
+        /* ── Pomo ── */
+        if (action === 'pomo-mode')            { Pomo.setMode(el.dataset.mode); return; }
+        if (action === 'pomo-toggle')          { Pomo.toggle(); return; }
+        if (action === 'pomo-reset')           { Pomo.reset(); return; }
+        if (action === 'pomo-skip')            { Pomo.skip(); return; }
+        if (action === 'pomo-fullscreen')      { Pomo.enterFullscreen(); return; }
+        if (action === 'pomo-exit-fullscreen') { Pomo.exitFullscreen(); return; }
+        if (action === 'pomo-ambient')         { Pomo.setAmbient(el.dataset.sound); return; }
+
+        /* ── Report ── */
+        if (action === 'report-mode')      { Report.setMode(el.dataset.mode); return; }
+        if (action === 'report-week')      { Report.changeWeek(parseInt(el.dataset.dir, 10)); return; }
+        if (action === 'report-month')     { Report.changeMonth(parseInt(el.dataset.dir, 10)); return; }
+        if (action === 'report-collapse')  { Report.toggleCollapse(el.dataset.card); return; }
+        if (action === 'report-chart-tab') { Report.setChartTab(el.dataset.tab); return; }
+        if (action === 'report-download')  { Report.downloadPDF(); return; }
+
+        /* ── Level ── */
+        if (action === 'level-claim') { Level.claimVibe(); return; }
+
+        /* ── Command Glass ── */
+        if (action === 'cmdglass-close') { CommandGlass.close(); return; }
+
+        /* ── Modal backdrop close ── */
+        if (action === 'modal-close') {
+            document.getElementById(el.dataset.modal)?.classList.remove('on');
+            Sound.close();
+            return;
+        }
+    });
+
+    /* ── Ambient volume slider (input not click) ── */
+    document.addEventListener('input', (e) => {
+        if (e.target.dataset.action === 'pomo-ambient-vol') {
+            e.target.style.setProperty('--val', e.target.value + '%');
+            Pomo.setAmbientVolume(e.target.value);
+        }
+        if (e.target.id === 'avatarFileInput') {
+            Settings.handleAvatarUpload(e);
+        }
+    });
+    </script>
+</body>
 </html>

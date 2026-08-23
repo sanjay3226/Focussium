@@ -1,24 +1,45 @@
 {
-    "name": "Focussium",
+    "name": "Focussium — Deep Focus Productivity",
     "short_name": "Focussium",
-    "description": "Your zen productivity space",
-    "start_url": "./index.html",
+    "description": "High-contrast offline-first PWA. Focus timer, tasks, habits & weekly vibe analytics.",
+    "version": "3.0.0",
+    "start_url": "./",
     "display": "standalone",
-    "background_color": "#050505",
-    "theme_color": "#050505",
-    "orientation": "portrait",
+    "orientation": "portrait-primary",
+    "background_color": "#03040B",
+    "theme_color": "#03040B",
+    "scope": "./",
+    "lang": "en",
+    "categories": ["productivity", "utilities"],
     "icons": [
+        { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    ],
+    "shortcuts": [
         {
-            "src": "icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "name": "Focus Timer",
+            "short_name": "Focus",
+            "description": "Jump to pomodoro timer",
+            "url": "./#focus",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
         },
         {
-            "src": "icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "name": "Add Task",
+            "short_name": "Task",
+            "description": "Quickly add a task",
+            "url": "./#tasks",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Brain Dump",
+            "short_name": "Dump",
+            "description": "Dump your thoughts",
+            "url": "./#dump",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
         }
-    ]
+    ],
+    "screenshots": [
+        { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "narrow" }
+    ],
+    "prefer_related_applications": false
 }

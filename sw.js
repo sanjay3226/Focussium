@@ -1,77 +1,127 @@
-const APP_VERSION = '2026.04.19.3';
-const CACHE_NAME = `focussium-${APP_VERSION}`;
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.0 — SERVICE WORKER
+   Network-first, auto-updates, v3.0 cache manifest
+═══════════════════════════════════════════════════════════ */
+
+const APP_VERSION = '2026.08.23.v300';
+const CACHE_NAME  = `focussium-${APP_VERSION}`;
+
 const ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './css/styles.css',
-    './js/app.js',
+    './icon-192.png',
+    './icon-512.png',
+
+    /* CSS — modular */
+    './css/tokens.css',
+    './css/reset.css',
+    './css/animations.css',
+    './css/layout.css',
+    './css/components.css',
+    './css/pages.css',
+    './css/modals.css',
+    './css/timer.css',
+    './css/charts.css',
+
+    /* JS — core */
+    './js/config.js',
+    './js/state.js',
+    './js/utils.js',
+    './js/storage.js',
+    './js/theme.js',
+    './js/toast.js',
+
+    /* JS — features */
+    './js/auth.js',
+    './js/router.js',
+    './js/clock.js',
+    './js/confetti.js',
+    './js/quotes.js',
+    './js/level.js',
+    './js/tasks.js',
+    './js/dump.js',
+    './js/pomo.js',
+    './js/home.js',
+    './js/report.js',
+    './js/habits.js',
+    './js/account.js',
+    './js/settings.js',
+    './js/onboard.js',
+    './js/command-glass.js',
+
+    /* JS — external libs (unchanged) */
     './js/sounds.js',
     './js/icons.js',
     './js/firebase-config.js',
-    './icon-192.png',
-    './icon-512.png'
+    './js/threebg_dark.js',
+    './js/threebg_light.js',
+
+    /* Boot */
+    './js/app.js',
+
+    /* Fonts (cache key only — actual fonts from Google CDN) */
+    'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap'
 ];
 
-self.addEventListener('install', e => {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))
+/* ── Install: pre-cache all assets ── */
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            /* Cache individually so one bad URL doesn't block all */
+            return Promise.allSettled(
+                ASSETS.map(url => cache.add(url).catch(e => console.warn('Cache miss:', url, e)))
+            );
+        })
     );
+    /* Take control immediately */
     self.skipWaiting();
 });
 
-self.addEventListener('activate', e => {
-    e.waitUntil(
-        caches.keys().then(keys => {
+/* ── Activate: purge old caches ── */
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
             return Promise.all(
-                keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+                cacheNames
+                    .filter(name => name !== CACHE_NAME)
+                    .map(name => caches.delete(name))
             );
-        }).then(() => self.clients.claim())
-    );
-});
-
-self.addEventListener('fetch', e => {
-    if (e.request.method !== 'GET') return;
-
-    if (e.request.mode === 'navigate') {
-        e.respondWith(
-            fetch(e.request)
-                .then(res => {
-                    const copy = res.clone();
-                    caches.open(CACHE_NAME).then(c => c.put('./index.html', copy));
-                    return res;
-                })
-                .catch(() => caches.match('./index.html'))
-        );
-        return;
-    }
-
-    const reqUrl = new URL(e.request.url);
-    const isSameOrigin = reqUrl.origin === self.location.origin;
-
-    if (!isSameOrigin) {
-        return;
-    }
-
-    e.respondWith(
-        caches.match(e.request).then(cached => {
-            const networkFetch = fetch(e.request)
-                .then(res => {
-                    if (res && res.status === 200) {
-                        const copy = res.clone();
-                        caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
-                    }
-                    return res;
-                })
-                .catch(() => cached);
-
-            return cached || networkFetch;
         })
     );
+    self.clients.claim();
 });
 
-self.addEventListener('message', e => {
-    if (e.data && e.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
+/* ── Fetch: network-first, fall back to cache ── */
+self.addEventListener('fetch', (event) => {
+    /* Skip non-GET and chrome-extension requests */
+    if (event.request.method !== 'GET') return;
+    if (event.request.url.startsWith('chrome-extension://')) return;
+
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                /* Clone and cache successful responses */
+                if (response && response.status === 200 && response.type !== 'opaque') {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                }
+                return response;
+            })
+            .catch(() => {
+                /* Network failed → serve from cache */
+                return caches.match(event.request).then(cached => {
+                    if (cached) return cached;
+                    /* Fallback to index for navigation requests (SPA) */
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                    }
+                });
+            })
+    );
+});
+
+/* ── Message: skip waiting on demand ── */
+self.addEventListener('message', (event) => {
+    if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });

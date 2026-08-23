@@ -1,0 +1,382 @@
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.0 — POMODORO TIMER + FULLSCREEN
+═══════════════════════════════════════════════════════════ */
+
+/* ── Pomo container ── */
+.pomo-container { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 8px 0; }
+
+/* ── Mode tabs ── */
+.pomo-mode-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--bg3);
+    border-radius: 20px;
+    padding: 4px;
+    border: 1px solid var(--bd);
+}
+
+.pomo-mode-tab {
+    padding: 7px 18px;
+    border-radius: 16px;
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--tx3);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    letter-spacing: .02em;
+}
+
+.pomo-mode-tab:hover { color: var(--tx1); }
+
+.pomo-mode-tab.active {
+    background: var(--ac);
+    color: var(--ac-text, #fff);
+    box-shadow: 0 4px 12px rgba(var(--acr), .35);
+}
+
+/* ── Timer ring ── */
+.pomo-timer {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pomo-ring-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+}
+
+.pomo-ring-bg circle {
+    fill: none;
+    stroke: var(--bg3);
+    stroke-width: 10;
+}
+
+.pomo-ring-fg {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+}
+
+.pomo-ring-fg circle {
+    fill: none;
+    stroke: url(#pomoGradient);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 816.8;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset .4s ease;
+    filter: drop-shadow(0 0 8px rgba(var(--acr), .5));
+    animation: ringPulse 3s ease-in-out infinite;
+}
+
+.pomo-ring-fg circle.running {
+    animation: ringPulse 2s ease-in-out infinite;
+}
+
+.pomo-glow {
+    position: absolute;
+    inset: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--acr), .08), transparent 70%);
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+.pomo-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+}
+
+.pomo-time {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.4rem;
+    font-weight: 400;
+    color: var(--tx1);
+    letter-spacing: -.02em;
+    line-height: 1;
+    user-select: none;
+}
+
+.pomo-mode-label {
+    font-size: .72rem;
+    color: var(--ac);
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+/* ── Controls ── */
+.pomo-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pomo-ctrl-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    border: none;
+}
+
+.pomo-ctrl-btn.primary {
+    width: 68px; height: 68px;
+    background: var(--acgr);
+    color: var(--ac-text, #fff);
+    box-shadow: 0 6px 24px rgba(var(--acr), .40);
+}
+
+.pomo-ctrl-btn.primary:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 32px rgba(var(--acr), .55);
+}
+
+.pomo-ctrl-btn.secondary {
+    background: var(--bg3);
+    color: var(--tx2);
+    border: 1.5px solid var(--bd);
+}
+
+.pomo-ctrl-btn.secondary:hover {
+    background: var(--bg4);
+    color: var(--tx1);
+    transform: scale(1.06);
+}
+
+.pomo-ctrl-btn:active { transform: scale(.92) !important; }
+
+.pomo-ctrl-btn svg { width: 20px; height: 20px; }
+.pomo-ctrl-btn.primary svg { width: 24px; height: 24px; }
+
+/* ── Session dots ── */
+.pomo-session-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.session-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--bg4);
+    border: 1.5px solid var(--bd);
+    transition: all .3s;
+}
+
+.session-dot.done {
+    background: var(--ac);
+    border-color: var(--ac);
+    box-shadow: 0 0 6px rgba(var(--acr), .5);
+}
+
+.session-dot.active {
+    background: var(--acg);
+    border-color: var(--ac);
+    animation: pulse 1.5s ease infinite;
+}
+
+/* ── Live insight ── */
+.pomo-live-insight-wrapper { width: 100%; }
+
+.pomo-live-insight {
+    font-size: .74rem;
+    color: var(--tx3);
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.5;
+    min-height: 20px;
+    transition: opacity .5s;
+}
+
+/* ── Ambient controls ── */
+.ambient-compact-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border-radius: 16px;
+    border: 1px solid var(--bd);
+}
+
+.ambient-icons-group {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.ambient-icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .95rem;
+    background: transparent;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all .2s;
+    opacity: .5;
+}
+
+.ambient-icon-btn:hover { opacity: 1; background: var(--bg4); border-color: var(--bd); }
+.ambient-icon-btn.active { opacity: 1; background: rgba(var(--acr), .12); border-color: var(--ac); }
+
+.ambient-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.ambient-slider-icon { font-size: .9rem; flex-shrink: 0; }
+
+.ambient-slider-premium {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--ac) var(--val, 40%), var(--bg4) var(--val, 40%));
+    cursor: pointer;
+    outline: none;
+    transition: background .1s;
+}
+
+.ambient-slider-premium::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--ac);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(var(--acr), .5);
+    transition: transform .2s;
+}
+
+.ambient-slider-premium::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.ambient-slider-premium::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--ac);
+    border: none;
+    cursor: pointer;
+}
+
+/* ── Fullscreen button ── */
+.pomo-fullscreen-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border-radius: 20px;
+    background: var(--bg3);
+    border: 1.5px solid var(--bd);
+    color: var(--tx2);
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .25s;
+}
+
+.pomo-fullscreen-btn:hover {
+    background: var(--bg4);
+    border-color: var(--ac);
+    color: var(--ac);
+}
+
+/* ── Fullscreen pomo ── */
+.fullscreen-pomo {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-fullscreen);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+.fullscreen-pomo.on {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.fs-bg {
+    position: absolute;
+    inset: 0;
+    transition: background 1s ease;
+}
+
+.fs-bg.focus  { background: linear-gradient(135deg, rgba(var(--acr), .06), var(--bg0) 60%); }
+.fs-bg.break  { background: linear-gradient(135deg, rgba(var(--okr), .06), var(--bg0) 60%); }
+
+.fs-close-btn {
+    position: absolute;
+    top: max(20px, env(safe-area-inset-top));
+    right: 20px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--glass);
+    border: 1px solid var(--bd);
+    color: var(--tx2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+    transition: all .2s;
+}
+
+.fs-close-btn:hover { background: var(--glassh); color: var(--tx1); }
+
+.fs-time {
+    position: relative;
+    z-index: 1;
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(5rem, 20vw, 8rem);
+    font-weight: 400;
+    color: var(--tx1);
+    letter-spacing: -.02em;
+    text-shadow: 0 0 60px rgba(var(--acr), .3);
+}
+
+.fs-label {
+    position: relative;
+    z-index: 1;
+    font-size: .85rem;
+    color: var(--ac);
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.fs-controls {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
