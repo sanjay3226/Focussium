@@ -943,32 +943,387 @@ const Report = {
 
     async downloadPDF() {
         try {
-            Toast.show('Generating PDF document… 📄');
-            const canvas = await this.generateCardCanvas();
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            Toast.show('Generating Executive PDF Report… 📄');
+
+            if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+                await new Promise(resolve => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+
             const { jsPDF } = window.jspdf || window;
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
+            const PW = doc.internal.pageSize.getWidth(); // 210
+            const PH = doc.internal.pageSize.getHeight(); // 297
 
-            // Soothing background fill matching card
-            doc.setFillColor(6, 8, 20);
-            doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-            // Center image nicely on A4
-            const imgWidth = 175;
-            const imgHeight = (canvas.height * imgWidth) / canvas.width;
-            const posX = (pageWidth - imgWidth) / 2;
-            const posY = Math.max(10, (pageHeight - imgHeight) / 2);
-
-            doc.addImage(imgData, 'JPEG', posX, posY, imgWidth, imgHeight);
-
+            // Gather Data
+            const w = Utils.weekData(State.weekOffset);
             const dates = Utils.weekDates(State.weekOffset);
-            doc.save(`Focussium_Report_${dates[0]}.pdf`);
+            const score = this.getScore(w);
+            const breakdown = this.getScoreBreakdown(w);
+
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const start = new Date(dates[0] + 'T00:00:00');
+            const end = new Date(dates[6] + 'T00:00:00');
+            const dateRangeStr = `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+
+            const username = State.user?.displayName || State.data?.settings?.userName || State.data?.name || 'Focus Disciple';
+            const levelData = (typeof Level !== 'undefined' && Level.getXPInfo) ? Level.getXPInfo() : { level: 1, rank: 'Focus Initiate', current: 0, needed: 800 };
+            const levelNum = levelData.level || 1;
+            const rankTitle = levelData.rank || 'Focus Initiate';
+
+            const totalFocusMins = w.days.reduce((s, d) => s + d.focus, 0);
+            const totalFocusHours = (totalFocusMins / 60).toFixed(1);
+            const totalTasksDone = w.days.reduce((s, d) => s + d.tasks, 0);
+            const totalSessions = (State.data?.pomo || []).filter(p => dates.includes(p.date)).length;
+            const habitActiveDays = dates.filter(d => (State.data?.habits?.[d] || []).length > 0).length;
+            const habitRate = Math.round((habitActiveDays / 7) * 100);
+            const velocityBadge = score >= 90 ? 'S-TIER FLOW' : score >= 70 ? 'HIGH VELOCITY' : score >= 40 ? 'STEADY RHYTHM' : 'MOMENTUM BUILDING';
+
+            // Habits configured
+            const habitConfigs = State.data?.habitConfig || [];
+            
+            // Completed tasks this week
+            const completedTasksThisWeek = (State.data?.tasks || [])
+                .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]));
+
+            // Colors
+            const css = getComputedStyle(document.documentElement);
+            const acHex = (css.getPropertyValue('--ac').trim() || '#38B6FF').replace('#', '');
+            const acR = parseInt(acHex.substring(0, 2), 16) || 56;
+            const acG = parseInt(acHex.substring(2, 4), 16) || 182;
+            const acB = parseInt(acHex.substring(4, 6), 16) || 255;
+
+            const BG_PAGE = [10, 14, 30];
+            const BG_CARD = [17, 23, 46];
+            const BG_CARD_ALT = [23, 31, 60];
+            const BORDER = [40, 52, 90];
+            const TX_WHITE = [255, 255, 255];
+            const TX_GRAY = [148, 163, 184];
+            const TX_MUTED = [100, 116, 139];
+            const ACCENT = [acR, acG, acB];
+
+            // Helper Drawing Functions
+            const fillBg = (c) => doc.setFillColor(c[0], c[1], c[2]);
+            const strokeBd = (c) => doc.setDrawColor(c[0], c[1], c[2]);
+            const textCol = (c) => doc.setTextColor(c[0], c[1], c[2]);
+
+            // Page Background
+            fillBg(BG_PAGE);
+            doc.rect(0, 0, PW, PH, 'F');
+
+            // Top Header Accent Line
+            fillBg(ACCENT);
+            doc.rect(0, 0, PW, 3, 'F');
+
+            // ── HEADER BLOCK ──
+            fillBg(BG_CARD);
+            strokeBd(BORDER);
+            doc.roundedRect(12, 10, PW - 24, 28, 4, 4, 'FD');
+
+            // Brand Logo & Title
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(16);
+            textCol(TX_WHITE);
+            doc.text('FOCUSSIUM 3.0', 20, 22);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            textCol(TX_GRAY);
+            doc.text('EXECUTIVE PRODUCTIVITY AUDIT & WEEKLY DOSSIER', 20, 28);
+
+            // User Info on Right
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(10);
+            textCol(TX_WHITE);
+            doc.text(Utils.escape(username), PW - 20, 20, { align: 'right' });
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7.5);
+            textCol(ACCENT);
+            doc.text(`LVL ${levelNum} • ${rankTitle}`, PW - 20, 26, { align: 'right' });
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            textCol(TX_MUTED);
+            doc.text(dateRangeStr, PW - 20, 31, { align: 'right' });
+
+            let curY = 44;
+
+            // ── SECTION 1: VIBE SCORE & PERFORMANCE MATRIX ──
+            fillBg(BG_CARD);
+            strokeBd(BORDER);
+            doc.roundedRect(12, curY, PW - 24, 38, 4, 4, 'FD');
+
+            // Score Display
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8);
+            textCol(TX_GRAY);
+            doc.text('WEEKLY VIBE SCORE', 20, curY + 10);
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(28);
+            textCol(ACCENT);
+            doc.text(`${score}`, 20, curY + 24);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            textCol(TX_GRAY);
+            doc.text('/ 100', 44, curY + 22);
+
+            // Velocity Tier Badge
+            fillBg(BG_CARD_ALT);
+            strokeBd(ACCENT);
+            doc.roundedRect(20, curY + 28, 48, 6, 2, 2, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6.5);
+            textCol(TX_WHITE);
+            doc.text(velocityBadge, 44, curY + 32.5, { align: 'center' });
+
+            // Triad Summary Columns on Right
+            const kpiX1 = 80, kpiX2 = 122, kpiX3 = 164;
+            
+            // KPI 1: Focus Time
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            textCol(TX_WHITE);
+            doc.text(`${totalFocusMins}m`, kpiX1, curY + 16);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            textCol(TX_GRAY);
+            doc.text('Focus Time', kpiX1, curY + 22);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            textCol(ACCENT);
+            doc.text(`${totalSessions} Deep Sessions`, kpiX1, curY + 27);
+
+            // KPI 2: Tasks Done
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            textCol(TX_WHITE);
+            doc.text(`${totalTasksDone}`, kpiX2, curY + 16);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            textCol(TX_GRAY);
+            doc.text('Tasks Crushed', kpiX2, curY + 22);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            textCol(ACCENT);
+            doc.text('Completed This Week', kpiX2, curY + 27);
+
+            // KPI 3: Habit Rhythm
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            textCol(TX_WHITE);
+            doc.text(`${habitRate}%`, kpiX3, curY + 16);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7);
+            textCol(TX_GRAY);
+            doc.text('Habit Rhythm', kpiX3, curY + 22);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            textCol(ACCENT);
+            doc.text(`${habitActiveDays}/7 Active Days`, kpiX3, curY + 27);
+
+            // Breakdown Points Row
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            textCol(TX_MUTED);
+            doc.text(`Score Breakdown: Tasks (+${breakdown.tasks} pts) • Focus (+${breakdown.focus} pts) • Habit Rhythm (+${breakdown.streak} pts)`, 80, curY + 34);
+
+            curY += 44;
+
+            // ── SECTION 2: 7-DAY DAILY PERFORMANCE AUDIT TABLE ──
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            textCol(TX_WHITE);
+            doc.text('DAILY PERFORMANCE BREAKDOWN (MON – SUN)', 14, curY);
+            curY += 4;
+
+            // Table Header
+            fillBg(BG_CARD_ALT);
+            strokeBd(BORDER);
+            doc.roundedRect(12, curY, PW - 24, 7, 2, 2, 'FD');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(6.5);
+            textCol(TX_GRAY);
+            doc.text('DAY', 16, curY + 4.8);
+            doc.text('DATE', 42, curY + 4.8);
+            doc.text('FOCUS TIME', 76, curY + 4.8);
+            doc.text('SESSIONS', 112, curY + 4.8);
+            doc.text('TASKS CRUSHED', 142, curY + 4.8);
+            doc.text('DAILY STATUS', 178, curY + 4.8);
+            curY += 8;
+
+            // Table Rows
+            const dayFullNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            w.days.forEach((d, i) => {
+                const rowBg = (i % 2 === 0) ? BG_CARD : BG_PAGE;
+                fillBg(rowBg);
+                strokeBd(BORDER);
+                doc.rect(12, curY, PW - 24, 6.5, 'FD');
+
+                const dailySessions = (State.data?.pomo || []).filter(p => p.date === d.date).length;
+                const dailyStatus = d.focus >= 60 ? 'Peak Focus' : d.focus > 0 ? 'Active Session' : '— Low Focus';
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(6.5);
+                textCol(d.focus > 0 ? ACCENT : TX_WHITE);
+                doc.text(dayFullNames[i], 16, curY + 4.5);
+
+                doc.setFont('helvetica', 'normal');
+                textCol(TX_GRAY);
+                doc.text(d.date, 42, curY + 4.5);
+
+                doc.setFont('helvetica', d.focus > 0 ? 'bold' : 'normal');
+                textCol(d.focus > 0 ? TX_WHITE : TX_MUTED);
+                doc.text(`${d.focus}m`, 76, curY + 4.5);
+
+                textCol(dailySessions > 0 ? TX_WHITE : TX_MUTED);
+                doc.text(`${dailySessions}`, 112, curY + 4.5);
+
+                textCol(d.tasks > 0 ? TX_WHITE : TX_MUTED);
+                doc.text(`${d.tasks}`, 142, curY + 4.5);
+
+                textCol(d.focus >= 60 ? ACCENT : TX_GRAY);
+                doc.text(dailyStatus, 178, curY + 4.5);
+
+                curY += 6.5;
+            });
+
+            curY += 6;
+
+            // ── SECTION 3: KEY ACCOMPLISHMENTS & COMPLETED TASKS ──
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            textCol(TX_WHITE);
+            doc.text('KEY ACCOMPLISHMENTS & COMPLETED TASKS', 14, curY);
+            curY += 4;
+
+            fillBg(BG_CARD);
+            strokeBd(BORDER);
+            const taskBoxH = 34;
+            doc.roundedRect(12, curY, PW - 24, taskBoxH, 4, 4, 'FD');
+
+            if (completedTasksThisWeek.length > 0) {
+                completedTasksThisWeek.slice(0, 4).forEach((t, i) => {
+                    const ty = curY + 6 + (i * 6.5);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    textCol(ACCENT);
+                    doc.text('✓', 18, ty);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7);
+                    textCol(TX_WHITE);
+                    const taskTitle = t.text.length > 75 ? t.text.substring(0, 72) + '…' : t.text;
+                    doc.text(taskTitle, 24, ty);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(6);
+                    textCol(TX_MUTED);
+                    const taskDate = t.completedAt ? new Date(t.completedAt).toISOString().split('T')[0] : '';
+                    doc.text(taskDate, PW - 20, ty, { align: 'right' });
+                });
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(7);
+                textCol(TX_GRAY);
+                doc.text('No completed tasks logged for this week. Focus momentum is ready to be built!', 20, curY + 16);
+            }
+
+            curY += taskBoxH + 6;
+
+            // ── SECTION 4: HABIT CONSISTENCY AUDIT ──
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(8.5);
+            textCol(TX_WHITE);
+            doc.text('HABIT COMPLIANCE & CONSISTENCY MATRIX', 14, curY);
+            curY += 4;
+
+            fillBg(BG_CARD);
+            strokeBd(BORDER);
+            const habitBoxH = 32;
+            doc.roundedRect(12, curY, PW - 24, habitBoxH, 4, 4, 'FD');
+
+            if (habitConfigs.length > 0) {
+                habitConfigs.slice(0, 3).forEach((h, i) => {
+                    const hy = curY + 7 + (i * 8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    textCol(TX_WHITE);
+                    doc.text(h.name || 'Habit', 18, hy);
+
+                    // 7 days tick boxes
+                    dates.forEach((d, dayIdx) => {
+                        const isDone = (State.data?.habits?.[d] || []).includes(h.id);
+                        const dotX = 80 + dayIdx * 12;
+                        fillBg(isDone ? ACCENT : BG_CARD_ALT);
+                        strokeBd(isDone ? ACCENT : BORDER);
+                        doc.roundedRect(dotX, hy - 3.5, 7, 4.5, 1, 1, 'FD');
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(5);
+                        textCol(isDone ? [0, 0, 0] : TX_MUTED);
+                        doc.text(dayFullNames[dayIdx].substring(0, 1), dotX + 3.5, hy - 0.2, { align: 'center' });
+                    });
+
+                    // Compliance Rate
+                    const doneCount = dates.filter(d => (State.data?.habits?.[d] || []).includes(h.id)).length;
+                    const compRate = Math.round((doneCount / 7) * 100);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7);
+                    textCol(compRate >= 70 ? ACCENT : TX_GRAY);
+                    doc.text(`${compRate}% (${doneCount}/7d)`, PW - 20, hy, { align: 'right' });
+                });
+            } else {
+                doc.setFont('helvetica', 'italic');
+                doc.setFontSize(7);
+                textCol(TX_GRAY);
+                doc.text('No active habits configured. Establish daily habits in the Habits tab to track streaks.', 20, curY + 16);
+            }
+
+            curY += habitBoxH + 6;
+
+            // ── SECTION 5: AI & STOIC EXECUTIVE REFLECTION ──
+            fillBg(BG_CARD);
+            strokeBd(ACCENT);
+            doc.roundedRect(12, curY, PW - 24, 22, 4, 4, 'FD');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(7);
+            textCol(ACCENT);
+            doc.text('AI EXECUTIVE INSIGHT & STOIC REFLECTION', 18, curY + 6);
+
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7);
+            textCol(TX_WHITE);
+            const stoicQuoteText = "“We suffer more often in imagination than in reality.” — Seneca";
+            doc.text(stoicQuoteText, 18, curY + 12);
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6.5);
+            textCol(TX_GRAY);
+            const insightSummary = totalFocusMins > 120 
+                ? `Exceptional focus momentum demonstrated with ${totalFocusHours}h logged across ${totalSessions} sessions. Maintain your daily habit rhythm.`
+                : `Focus momentum is developing. Aim for 25-minute deep Pomodoro blocks and daily habit completion to unlock S-Tier velocity.`;
+            doc.text(insightSummary, 18, curY + 17);
+
+            // ── FOOTER BAR ──
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(6);
+            textCol(TX_MUTED);
+            doc.text('Focussium 3.0 • Confidential Productivity Audit • Generated locally on device', 12, PH - 6);
+            doc.text(`focussium.app • Page 1 of 1`, PW - 12, PH - 6, { align: 'right' });
+
+            // Save PDF
+            doc.save(`Focussium_Executive_Audit_${dates[0]}.pdf`);
             if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
-            Toast.show('PDF Report downloaded! 📄');
-        } catch(e) {
+            Toast.show('Detailed PDF Report downloaded! 📄');
+        } catch (e) {
             handleError('PDF Export', e);
             Toast.show('PDF generation failed');
         }
