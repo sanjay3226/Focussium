@@ -428,6 +428,11 @@ const Report = {
 
         const username = State.user?.displayName || State.data?.settings?.userName || 'Focus Disciple';
         const userInitial = username.charAt(0).toUpperCase();
+        const userPhoto = State.user?.photoURL || State.data?.settings?.customAvatarDataUrl;
+        const avatarMarkup = userPhoto 
+            ? `<img src="${userPhoto}" class="info-user-avatar-img" alt="Avatar">`
+            : `<div class="info-user-avatar">${userInitial}</div>`;
+
         const levelData = (typeof Level !== 'undefined' && Level.getXPInfo) ? Level.getXPInfo() : { level: 1, rank: 'Focus Initiate' };
         const levelNum = levelData.level || 1;
         const rankTitle = levelData.rank || 'Focus Initiate';
@@ -478,7 +483,9 @@ const Report = {
                     </div>
                 </div>
                 <div class="info-user-pill">
-                    <div class="info-user-avatar">${userInitial}</div>
+                    <div class="info-user-avatar-wrap">
+                        ${avatarMarkup}
+                    </div>
                     <div class="info-user-meta">
                         <div class="info-user-name">${Utils.escape(username)}</div>
                         <div class="info-user-rank">LVL ${levelNum} • ${rankTitle}</div>

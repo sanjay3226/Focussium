@@ -85,102 +85,159 @@
     align-items: center;
     gap: 16px;
     margin-bottom: 20px;
-    padding: 16px;
-    background: var(--bg3);
-    border-radius: 18px;
-    border: 1px solid var(--bd);
+    padding: 18px 16px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .account-avatar-ring {
     position: relative;
-    width: 64px; height: 64px;
+    width: 68px;
+    height: 68px;
     flex-shrink: 0;
 }
 
 .account-avatar-ring img {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--ac);
+    border: 2.5px solid var(--ac);
+    box-shadow: 0 0 16px rgba(var(--acr), 0.35);
 }
 
-.account-lvl-badge {
-    position: absolute;
-    bottom: -3px; right: -3px;
-    width: 22px; height: 22px;
+.account-avatar-fallback {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    background: var(--acgr);
-    color: var(--ac-text, #fff);
-    font-size: .6rem;
+    background: linear-gradient(135deg, var(--ac), var(--acl, #60A5FA));
+    color: #000000;
+    font-size: 1.6rem;
     font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2.5px solid var(--bg2);
+    border: 2.5px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 16px rgba(var(--acr), 0.35);
+}
+
+.account-lvl-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--ac), var(--acd, #1D4ED8));
+    color: var(--ac-text, #000000);
+    font-size: .68rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    line-height: 1;
+}
+
+.account-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
 }
 
 .account-name {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    color: var(--tx1);
+    color: #FFFFFF;
     margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .account-email {
-    font-size: .72rem;
+    font-size: .74rem;
     color: var(--tx3);
-    margin: 2px 0 4px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .account-rank-pill {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    background: rgba(var(--acr), .12);
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(var(--acr), 0.12);
     color: var(--ac);
-    font-size: .65rem;
+    font-size: .68rem;
     font-weight: 700;
-    border: 1px solid rgba(var(--acr), .25);
+    border: 1px solid rgba(var(--acr), 0.25);
+    margin-top: 2px;
 }
 
 .account-xp-card {
-    background: var(--bg3);
-    border-radius: 16px;
-    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 18px;
+    padding: 16px;
     margin-bottom: 16px;
-    border: 1px solid var(--bd);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .account-xp-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
-.account-xp-label { font-size: .62rem; font-weight: 800; color: var(--tx3); letter-spacing: .06em; }
-.account-xp-val   { font-size: .72rem; font-weight: 700; color: var(--ac); }
+.account-xp-label {
+    font-size: .62rem;
+    font-weight: 800;
+    color: var(--tx3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.account-xp-val {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--ac);
+}
 
 .account-xp-track {
-    height: 6px;
-    border-radius: 3px;
-    background: var(--bg4);
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
     overflow: hidden;
     margin-bottom: 8px;
 }
 
 .account-xp-bar {
     height: 100%;
-    border-radius: 3px;
-    background: var(--acgr);
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--ac), var(--acl, #60A5FA));
     width: 0%;
-    transition: width .8s cubic-bezier(.34,1.56,.64,1);
-    box-shadow: 0 0 6px var(--acg);
+    transition: width .8s cubic-bezier(.34, 1.56, .64, 1);
+    box-shadow: 0 0 10px rgba(var(--acr), 0.5);
 }
 
-.account-xp-sub { font-size: .68rem; color: var(--tx4); line-height: 1.4; }
+.account-xp-sub {
+    font-size: .68rem;
+    color: var(--tx4);
+    line-height: 1.4;
+}
 
-.account-stats-section { margin-bottom: 20px; }
+.account-stats-section {
+    margin-bottom: 20px;
+}
 
 .account-stats-title {
     font-size: .62rem;
@@ -194,19 +251,39 @@
 .account-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 10px;
 }
 
 .ac-stat-box {
-    background: var(--bg3);
-    border-radius: 14px;
-    padding: 12px 14px;
-    border: 1px solid var(--bd);
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     text-align: center;
+    transition: all .2s ease;
 }
 
-.ac-stat-num { font-size: 1.3rem; font-weight: 800; color: var(--ac); line-height: 1; }
-.ac-stat-lbl { font-size: .63rem; color: var(--tx3); font-weight: 600; margin-top: 4px; letter-spacing: .03em; }
+.ac-stat-box:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(var(--acr), 0.3);
+    transform: translateY(-1px);
+}
+
+.ac-stat-num {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: var(--ac);
+    line-height: 1;
+}
+
+.ac-stat-lbl {
+    font-size: .65rem;
+    color: var(--tx3);
+    font-weight: 700;
+    margin-top: 6px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
 
 .account-actions {
     display: flex;
@@ -794,9 +871,28 @@
     padding: 4px 12px 4px 6px;
 }
 
+.info-user-avatar-wrap {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--ac);
+}
+
+.info-user-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
 .info-user-avatar {
-    width: 26px;
-    height: 26px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     background: var(--ac);
     color: #000000;

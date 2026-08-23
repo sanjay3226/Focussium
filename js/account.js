@@ -22,12 +22,19 @@ const Account = {
 
         /* ─── Avatar ─── */
         const avatarEl = document.getElementById('accountAvatar');
-        if (avatarEl) {
-            if (user?.photoURL) {
-                avatarEl.src = user.photoURL;
+        const fallbackEl = document.getElementById('accountAvatarFallback');
+        const userPhoto = user?.photoURL || data.settings?.customAvatarDataUrl;
+        const initial = (data.name || user?.displayName || 'F').charAt(0).toUpperCase();
+
+        if (avatarEl && fallbackEl) {
+            if (userPhoto) {
+                avatarEl.src = userPhoto;
                 avatarEl.style.display = 'block';
+                fallbackEl.style.display = 'none';
             } else {
                 avatarEl.style.display = 'none';
+                fallbackEl.textContent = initial;
+                fallbackEl.style.display = 'flex';
             }
         }
 
@@ -39,11 +46,11 @@ const Account = {
 
         /* ─── Level badge ─── */
         const levelEl = document.getElementById('accountLevel');
-        if (levelEl)  levelEl.textContent = `Level ${xpInfo.level}`;
+        if (levelEl)  levelEl.textContent = xpInfo.level;
 
         /* ─── Rank pill ─── */
         const rankEl = document.getElementById('accountRank');
-        if (rankEl)  rankEl.textContent = xpInfo.rank;
+        if (rankEl)  rankEl.textContent = `⚡ LVL ${xpInfo.level} • ${xpInfo.rank}`;
 
         /* ─── XP bar ─── */
         const xpFillEl = document.getElementById('accountXpFill');
