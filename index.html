@@ -834,7 +834,7 @@
 
             <div class="account-card-header">
                 <div class="account-avatar-ring">
-                    <img id="accountAvatar" src="" alt="Avatar" style="display:none;">
+                    <img id="accountAvatar" src="" alt="Avatar" style="display:none;" onerror="this.style.display='none'; const fb=document.getElementById('accountAvatarFallback'); if(fb) fb.style.display='flex';">
                     <div class="account-avatar-fallback" id="accountAvatarFallback">F</div>
                     <div class="account-lvl-badge" id="accountLevel">1</div>
                 </div>

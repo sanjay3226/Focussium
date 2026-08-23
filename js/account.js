@@ -23,16 +23,38 @@ const Account = {
         /* ─── Avatar ─── */
         const avatarEl = document.getElementById('accountAvatar');
         const fallbackEl = document.getElementById('accountAvatarFallback');
-        const userPhoto = user?.photoURL || data.settings?.customAvatarDataUrl;
-        const initial = (data.name || user?.displayName || 'F').charAt(0).toUpperCase();
+        const activeAvatar = State.data?.settings?.avatar || 'default';
+        const googlePhoto = user?.photoURL;
+        const customPhoto = data?.settings?.customAvatarDataUrl;
+        const name = data?.name || user?.displayName || 'Focus Warrior';
+        const initial = name.trim().charAt(0).toUpperCase() || 'F';
+
+        let photo = null;
+        if (activeAvatar === 'google' && googlePhoto && typeof googlePhoto === 'string' && googlePhoto.startsWith('http')) {
+            photo = googlePhoto;
+        } else if (activeAvatar === 'custom' && customPhoto && typeof customPhoto === 'string' && customPhoto.startsWith('data:image')) {
+            photo = customPhoto;
+        } else if (customPhoto && typeof customPhoto === 'string' && customPhoto.startsWith('data:image')) {
+            photo = customPhoto;
+        } else if (googlePhoto && typeof googlePhoto === 'string' && googlePhoto.startsWith('http')) {
+            photo = googlePhoto;
+        }
 
         if (avatarEl && fallbackEl) {
-            if (userPhoto) {
-                avatarEl.src = userPhoto;
+            if (photo) {
+                avatarEl.onerror = function() {
+                    this.style.display = 'none';
+                    if (fallbackEl) {
+                        fallbackEl.textContent = initial;
+                        fallbackEl.style.display = 'flex';
+                    }
+                };
+                avatarEl.src = photo;
                 avatarEl.style.display = 'block';
                 fallbackEl.style.display = 'none';
             } else {
                 avatarEl.style.display = 'none';
+                avatarEl.removeAttribute('src');
                 fallbackEl.textContent = initial;
                 fallbackEl.style.display = 'flex';
             }

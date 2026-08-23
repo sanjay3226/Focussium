@@ -428,9 +428,14 @@ const Report = {
 
         const username = State.user?.displayName || State.data?.settings?.userName || 'Focus Disciple';
         const userInitial = username.charAt(0).toUpperCase();
-        const userPhoto = State.user?.photoURL || State.data?.settings?.customAvatarDataUrl;
+        const userPhoto = (State.user?.photoURL && State.user.photoURL.startsWith('http')) 
+            ? State.user.photoURL 
+            : (State.data?.settings?.customAvatarDataUrl && State.data.settings.customAvatarDataUrl.startsWith('data:image')) 
+            ? State.data.settings.customAvatarDataUrl 
+            : null;
+
         const avatarMarkup = userPhoto 
-            ? `<img src="${userPhoto}" class="info-user-avatar-img" alt="Avatar">`
+            ? `<img src="${userPhoto}" class="info-user-avatar-img" alt="Avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="info-user-avatar" style="display:none;">${userInitial}</div>`
             : `<div class="info-user-avatar">${userInitial}</div>`;
 
         const levelData = (typeof Level !== 'undefined' && Level.getXPInfo) ? Level.getXPInfo() : { level: 1, rank: 'Focus Initiate' };
