@@ -54,6 +54,13 @@ const App = {
         /* Avatar */
         if (typeof Settings !== 'undefined') Settings.applyAvatarDisplay();
 
+        /* Initial hash page route */
+        const hash = location.hash.replace('#', '');
+        const validPages = ['home', 'tasks', 'focus', 'dump', 'report', 'habits'];
+        if (typeof Nav !== 'undefined' && validPages.includes(hash)) {
+            Nav.go(hash);
+        }
+
         console.log(`Focussium 3.0 🚀 | Schema v${CONFIG.SCHEMA_VERSION} | ${Utils.today()}`);
     }
 };

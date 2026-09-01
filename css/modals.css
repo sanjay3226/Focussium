@@ -32,12 +32,15 @@
     background: var(--bg2);
     border: 1px solid var(--bd);
     border-radius: 28px 28px 0 0;
-    padding: 16px 24px 40px;
+    padding: 16px 20px max(32px, env(safe-area-inset-bottom));
     transform: translateY(100%);
     transition: transform .45s cubic-bezier(.16,1,.3,1);
     position: relative;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
+.modal-sheet::-webkit-scrollbar { display: none; }
 
 .modal.on .modal-sheet {
     transform: none;
@@ -72,10 +75,11 @@
     justify-content: center;
     cursor: pointer;
     border: none;
-    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
 }
 
-.account-close-btn:hover { background: var(--bg5); color: var(--tx1); }
+.account-close-btn:active { opacity: .7; }
 
 /* ── Account sheet ── */
 .account-sheet { padding-bottom: 36px; }
@@ -1232,7 +1236,7 @@
 }
 
 .export-action-btn {
-    padding: 13px 16px;
+    padding: 12px 14px;
     border-radius: 14px;
     font-size: .80rem;
     font-weight: 700;
@@ -1241,44 +1245,29 @@
     justify-content: center;
     gap: 8px;
     cursor: pointer;
-    transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s, transform .15s;
     border: 1.5px solid transparent;
 }
 
-.export-action-btn.primary {
-    background: linear-gradient(135deg, var(--ac), var(--acl, #60A5FA));
-    color: var(--ac-text, #000000);
-    border-color: var(--ac);
-    box-shadow: 0 4px 16px rgba(var(--acr), 0.40);
-}
+.export-action-btn:active { transform: scale(.97); opacity: .85; }
 
-.export-action-btn.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(var(--acr), 0.50);
+.export-action-btn.primary {
+    background: var(--acgr);
+    color: var(--ac-text, #fff);
+    border-color: var(--ac);
+    box-shadow: 0 4px 16px rgba(var(--acr), 0.35);
 }
 
 .export-action-btn.secondary {
-    background: rgba(255, 255, 255, 0.06);
-    color: #FFFFFF;
-    border-color: rgba(255, 255, 255, 0.14);
-}
-
-.export-action-btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: var(--ac);
-    transform: translateY(-2px);
+    background: var(--bg3);
+    color: var(--tx1);
+    border-color: var(--bd);
 }
 
 .export-action-btn.tertiary {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg3);
     color: var(--tx2);
-    border-color: rgba(255, 255, 255, 0.08);
-}
-
-.export-action-btn.tertiary:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #FFFFFF;
-    border-color: rgba(255, 255, 255, 0.16);
-    transform: translateY(-1px);
+    border-color: var(--bd);
 }
 

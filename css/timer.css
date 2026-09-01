@@ -1,46 +1,58 @@
 /* ═══════════════════════════════════════════════════════════
    FOCUSSIUM 3.0 — POMODORO TIMER + FULLSCREEN
+   Compact layout — no scrolling needed on Focus page
+   Touch-first: active states only, no hover
 ═══════════════════════════════════════════════════════════ */
 
-/* ── Pomo container ── */
-.pomo-container { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 8px 0; }
+/* ── Pomo container — tight, no scroll needed ── */
+.pomo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+}
 
 /* ── Mode tabs ── */
 .pomo-mode-tabs {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     background: var(--bg3);
     border-radius: 20px;
-    padding: 4px;
+    padding: 3px;
     border: 1px solid var(--bd);
+    width: 100%;
+    justify-content: center;
 }
 
 .pomo-mode-tab {
-    padding: 7px 18px;
+    flex: 1;
+    padding: 6px 10px;
     border-radius: 16px;
-    font-size: .75rem;
+    font-size: .73rem;
     font-weight: 700;
     color: var(--tx3);
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: all .25s cubic-bezier(.34,1.56,.64,1);
+    transition: color .2s;
     letter-spacing: .02em;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.pomo-mode-tab:hover { color: var(--tx1); }
+.pomo-mode-tab:active { opacity: .7; }
 
 .pomo-mode-tab.active {
     background: var(--ac);
     color: var(--ac-text, #fff);
-    box-shadow: 0 4px 12px rgba(var(--acr), .35);
+    box-shadow: 0 3px 10px rgba(var(--acr), .32);
 }
 
-/* ── Timer ring ── */
+/* ── Timer ring — compact: 220px not 260px ── */
 .pomo-timer {
     position: relative;
-    width: 260px;
-    height: 260px;
+    width: 220px;
+    height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -55,8 +67,8 @@
 .pomo-ring-bg circle {
     fill: none;
     stroke: var(--bg4);
-    stroke-width: 14;
-    opacity: 0.6;
+    stroke-width: 12;
+    opacity: 0.65;
 }
 
 .pomo-ring-fg {
@@ -69,32 +81,31 @@
 .pomo-ring-fg circle {
     fill: none;
     stroke: url(#pomoGradient);
-    stroke-width: 14;
+    stroke-width: 12;
     stroke-linecap: round;
     stroke-dasharray: 816.8;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset .4s ease;
-    filter: drop-shadow(0 0 12px rgba(var(--acr), .7)) drop-shadow(0 0 4px rgba(var(--acr), 1));
+    filter: drop-shadow(0 0 10px rgba(var(--acr), .65));
     animation: ringPulse 3s ease-in-out infinite;
 }
 
 .pomo-ring-fg circle.running {
-    filter: drop-shadow(0 0 16px rgba(var(--acr), .9)) drop-shadow(0 0 6px rgba(var(--acr), 1));
+    filter: drop-shadow(0 0 14px rgba(var(--acr), .88)) drop-shadow(0 0 5px rgba(var(--acr), 1));
     animation: ringPulse 2s ease-in-out infinite;
 }
 
 .pomo-glow {
     position: absolute;
-    inset: 20px;
+    inset: 18px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(var(--acr), .15), transparent 65%);
+    background: radial-gradient(circle, rgba(var(--acr), .12), transparent 65%);
     pointer-events: none;
     transition: opacity .5s, background .5s;
 }
 
-/* Running state glow boost */
 .pomo-timer.running .pomo-glow {
-    background: radial-gradient(circle, rgba(var(--acr), .22), transparent 65%);
+    background: radial-gradient(circle, rgba(var(--acr), .20), transparent 65%);
 }
 
 .pomo-inner {
@@ -103,13 +114,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     text-align: center;
 }
 
 .pomo-time {
     font-family: var(--font-serif);
-    font-size: 3.4rem;
+    font-size: 3rem;
     font-weight: 400;
     color: var(--tx1);
     letter-spacing: -.02em;
@@ -118,7 +129,7 @@
 }
 
 .pomo-mode-label {
-    font-size: .72rem;
+    font-size: .68rem;
     color: var(--ac);
     font-weight: 700;
     letter-spacing: .06em;
@@ -129,30 +140,26 @@
 .pomo-controls {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .pomo-ctrl-btn {
-    width: 52px; height: 52px;
+    width: 48px; height: 48px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all .3s cubic-bezier(.34,1.56,.64,1);
     border: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s, transform .2s;
 }
 
 .pomo-ctrl-btn.primary {
-    width: 68px; height: 68px;
+    width: 62px; height: 62px;
     background: var(--acgr);
     color: var(--ac-text, #fff);
-    box-shadow: 0 6px 24px rgba(var(--acr), .40);
-}
-
-.pomo-ctrl-btn.primary:hover {
-    transform: scale(1.1);
-    box-shadow: 0 10px 32px rgba(var(--acr), .55);
+    box-shadow: 0 5px 20px rgba(var(--acr), .38);
 }
 
 .pomo-ctrl-btn.secondary {
@@ -161,26 +168,20 @@
     border: 1.5px solid var(--bd);
 }
 
-.pomo-ctrl-btn.secondary:hover {
-    background: var(--bg4);
-    color: var(--tx1);
-    transform: scale(1.06);
-}
+.pomo-ctrl-btn:active { transform: scale(.90); opacity: .8; }
 
-.pomo-ctrl-btn:active { transform: scale(.92) !important; }
-
-.pomo-ctrl-btn svg { width: 20px; height: 20px; }
-.pomo-ctrl-btn.primary svg { width: 24px; height: 24px; }
+.pomo-ctrl-btn svg { width: 18px; height: 18px; }
+.pomo-ctrl-btn.primary svg { width: 22px; height: 22px; }
 
 /* ── Session dots ── */
 .pomo-session-dots {
     display: flex;
-    gap: 8px;
+    gap: 7px;
     align-items: center;
 }
 
 .session-dot {
-    width: 10px; height: 10px;
+    width: 9px; height: 9px;
     border-radius: 50%;
     background: var(--bg4);
     border: 1.5px solid var(--bd);
@@ -190,7 +191,7 @@
 .session-dot.done {
     background: var(--ac);
     border-color: var(--ac);
-    box-shadow: 0 0 6px rgba(var(--acr), .5);
+    box-shadow: 0 0 5px rgba(var(--acr), .5);
 }
 
 .session-dot.active {
@@ -203,59 +204,61 @@
 .pomo-live-insight-wrapper { width: 100%; }
 
 .pomo-live-insight {
-    font-size: .74rem;
+    font-size: .72rem;
     color: var(--tx3);
     font-weight: 500;
     text-align: center;
     line-height: 1.5;
-    min-height: 20px;
+    min-height: 18px;
     transition: opacity .5s;
+    padding: 0 8px;
 }
 
-/* ── Ambient controls ── */
+/* ── Ambient controls — compact row ── */
 .ambient-compact-row {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    background: var(--bg3);
-    border-radius: 16px;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg2);
+    border-radius: var(--radius-card);
     border: 1px solid var(--bd);
 }
 
 .ambient-icons-group {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     align-items: center;
 }
 
 .ambient-icon-btn {
-    width: 32px; height: 32px;
-    border-radius: 8px;
+    width: 30px; height: 30px;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .95rem;
+    font-size: .9rem;
     background: transparent;
     border: 1.5px solid transparent;
     cursor: pointer;
-    transition: all .2s;
-    opacity: .5;
+    opacity: .55;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
 }
 
-.ambient-icon-btn:hover { opacity: 1; background: var(--bg4); border-color: var(--bd); }
+.ambient-icon-btn:active { opacity: .85; }
 .ambient-icon-btn.active { opacity: 1; background: rgba(var(--acr), .12); border-color: var(--ac); }
 
 .ambient-slider-container {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex: 1;
 }
 
-.ambient-slider-icon { font-size: .9rem; flex-shrink: 0; }
+.ambient-slider-icon { font-size: .85rem; flex-shrink: 0; }
 
 .ambient-slider-premium {
     -webkit-appearance: none;
@@ -275,11 +278,8 @@
     border-radius: 50%;
     background: var(--ac);
     cursor: pointer;
-    box-shadow: 0 0 6px rgba(var(--acr), .5);
-    transition: transform .2s;
+    box-shadow: 0 0 5px rgba(var(--acr), .5);
 }
-
-.ambient-slider-premium::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
 .ambient-slider-premium::-moz-range-thumb {
     width: 16px; height: 16px;
@@ -289,27 +289,24 @@
     cursor: pointer;
 }
 
-/* ── Fullscreen button ── */
+/* ── Focus Mode button — compact ── */
 .pomo-fullscreen-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 20px;
+    gap: 7px;
+    padding: 8px 18px;
     border-radius: 20px;
-    background: var(--bg3);
+    background: var(--bg2);
     border: 1.5px solid var(--bd);
     color: var(--tx2);
-    font-size: .78rem;
+    font-size: .75rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all .25s;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
 }
 
-.pomo-fullscreen-btn:hover {
-    background: var(--bg4);
-    border-color: var(--ac);
-    color: var(--ac);
-}
+.pomo-fullscreen-btn:active { opacity: .7; }
 
 /* ── Fullscreen pomo ── */
 .fullscreen-pomo {
@@ -324,7 +321,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity .5s;
-    /* Ensure it sits above everything */
     isolation: isolate;
 }
 
@@ -333,20 +329,13 @@
     pointer-events: auto;
 }
 
-/* When fullscreen is active, hide the background .fs-bg solid */
-.fullscreen-pomo.on .fs-bg {
-    backdrop-filter: blur(0px);
-}
-
 .fs-bg {
     position: absolute;
     inset: 0;
-    /* Solid base first — critical to prevent double-timer bleed */
     background-color: var(--bg0);
     transition: background 1s ease;
 }
 
-/* Fully opaque background to prevent double-timer bleed-through */
 .fs-bg.focus  { background: var(--bg0) linear-gradient(160deg, rgba(var(--acr), .12) 0%, transparent 50%); }
 .fs-bg.break  { background: var(--bg0) linear-gradient(160deg, rgba(34, 197, 94, .10) 0%, transparent 50%); }
 
@@ -364,10 +353,11 @@
     justify-content: center;
     cursor: pointer;
     z-index: 1;
-    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
 }
 
-.fs-close-btn:hover { background: var(--glassh); color: var(--tx1); }
+.fs-close-btn:active { opacity: .7; }
 
 .fs-time {
     position: relative;

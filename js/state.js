@@ -15,7 +15,7 @@ const State = {
         pomo: [],
         moods: [],
         habits: {},                 // v3.0 NEW: { 'YYYY-MM-DD': ['workout', 'water', ...] }
-        habitConfig: [],            // v3.0 NEW: user's habit definitions
+        habitConfig: typeof DEFAULT_HABITS !== 'undefined' ? DEFAULT_HABITS : [], // v3.0 NEW: user's habit definitions
         currentList: 'All',
         streak: 0,
         lastVisit: null,

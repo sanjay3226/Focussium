@@ -283,7 +283,7 @@ const Pomo = {
         for (let i = 0; i < State.data.settings.sessions; i++) {
             const isFilled  = i < State.pomo.count;
             const isCurrent = i === State.pomo.count && State.pomo.mode === 'focus';
-            html += `<div class="pomo-dot ${isFilled ? 'filled' : ''} ${isCurrent ? 'current' : ''}"></div>`;
+            html += `<div class="session-dot ${isFilled ? 'done' : ''} ${isCurrent ? 'active' : ''}"></div>`;
         }
         container.innerHTML = html;
     },

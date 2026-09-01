@@ -44,14 +44,16 @@ const CommandGlass = {
                 Nav.updateBadges();
                 Toast.show('Brain dump saved 🧠');
             }
-        } else if (text.toLowerCase().startsWith('focus ')) {
+        } else if (text.toLowerCase().startsWith('focus')) {
             /* ── Jump to focus page ── */
             Nav.go('focus');
             Toast.show('Focus mode activated ⏱️');
         } else if (text.toLowerCase() === 'report') {
             Nav.go('report');
+            Toast.show('Weekly Report 📊');
         } else if (text.toLowerCase() === 'habits') {
             Nav.go('habits');
+            Toast.show('Habits tracker 🛡️');
         } else {
             /* ── Default: quick task ── */
             State.data.tasks.unshift({

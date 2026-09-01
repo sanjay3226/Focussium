@@ -52,15 +52,7 @@
 </head>
 
 <body>
-    <!-- Three.js Background Layer -->
-    <div id="threeJsBg"></div>
 
-    <!-- CSS Fallback orbs (shown while Three.js loads) -->
-    <div class="bg-orb bg-orb-1"></div>
-    <div class="bg-orb bg-orb-2"></div>
-    <div class="bg-orb bg-orb-3"></div>
-
-    <!-- NO particle canvas — removed in v3.0 -->
 
     <!-- ── Loading Screen ── -->
     <div class="ld-scr" id="loadingScreen">
@@ -293,7 +285,7 @@
                     <div class="section-title">Today's Habits</div>
                     <button class="section-link" data-action="nav-habits">View all</button>
                 </div>
-                <div class="home-habits-card" id="homeHabitsPreview"></div>
+                <div id="homeHabitsPreview"></div>
 
                 <!-- Up Next -->
                 <div class="section-header" style="margin-top:18px;">
@@ -966,15 +958,42 @@
         </div>
     </div>
 
+    <!-- Add / Edit Habit Modal -->
+    <div class="modal" id="habitModal" role="dialog" aria-modal="true" aria-label="Habit Editor">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <button class="account-close-btn" data-action="habit-modal-close" title="Close">✕</button>
+            <div class="modal-title" id="habitModalTitle">Add Habit</div>
+
+            <div class="form-group">
+                <label class="form-label">Habit Name</label>
+                <input class="form-input" id="habitLabelInput" placeholder="Workout, Read 20 mins, Drink water..." maxlength="30" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category / Icon</label>
+                <select class="form-select" id="habitIconSelect">
+                    <option value="workout">🏋️ Workout / Fitness</option>
+                    <option value="water">💧 Hydration / Water</option>
+                    <option value="sleep">🌙 Sleep / Rest</option>
+                    <option value="study">📚 Deep Study / Learning</option>
+                    <option value="journal">✍️ Journal / Writing</option>
+                    <option value="noscreen">📵 Screen Detox</option>
+                    <option value="default">🌱 General Habit</option>
+                </select>
+            </div>
+
+            <input type="hidden" id="editingHabitId" value="">
+            <button class="form-submit-btn" id="habitSubmitBtn" data-action="habit-submit">Add Habit</button>
+        </div>
+    </div>
+
     <!-- ══ SCRIPTS (load order matters) ══ -->
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
 
     <!-- PDF Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
@@ -1007,10 +1026,6 @@
     <script src="js/settings.js"></script>
     <script src="js/onboard.js"></script>
     <script src="js/command-glass.js"></script>
-
-    <!-- Background scenes -->
-    <script src="js/threebg_dark.js"></script>
-    <script src="js/threebg_light.js"></script>
 
     <!-- Boot (last — all modules must be defined first) -->
     <script src="js/app.js"></script>

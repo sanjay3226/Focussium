@@ -67,7 +67,7 @@ const Dump = {
         const todayMood = State.data.moods.find(m => m.date === today)?.mood || '';
 
         document.querySelectorAll('.mood-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.classList.contains(todayMood));
+            btn.classList.toggle('active', btn.dataset.mood === todayMood || btn.classList.contains(todayMood));
         });
     },
 

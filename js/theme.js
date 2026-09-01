@@ -189,17 +189,6 @@ const Theme = {
             this.clearCustomAccent();
             document.documentElement.setAttribute('data-accent', State.data?.settings?.accent || 'neon');
         }
-
-        // Dynamic Three.js Background Swapping
-        const bgContainer = document.getElementById('threeJsBg');
-        if (bgContainer) {
-            bgContainer.innerHTML = '';
-            if (theme === 'light' && typeof window.initThreeBgLight === 'function') {
-                window.initThreeBgLight();
-            } else if (typeof window.initThreeBg === 'function') {
-                window.initThreeBg();
-            }
-        }
     }
 };
 

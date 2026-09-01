@@ -68,11 +68,12 @@
     font-size: .55rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
     color: var(--tx3);
 }
 
-.heat-cell:hover { transform: scale(1.15); z-index: 1; position: relative; }
+.heat-cell:active { opacity: .7; }
 .heat-cell:hover::after {
     content: attr(data-label);
     position: absolute;
@@ -225,7 +226,8 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity .15s;
     font-size: .6rem;
     color: var(--tx3);
     font-weight: 600;
@@ -233,7 +235,7 @@
     position: relative;
 }
 
-.cal-cell:hover { transform: scale(1.12); z-index: 1; }
+.cal-cell:active { opacity: .7; }
 .cal-cell.today { border-color: var(--ac); color: var(--ac); font-weight: 800; }
 .cal-cell.blank { background: transparent; pointer-events: none; }
 

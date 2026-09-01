@@ -492,6 +492,13 @@ const Icons = {
         </svg>`;
     },
 
+    bolt(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/>
+        </svg>`;
+    },
+
     // Generic habit fallback (plant/growth)
     habitDefault(size = 22) {
         return `
@@ -569,6 +576,10 @@ function injectIcons() {
         'aiInsightsIcon': () => Icons.spark(12),
         'downloadIcon': () => Icons.download(18),
 
+        'exportIconPng': () => Icons.camera(16),
+        'exportIconPdf': () => Icons.filePdf(16),
+        'exportIconCopy': () => Icons.copy(16),
+
         'formIconTitle': () => Icons.tasks(12),
         'formIconNotes': () => Icons.brain(12),
         'formIconDate': () => Icons.calendar(12),
@@ -591,3 +602,4 @@ function injectIcons() {
         if (el) el.innerHTML = iconFn();
     });
 }
+
