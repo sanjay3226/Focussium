@@ -28,12 +28,19 @@ const Nav = {
 
         Sound.nav();
 
+        // Clean up active game if navigating away
+        if (window.Games && Games.currentGame && page !== 'games') {
+            Games.exitGame();
+        }
+
         // Render appropriate page content
         if (page === 'home')   Home.render();
         if (page === 'tasks')  Tasks.render();
         if (page === 'dump')   Dump.render();
         if (page === 'report') Report.render();
         if (page === 'habits') Habits.render(); // v3.0 NEW
+        if (page === 'focus')  Pomo.initAmbientUI();
+        if (page === 'games' && window.Games)  Games.render();
 
         this.updateBadges();
 
@@ -75,7 +82,7 @@ const Nav = {
 ───────────────────────────────────────────────────────── */
 window.addEventListener('popstate', () => {
     const hash = location.hash.replace('#', '') || 'home';
-    const validPages = ['home', 'tasks', 'focus', 'dump', 'report', 'habits'];
+    const validPages = ['home', 'tasks', 'focus', 'dump', 'report', 'habits', 'games'];
     if (validPages.includes(hash)) {
         Nav.go(hash);
     }

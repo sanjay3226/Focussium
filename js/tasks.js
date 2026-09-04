@@ -225,7 +225,7 @@ const Tasks = {
             <div class="task-filter-group">
                 <button class="task-filter-btn ${activeFilter === 'all' ? 'active' : ''}" data-action="set-filter" data-filter="all">All</button>
                 <button class="task-filter-btn ${activeFilter === 'pending' ? 'active' : ''}" data-action="set-filter" data-filter="pending">Pending</button>
-                <button class="task-filter-btn ${activeFilter === 'high' ? 'active' : ''}" data-action="set-filter" data-filter="high">High 🔥</button>
+                <button class="task-filter-btn ${activeFilter === 'high' ? 'active' : ''}" data-action="set-filter" data-filter="high">High ${Icons.fire(12)}</button>
             </div>`;
         }
 

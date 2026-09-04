@@ -75,14 +75,17 @@ const Report = {
         this.applyModeVisibility();
         this.renderScoreHero(w);
         this.renderStats(w);
+        this.renderWeekTimeline(w);
         this.renderHeatmap(w);
         this.setChartTab(State.reportChartTab);
         this.renderMonthOverview(m);
         this.renderDayDetails(w, m);
         this.renderInsights(w, m);
         this.renderHabitsHeatmap(); // v3.0 NEW
+        this.renderStreakPanel();   // v3.1 NEW
+        this.renderMonthSparkline(m); // v3.1 NEW
 
-        ['reportHeatChevron','reportAnalyticsChevron','reportMonthChevron','reportDayChevron'].forEach(id => {
+        ['reportHeatChevron','reportAnalyticsChevron','reportMonthChevron','reportDayChevron','reportHabitsChevron','reportStreakChevron'].forEach(id => {
             const el = document.getElementById(id);
             if (el && Icons.chevronDown) el.innerHTML = Icons.chevronDown(12);
         });
@@ -134,30 +137,130 @@ const Report = {
 
     renderScoreHero(w) {
         const score  = this.getScore(w);
-        const labels = { '80': 'Deep Flow', '60': 'High Momentum', '35': 'Building Rhythm', '0': 'Resting Flow' };
         let vibe = 'Resting Flow';
         if (score >= 80) vibe = 'Deep Flow State';
         else if (score >= 60) vibe = 'High Momentum';
         else if (score >= 35) vibe = 'Building Rhythm';
 
-        const scoreEl = document.getElementById('reportScoreVal');
-        const vibeEl  = document.getElementById('reportVibeLabel');
-        const barEl   = document.getElementById('reportScoreBar');
+        const scoreEl = document.getElementById('reportScoreValue');
+        const vibeEl  = document.getElementById('reportVibeTitle');
+        const circle  = document.getElementById('reportVibeGaugeCircle');
         if (scoreEl) scoreEl.textContent = score;
         if (vibeEl)  vibeEl.textContent  = vibe;
-        if (barEl)   barEl.style.width   = `${score}%`;
+        if (circle) {
+            const circumference = 376.9;
+            const pct = Math.min(100, Math.max(0, score));
+            const offset = circumference - (circumference * pct / 100);
+            circle.style.strokeDashoffset = `${offset}`;
+        }
+
+        const bdEl = document.getElementById('scoreBreakdownList');
+        if (bdEl) {
+            const bd = this.getScoreBreakdown(w);
+            bdEl.innerHTML = `
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Tasks Done</span>
+                    <span class="breakdown-val positive">+${bd.tasks}</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Focus Time</span>
+                    <span class="breakdown-val positive">+${bd.focus}</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Active Days</span>
+                    <span class="breakdown-val positive">+${bd.consistency}</span>
+                </div>
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Streak Flow</span>
+                    <span class="breakdown-val positive">+${bd.streak}</span>
+                </div>
+                ${bd.overdue > 0 ? `
+                <div class="breakdown-item">
+                    <span class="breakdown-label">Overdue</span>
+                    <span class="breakdown-val negative">-${bd.overdue}</span>
+                </div>` : ''}
+            `;
+        }
     },
 
     renderStats(w) {
-        [
-            ['reportStatTasks',  w.totalTasks],
-            ['reportStatFocus',  `${w.totalFocus}m`],
-            ['reportStatActive', `${w.activeDays}/7`],
-            ['reportStatStreak', State.data.streak || 0]
-        ].forEach(([id, val]) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        });
+        const container = document.getElementById('reportStats');
+        if (!container) return;
+        const stats = [
+            { val: w.totalTasks, lbl: 'Tasks Done' },
+            { val: `${w.totalFocus}m`, lbl: 'Focus Time' },
+            { val: `${w.activeDays}/7`, lbl: 'Active Days' },
+            { val: State.data.streak || 0, lbl: 'Day Streak' }
+        ];
+        container.innerHTML = stats.map(s => `
+            <div class="report-stat">
+                <div class="report-stat-val">${s.val}</div>
+                <div class="report-stat-lbl">${s.lbl}</div>
+            </div>
+        `).join('');
+    },
+
+    renderWeekTimeline(w) {
+        const container = document.getElementById('reportWeekTimeline');
+        if (!container) return;
+
+        const maxFocus = Math.max(...w.days.map(d => d.focus), 60);
+        const maxTasks = Math.max(...w.days.map(d => d.tasks), 5);
+        const today = Utils.today();
+        const moodIcons = {
+            calm: Icons.meditate ? Icons.meditate(14) : '',
+            high: Icons.zap ? Icons.zap(14) : '',
+            flow: Icons.ocean ? Icons.ocean(14) : '',
+            tired: Icons.habitSleep ? Icons.habitSleep(14) : '',
+            clouded: Icons.cloud ? Icons.cloud(14) : '',
+            focused: Icons.target ? Icons.target(14) : '',
+            good: Icons.smileHappy ? Icons.smileHappy(14) : '',
+            okay: Icons.smileNeutral ? Icons.smileNeutral(14) : '',
+            low: Icons.smileSad ? Icons.smileSad(14) : '',
+            epic: Icons.fire ? Icons.fire(14) : ''
+        };
+
+        container.innerHTML = w.days.map((day, i) => {
+            const focusPct = Math.min(100, Math.round((day.focus / maxFocus) * 100));
+            const tasksPct = Math.min(100, Math.round((day.tasks / maxTasks) * 100));
+            const isToday = day.date === today;
+            const isSel = day.date === State.selectedReportDate;
+            const mood = State.data.moods?.find(m => m.date === day.date)?.mood || '';
+            const moodMarkup = mood && moodIcons[mood] ? `<span class="timeline-mood" style="color:var(--ac);">${moodIcons[mood]}</span>` : '';
+            const dayScore = day.tasks + Math.floor(day.focus / 25);
+            const dateNum = new Date(day.date + 'T00:00:00').getDate();
+
+            return `
+            <div class="timeline-day ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
+                 data-action="select-report-day" data-date="${day.date}"
+                 style="animation-delay: ${i * 40}ms">
+                <div class="timeline-day-label">
+                    <span class="timeline-weekday">${day.name.substring(0, 3)}</span>
+                    <span class="timeline-date">${dateNum}</span>
+                    ${isToday ? '<span class="timeline-today-pill">Today</span>' : ''}
+                </div>
+                <div class="timeline-day-bars">
+                    <div class="timeline-bar-row">
+                        <span class="timeline-bar-lbl">Focus</span>
+                        <div class="timeline-bar-track">
+                            <div class="timeline-bar-fill focus" style="width: ${focusPct}%"></div>
+                        </div>
+                        <span class="timeline-bar-val">${day.focus}m</span>
+                    </div>
+                    <div class="timeline-bar-row">
+                        <span class="timeline-bar-lbl">Tasks</span>
+                        <div class="timeline-bar-track">
+                            <div class="timeline-bar-fill tasks" style="width: ${tasksPct}%"></div>
+                        </div>
+                        <span class="timeline-bar-val">${day.tasks}</span>
+                    </div>
+                </div>
+                <div class="timeline-day-meta">
+                    ${moodMarkup}
+                    ${dayScore > 0 ? `<span class="timeline-pts">+${dayScore} pts</span>` : '<span class="timeline-rest">Rest</span>'}
+                </div>
+            </div>`;
+        }).join('');
     },
 
     renderHeatmap(w) {
@@ -180,31 +283,95 @@ const Report = {
     drawChart(containerId, values, labels, type) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        const max = Math.max(...values, 1);
-        const W = 320, H = 120, padX = 14, padY = 8, barGap = 8;
+        const maxVal = Math.max(...values, 1);
+        const W = 380, H = 145;
+        const padX = 24, padTop = 18, padBottom = 26;
         const chartW = W - padX * 2;
-        const barW   = (chartW - (values.length - 1) * barGap) / values.length;
+        const chartH = H - padTop - padBottom;
         const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#38B6FF';
         const unit = type === 'focus' ? 'm' : '';
 
-        const bars = values.map((v, i) => {
-            const barH  = v > 0 ? Math.max(6, (v / max) * (H - padY * 2 - 16)) : 4;
-            const bx    = padX + i * (barW + barGap);
-            const by    = H - padY - 14 - barH;
-            const alpha = v > 0 ? 0.95 : 0.3;
+        const points = values.map((v, i) => {
+            const x = padX + (i / Math.max(1, values.length - 1)) * chartW;
+            const y = padTop + (1 - (v / maxVal)) * chartH;
+            return { x, y, v, label: labels[i] };
+        });
+
+        // Smooth cubic bezier path construction
+        let linePath = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[i === 0 ? 0 : i - 1];
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const p3 = points[i + 2] || p2;
+
+            const cp1x = p1.x + (p2.x - p0.x) / 6;
+            const cp1y = p1.y + (p2.y - p0.y) / 6;
+            const cp2x = p2.x - (p3.x - p1.x) / 6;
+            const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+            linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        }
+
+        const lastPt = points[points.length - 1];
+        const firstPt = points[0];
+        const areaPath = `${linePath} L ${lastPt.x.toFixed(1)} ${H - padBottom} L ${firstPt.x.toFixed(1)} ${H - padBottom} Z`;
+
+        // Dotted horizontal grid lines
+        const gridLines = [0.33, 0.66, 1].map(step => {
+            const gy = padTop + (1 - step) * chartH;
+            return `<line class="chart-grid-line" x1="${padX}" y1="${gy.toFixed(1)}" x2="${W - padX}" y2="${gy.toFixed(1)}" opacity="0.6"/>`;
+        }).join('');
+
+        // Points & Labels
+        const dots = points.map((p, i) => {
             return `
-            <rect x="${bx}" y="${by}" width="${barW}" height="${barH}" rx="4" fill="${v > 0 ? ac : 'var(--bg4)'}" opacity="${alpha}"
-                  style="filter:${v > 0 ? `drop-shadow(0 0 6px ${ac}44)` : 'none'}"/>
-            ${v > 0 ? `<text x="${bx + barW/2}" y="${Math.max(by - 4, padY + 6)}" text-anchor="middle"
-                  fill="${ac}" font-size="8" font-weight="700">${v}${unit}</text>` : ''}
-            <text x="${bx + barW/2}" y="${H - 2}" text-anchor="middle"
-                  fill="var(--tx3)" font-size="8" font-weight="700">${labels[i].substring(0,2)}</text>`;
+            <g class="chart-point-group" data-idx="${i}" data-val="${p.v}${unit}" data-label="${p.label}">
+                <circle class="chart-point" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5"/>
+                ${p.v > 0 ? `<text class="chart-value-label" x="${p.x.toFixed(1)}" y="${(p.y - 8).toFixed(1)}">${p.v}${unit}</text>` : ''}
+                <text class="chart-label" x="${p.x.toFixed(1)}" y="${H - 6}">${p.label.substring(0, 2)}</text>
+            </g>`;
         }).join('');
 
         container.innerHTML = `
-        <svg viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
-            ${bars}
+        <div class="chart-tooltip" id="chartTooltip"></div>
+        <svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="${ac}" stop-opacity="0.5"/>
+                    <stop offset="70%" stop-color="${ac}" stop-opacity="0.12"/>
+                    <stop offset="100%" stop-color="${ac}" stop-opacity="0.0"/>
+                </linearGradient>
+            </defs>
+            ${gridLines}
+            <path class="chart-area" d="${areaPath}"/>
+            <path class="chart-line" d="${linePath}"/>
+            ${dots}
         </svg>`;
+
+        // Interactive tooltips
+        const tooltip = container.querySelector('#chartTooltip');
+        const groups = container.querySelectorAll('.chart-point-group');
+        groups.forEach(g => {
+            const showTooltip = () => {
+                if (!tooltip) return;
+                const val = g.getAttribute('data-val');
+                const lbl = g.getAttribute('data-label');
+                tooltip.textContent = `${lbl}: ${val}`;
+                const pt = g.querySelector('.chart-point');
+                const rect = pt.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                tooltip.style.left = `${rect.left - containerRect.left + rect.width / 2}px`;
+                tooltip.style.top = `${rect.top - containerRect.top}px`;
+                tooltip.classList.add('visible');
+            };
+            const hideTooltip = () => {
+                if (tooltip) tooltip.classList.remove('visible');
+            };
+            g.addEventListener('mouseenter', showTooltip);
+            g.addEventListener('mouseleave', hideTooltip);
+            g.addEventListener('touchstart', () => { showTooltip(); }, { passive: true });
+        });
     },
 
     getMonthData(offset = 0) {
@@ -247,20 +414,147 @@ const Report = {
 
         const calEl = document.getElementById('monthCalendar');
         if (!calEl) return;
-        const dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-        let calHTML = `<div class="cal-header">${dayNames.map(d => `<div class="cal-day-name">${d}</div>`).join('')}</div><div class="cal-grid">`;
-        const startOffset = m.startWeekday;
-        for (let i = 0; i < startOffset; i++) calHTML += '<div class="cal-empty"></div>';
-        m.days.forEach(day => {
+        const dayNames = ['S','M','T','W','T','F','S'];
+
+        let calHTML = `
+        <div class="gh-heatmap">
+            <div class="gh-header">
+                ${dayNames.map(d => `<div class="gh-day-label">${d}</div>`).join('')}
+            </div>
+            <div class="gh-grid">`;
+
+        for (let i = 0; i < m.startWeekday; i++) {
+            calHTML += '<div class="gh-empty"></div>';
+        }
+
+        m.days.forEach((day, idx) => {
             const intensity = Math.min(4, day.score);
             const isSel = day.key === State.selectedReportDate;
-            calHTML += `<div class="cal-cell cal-int-${intensity} ${day.isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
-                             data-action="select-report-day" data-date="${day.key}" title="${day.key}: ${day.tasks}t ${day.focus}m">
-                <span class="cal-num">${day.day}</span>
+            calHTML += `
+            <div class="gh-cell gh-int-${intensity} ${day.isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
+                 style="--cell-i: ${idx};"
+                 data-action="select-report-day" data-date="${day.key}"
+                 title="${day.key}: ${day.tasks} tasks, ${day.focus}m focus">
+                <span class="gh-num">${day.day}</span>
             </div>`;
         });
-        calHTML += '</div>';
+
+        calHTML += `
+            </div>
+            <div class="gh-legend">
+                <span class="gh-legend-label">${m.activeDays} active days in ${monthNames[m.month]}</span>
+                <div class="gh-legend-scale">
+                    <span class="gh-legend-text">Less</span>
+                    <div class="gh-legend-box gh-int-0"></div>
+                    <div class="gh-legend-box gh-int-1"></div>
+                    <div class="gh-legend-box gh-int-2"></div>
+                    <div class="gh-legend-box gh-int-3"></div>
+                    <div class="gh-legend-box gh-int-4"></div>
+                    <span class="gh-legend-text">More</span>
+                </div>
+            </div>
+        </div>`;
+
         calEl.innerHTML = calHTML;
+    },
+
+    renderMonthSparkline(m) {
+        const container = document.getElementById('monthSparklineContainer');
+        if (!container || !m || !m.days || !m.days.length) return;
+
+        const scores = m.days.map(d => d.score);
+        const maxScore = Math.max(...scores, 1);
+        const W = 360, H = 58, padX = 10, padY = 8;
+        const chartW = W - padX * 2;
+        const chartH = H - padY * 2;
+        const ac = getComputedStyle(document.documentElement).getPropertyValue('--ac').trim() || '#38B6FF';
+
+        const points = m.days.map((d, i) => {
+            const x = padX + (i / Math.max(1, m.days.length - 1)) * chartW;
+            const y = padY + (1 - (d.score / maxScore)) * chartH;
+            return { x, y, day: d.day, score: d.score, isToday: d.isToday };
+        });
+
+        let path = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p1 = points[i];
+            const p2 = points[i + 1];
+            const mx = (p1.x + p2.x) / 2;
+            path += ` C ${mx.toFixed(1)} ${p1.y.toFixed(1)}, ${mx.toFixed(1)} ${p2.y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        }
+
+        const areaPath = `${path} L ${points[points.length - 1].x.toFixed(1)} ${H} L ${points[0].x.toFixed(1)} ${H} Z`;
+        const todayPt = points.find(p => p.isToday) || points[points.length - 1];
+
+        container.innerHTML = `
+        <svg class="month-sparkline-svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" preserveAspectRatio="none">
+            <defs>
+                <linearGradient id="monthSparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="${ac}" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="${ac}" stop-opacity="0.02"/>
+                </linearGradient>
+            </defs>
+            <path d="${areaPath}" fill="url(#monthSparkGrad)"/>
+            <path d="${path}" fill="none" stroke="${ac}" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="${todayPt.x.toFixed(1)}" cy="${todayPt.y.toFixed(1)}" r="3.5" fill="${ac}" stroke="var(--bg3)" stroke-width="1.5"/>
+        </svg>`;
+    },
+
+    renderStreakPanel() {
+        const container = document.getElementById('reportStreakBody');
+        if (!container) return;
+
+        const currentStreak = State.data.streak || 0;
+        const todayKey = Utils.today();
+        const days = [];
+
+        for (let i = 29; i >= 0; i--) {
+            const dateStr = Utils.daysAgo(i);
+            const isToday = (dateStr === todayKey);
+            const tasksDone = (State.data.tasks || []).filter(t => t.completed && t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === dateStr).length;
+            const focusMin = (State.data.pomo || []).filter(p => p.date === dateStr).reduce((sum, p) => sum + p.dur, 0);
+            const habitsDone = (State.data.habits?.[dateStr] || []).length;
+            const active = (tasksDone > 0 || focusMin > 0 || habitsDone > 0);
+            days.push({ date: dateStr, isToday, active, tasksDone, focusMin, habitsDone });
+        }
+
+        const activeDaysCount = days.filter(d => d.active).length;
+        const consistencyRate = Math.round((activeDaysCount / 30) * 100);
+
+        let streakStatus = 'Momentum Rising';
+        if (currentStreak >= 30) streakStatus = 'Legendary Flow';
+        else if (currentStreak >= 14) streakStatus = 'Unstoppable';
+        else if (currentStreak >= 7) streakStatus = 'Consistent Fire';
+        else if (currentStreak >= 3) streakStatus = 'Building Habit';
+
+        container.innerHTML = `
+        <div class="streak-panel-card">
+            <div class="streak-hero">
+                <div class="streak-hero-left">
+                    <div class="streak-flame-disc">
+                        ${Icons.fire(24)}
+                    </div>
+                    <div>
+                        <div class="streak-count-num">${currentStreak}</div>
+                        <div class="streak-count-lbl">Day Active Streak</div>
+                    </div>
+                </div>
+                <div class="streak-status-badge">${streakStatus}</div>
+            </div>
+
+            <div class="streak-trail-wrap">
+                <div class="streak-trail-label">
+                    <span>30-Day Activity Trail</span>
+                    <span>${consistencyRate}% Consistency</span>
+                </div>
+                <div class="streak-trail">
+                    ${days.map(d => `
+                    <div class="streak-dot ${d.active ? 'active' : ''} ${d.isToday ? 'today' : ''}"
+                         title="${d.date}: ${d.tasksDone} tasks, ${d.focusMin}m focus, ${d.habitsDone} habits"></div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>`;
     },
 
     getDateDigest(date, w, m) {
@@ -273,7 +567,7 @@ const Report = {
     renderDayDetails(w, m) {
         const sel = State.selectedReportDate || Utils.today();
         const dayData = w.days.find(d => d.date === sel) || m.days.find(d => d.key === sel);
-        const container = document.getElementById('reportDayDetailBody') || document.getElementById('reportCardDayDetail');
+        const container = document.getElementById('reportDayDetailBody');
         if (!container) return;
 
         if (!dayData) {
@@ -281,22 +575,51 @@ const Report = {
             return;
         }
 
-        const date = new Date((dayData.date || dayData.key) + 'T00:00:00');
+        const dayKey = dayData.date || dayData.key;
+        const date = new Date(dayKey + 'T00:00:00');
         const dayLabel = date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
         const completedTasks = State.data.tasks.filter(t =>
             t.completed && t.completedAt &&
-            new Date(t.completedAt).toISOString().split('T')[0] === (dayData.date || dayData.key)
+            new Date(t.completedAt).toISOString().split('T')[0] === dayKey
         );
 
-        const mood = State.data.moods?.find(m => m.date === (dayData.date || dayData.key))?.mood || '';
-        const moodLabels = { focused: '🧠 Focused', good: '😊 Good', okay: '😐 Okay', low: '😔 Low', epic: '🔥 Epic' };
+        const mood = State.data.moods?.find(m => m.date === dayKey)?.mood || '';
+        const moodConfigs = {
+            calm:    { text: 'Calm',    icon: Icons.meditate(13) },
+            high:    { text: 'Sparked', icon: Icons.zap(13) },
+            flow:    { text: 'Flow',    icon: Icons.ocean(13) },
+            tired:   { text: 'Resting', icon: Icons.habitSleep(13) },
+            clouded: { text: 'Clouded', icon: Icons.cloud(13) },
+            focused: { text: 'Focused', icon: Icons.brain(13) },
+            good:    { text: 'Good',    icon: Icons.smileHappy(13) },
+            okay:    { text: 'Okay',    icon: Icons.smileNeutral(13) },
+            low:     { text: 'Low',     icon: Icons.smileSad(13) },
+            epic:    { text: 'Epic',    icon: Icons.fire(13) }
+        };
+        const moodMarkup = mood && moodConfigs[mood]
+            ? `<span class="day-detail-mood" style="display:inline-flex;align-items:center;gap:5px;"><span>${moodConfigs[mood].icon}</span><span>${moodConfigs[mood].text}</span></span>`
+            : (mood ? `<span class="day-detail-mood">${mood}</span>` : '');
+
+        const dayDumps = (State.data.dumps || []).filter(d => {
+            if (!d.ts) return false;
+            return new Date(d.ts).toISOString().split('T')[0] === dayKey;
+        });
+
+        // Habits completed on this date
+        const completedHabits = (State.data.habits?.[dayKey] || []);
+        const habitConfigs = State.data.habitConfig || (typeof DEFAULT_HABITS !== 'undefined' ? DEFAULT_HABITS : []);
+        const dayHabitItems = habitConfigs.filter(h => h.enabled).map(h => {
+            const isDone = completedHabits.includes(h.id);
+            const iconSvg = Icons.getHabitIcon ? Icons.getHabitIcon(h.icon, 12) : '';
+            return `<span class="day-habit-pill ${isDone ? 'done' : ''}">${iconSvg} ${Utils.escape(h.label)}</span>`;
+        });
 
         container.innerHTML = `
         <div class="day-detail-content">
             <div class="day-detail-header">
                 <div class="day-detail-date">${dayLabel}</div>
-                ${mood ? `<span class="day-detail-mood">${moodLabels[mood] || mood}</span>` : ''}
+                ${moodMarkup}
             </div>
             <div class="day-detail-stats">
                 <div class="day-detail-stat">
@@ -318,37 +641,53 @@ const Report = {
                     </div>`).join('')}
                 ${completedTasks.length > 8 ? `<div class="day-detail-more">+${completedTasks.length - 8} more completed</div>` : ''}
             </div>` : '<div class="day-detail-empty">No tasks completed on this day.</div>'}
+
+            ${dayHabitItems.length ? `
+            <div class="day-detail-tasks-list" style="margin-top:10px;">
+                <div class="day-detail-tasks-title">Habit Rhythm</div>
+                <div class="day-habit-pill-wrap">${dayHabitItems.join('')}</div>
+            </div>` : ''}
+
+            ${dayDumps.length ? `
+            <div class="day-detail-tasks-list" style="margin-top:10px;">
+                <div class="day-detail-tasks-title">Captured Thoughts</div>
+                ${dayDumps.slice(0, 5).map(d => `
+                    <div class="day-detail-task" style="border-left: 2.5px solid var(--ac); padding-left: 8px;">
+                        <span class="day-task-text" style="color:var(--tx2);">${Utils.escape(d.text)}</span>
+                    </div>`).join('')}
+                ${dayDumps.length > 5 ? `<div class="day-detail-more">+${dayDumps.length - 5} more thoughts</div>` : ''}
+            </div>` : ''}
         </div>`;
     },
 
     renderInsights(w, m) {
-        const score     = this.getScore(w);
-        const breakdown = this.getScoreBreakdown(w);
         const container = document.getElementById('aiInsightsContent');
         if (!container) return;
 
-        let insight = 'Build the habit of completing one deep work block daily. Small wins compound.';
-        if (score >= 80)      insight = `Elite week — ${w.totalFocus}min of deep focus logged. ${State.data.streak}d streak active. Keep this momentum.`;
-        else if (score >= 60) insight = `Solid output. ${w.totalTasks} tasks done. Focus: ${w.totalFocus}min. Add 2 more sessions to hit flow state.`;
-        else if (score >= 35) insight = `Building rhythm. Best day: ${w.bestDay?.name || 'today'}. Overdue items are dragging your score — clear them first.`;
-        else if (score > 0)   insight = `Week needs momentum. Start with just 1 pomodoro to break friction. Score is ${score}/100 — climb from here.`;
+        const mode = State.reportMode || 'week';
+        if (mode === 'month') {
+            const activePct = m.days.length ? Math.round((m.activeDays / m.days.length) * 100) : 0;
+            const focusHours = (m.totalFocus / 60).toFixed(1);
+            const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const curMonth = monthNames[m.month];
 
-        container.textContent = insight;
-
-        const breakdownEl = document.getElementById('scoreBreakdownList');
-        if (breakdownEl) {
-            breakdownEl.innerHTML = [
-                { label: 'Tasks Done',      val: breakdown.tasks,        positive: true },
-                { label: 'Focus Minutes',   val: breakdown.focus,        positive: true },
-                { label: 'Consistency',     val: breakdown.consistency,  positive: true },
-                { label: 'Completion Rate', val: breakdown.completion,   positive: true },
-                { label: 'Streak Bonus',    val: breakdown.streak,       positive: true },
-                { label: 'Overdue Penalty', val: -breakdown.overdue,     positive: false },
-            ].map(item => `
-            <div class="breakdown-item">
-                <span class="breakdown-label">${item.label}</span>
-                <span class="breakdown-val ${item.val >= 0 ? 'positive' : 'negative'}">${item.val >= 0 ? '+' : ''}${item.val}</span>
-            </div>`).join('');
+            if (m.totalTasks === 0 && m.totalFocus === 0) {
+                container.textContent = `No activity recorded yet for ${curMonth}. Start with a 25-minute Pomodoro session today to kickstart your monthly rhythm.`;
+            } else if (activePct >= 75) {
+                container.textContent = `Phenomenal consistency! Active ${m.activeDays} of ${m.days.length} days (${activePct}%) in ${curMonth} with ${focusHours}h of deep focus. Your peak day was ${m.bestDay?.key || 'recent'} (${m.bestScore} pts).`;
+            } else if (activePct >= 40) {
+                container.textContent = `Solid monthly foundation in ${curMonth}: ${m.totalTasks} tasks completed and ${focusHours}h focused across ${m.activeDays} days. Aim for 3 consecutive active days to strengthen your streak.`;
+            } else {
+                container.textContent = `${curMonth} shows ${m.totalTasks} tasks and ${m.totalFocus}m focus across ${m.activeDays} active days. Focus on daily micro-sessions to rebuild momentum.`;
+            }
+        } else {
+            const score = this.getScore(w);
+            let insight = 'Build the habit of completing one deep work block daily. Small wins compound.';
+            if (score >= 80)      insight = `Elite week — ${w.totalFocus}min of deep focus logged across ${w.activeDays} active days. ${State.data.streak}d streak active. Keep this momentum.`;
+            else if (score >= 60) insight = `Solid output: ${w.totalTasks} tasks done, ${w.totalFocus}min focus. Peak output on ${w.bestDay?.name || 'this week'}. Push for 1 more session to enter flow state.`;
+            else if (score >= 35) insight = `Building rhythm. Best day: ${w.bestDay?.name || 'today'}. Clearing pending tasks before weekend will unlock higher momentum.`;
+            else if (score > 0)   insight = `Week needs momentum. Start with just 1 pomodoro to break initial friction. Current score is ${score}/100 — climb from here.`;
+            container.textContent = insight;
         }
     },
 
@@ -449,12 +788,12 @@ const Report = {
         const habitRate = Math.round((habitActiveDays / 7) * 100);
 
         const velocityBadge = score >= 90 
-            ? '⚡ S-TIER FLOW' 
+            ? `${Icons.zap(12)} S-TIER FLOW` 
             : score >= 70 
-            ? '🔥 HIGH VELOCITY' 
+            ? `${Icons.fire(12)} HIGH VELOCITY` 
             : score >= 40 
-            ? '✨ STEADY RHYTHM' 
-            : '🌱 BUILDING MOMENTUM';
+            ? `${Icons.spark(12)} STEADY RHYTHM` 
+            : `${Icons.habitDefault(12)} BUILDING MOMENTUM`;
 
         // Top completed tasks of the week
         const completedTasksThisWeek = (State.data?.tasks || [])
@@ -500,7 +839,7 @@ const Report = {
 
             <!-- Date & Velocity Sub-header Row -->
             <div class="info-sub-row">
-                <div class="info-date-range">📅 ${dateRangeStr}</div>
+                <div class="info-date-range">${Icons.calendar(12)} ${dateRangeStr}</div>
                 <div class="info-velocity-chip">${velocityBadge}</div>
             </div>
 
@@ -516,7 +855,7 @@ const Report = {
                 </div>
                 <div class="info-score-graphic">
                     <div class="info-score-ring" style="--ring-pct:${Math.max(8, score)}%">
-                        <div class="info-score-ring-inner">⚡</div>
+                        <div class="info-score-ring-inner">${Icons.zap(16)}</div>
                     </div>
                 </div>
             </div>
@@ -563,12 +902,12 @@ const Report = {
                 <div class="info-section-title">KEY ACCOMPLISHMENTS</div>
                 ${completedTasksThisWeek.length > 0 ? completedTasksThisWeek.map(t => `
                     <div class="info-task-item">
-                        <span class="info-task-check">✓</span>
+                        <span class="info-task-check">${Icons.check(12)}</span>
                         <span class="info-task-text">${Utils.escape(t.text)}</span>
                     </div>
                 `).join('') : `
                     <div class="info-task-empty">
-                        <span>🌱</span>
+                        <span>${Icons.seedling(16)}</span>
                         <span>Momentum is building. Complete your first focus session this week!</span>
                     </div>
                 `}
@@ -727,11 +1066,11 @@ const Report = {
         const habitPts = habitTotal ? rhythm : 0;
         const vibe = Math.max(0, Math.min(100, Math.round((focusPts + taskPts + habitPts) / 3)));
 
-        let tier = 'STARTING', emoji = '🌱';
-        if (vibe >= 85) { tier = 'ELITE'; emoji = '⚡'; }
-        else if (vibe >= 70) { tier = 'STRONG'; emoji = '🚀'; }
-        else if (vibe >= 50) { tier = 'STEADY'; emoji = '📈'; }
-        else if (vibe >= 30) { tier = 'BUILDING'; emoji = '🌅'; }
+        let tier = 'STARTING';
+        if (vibe >= 85) { tier = 'ELITE'; }
+        else if (vibe >= 70) { tier = 'STRONG'; }
+        else if (vibe >= 50) { tier = 'STEADY'; }
+        else if (vibe >= 30) { tier = 'BUILDING'; }
 
         /* ---------- background ---------- */
         const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -819,16 +1158,30 @@ const Report = {
                 ? `${a.M} ${a.d} – ${b.M} ${b.d}, ${b.y}`
                 : `${a.M} ${a.d}, ${a.y} – ${b.M} ${b.d}, ${b.y}`;
         }
-        const pillText = `📅  ${range}`;
         const pillFont = `700 13px ${sansFont}`;
-        const pillW = M(pillText, pillFont) + 30;
+        const pillW = M(range, pillFont) + 52;
         roundRect(64, 128, pillW, 32, 16);
         ctx.fillStyle = acA(0.12);
         ctx.fill();
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = acA(0.28);
         ctx.stroke();
-        T(pillText, 79, 144, pillFont, '#CBD5E1');
+
+        ctx.save();
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 1.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const calX = 80, calY = 138;
+        ctx.strokeRect(calX, calY, 13, 11);
+        ctx.beginPath();
+        ctx.moveTo(calX + 3, calY - 3); ctx.lineTo(calX + 3, calY);
+        ctx.moveTo(calX + 10, calY - 3); ctx.lineTo(calX + 10, calY);
+        ctx.moveTo(calX, calY + 3.5); ctx.lineTo(calX + 13, calY + 3.5);
+        ctx.stroke();
+        ctx.restore();
+
+        T(range, 102, 144, pillFont, '#CBD5E1');
 
         /* ---------- vibe score hero ---------- */
         glass(64, 196, 1072, 190, 24, 0.035, 0.09);
@@ -841,7 +1194,7 @@ const Report = {
 
         T(`FOCUS ${focusPts}  •  TASKS ${taskPts}  •  HABITS ${habitPts}`, 100, 354, `600 13px ${sansFont}`, '#94A3B8');
 
-        const badgeText = `${emoji} ${tier}`;
+        const badgeText = tier;
         const badgeFont = `800 13px ${sansFont}`;
         const badgeW = M(badgeText, badgeFont) + 36;
         const badgeX = 1100 - badgeW;
@@ -952,7 +1305,18 @@ const Report = {
                 roundRect(100, ry, 1000, 34, 10);
                 ctx.fillStyle = 'rgba(255,255,255,0.035)';
                 ctx.fill();
-                T('✓', 120, ry + 17, `800 14px ${sansFont}`, AC, 'center');
+                // Crisp vector checkmark
+                ctx.save();
+                ctx.strokeStyle = AC;
+                ctx.lineWidth = 2.2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(114, ry + 17);
+                ctx.lineTo(119, ry + 22);
+                ctx.lineTo(127, ry + 12);
+                ctx.stroke();
+                ctx.restore();
                 T(fit(t.text, `600 14px ${sansFont}`, 930), 146, ry + 17, `600 14px ${sansFont}`, '#E2E8F0');
             });
         }
@@ -992,8 +1356,10 @@ const Report = {
     },
 
     async downloadPNG() {
+        const btn = document.querySelector('[data-action="export-download-png"]');
+        if (btn) btn.classList.add('loading');
         try {
-            Toast.show('Rendering high-res card… 🎨');
+            Toast.show('Rendering high-res card…');
             const canvas = await this.generateCardCanvas();
             const dates = Utils.weekDates(State.weekOffset);
             const link = document.createElement('a');
@@ -1003,28 +1369,33 @@ const Report = {
             link.click();
             document.body.removeChild(link);
             if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
-            Toast.show('Infographic Card downloaded! 📸');
+            Toast.show('Infographic Card downloaded!');
         } catch(e) {
             handleError('PNG Export', e);
             Toast.show('Export failed. Please try again.');
+        } finally {
+            if (btn) btn.classList.remove('loading');
         }
     },
 
     async downloadPDF() {
+        const btn = document.querySelector('[data-action="export-download-pdf"]');
+        if (btn) btn.classList.add('loading');
         try {
-            Toast.show('Generating Executive PDF Report… 📄');
+            Toast.show('Generating Executive PDF Report…');
 
-            if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+            let jsPDFClass = window.jspdf?.jsPDF || window.jsPDF;
+            if (!jsPDFClass) {
                 await new Promise(resolve => {
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
                     script.onload = resolve;
                     document.head.appendChild(script);
                 });
+                jsPDFClass = window.jspdf?.jsPDF || window.jsPDF;
             }
 
-            const { jsPDF } = window.jspdf || window;
-            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const doc = new jsPDFClass({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
             const PW = doc.internal.pageSize.getWidth(); // 210
             const PH = doc.internal.pageSize.getHeight(); // 297
@@ -1053,28 +1424,29 @@ const Report = {
             const habitRate = Math.round((habitActiveDays / 7) * 100);
             const velocityBadge = score >= 90 ? 'S-TIER FLOW' : score >= 70 ? 'HIGH VELOCITY' : score >= 40 ? 'STEADY RHYTHM' : 'MOMENTUM BUILDING';
 
-            // Habits configured
-            const habitConfigs = State.data?.habitConfig || DEFAULT_HABITS || [];
+            // Enabled habits only (BUG-05)
+            const habitConfigs = (State.data?.habitConfig || DEFAULT_HABITS || []).filter(h => h.enabled);
             
             // Completed tasks this week
             const completedTasksThisWeek = (State.data?.tasks || [])
                 .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]));
 
-            // Colors
+            // Colors: Theme-aware (BUG-04)
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
             const css = getComputedStyle(document.documentElement);
             const acHex = (css.getPropertyValue('--ac').trim() || '#38B6FF').replace('#', '');
             const acR = parseInt(acHex.substring(0, 2), 16) || 56;
             const acG = parseInt(acHex.substring(2, 4), 16) || 182;
             const acB = parseInt(acHex.substring(4, 6), 16) || 255;
 
-            const BG_PAGE = [10, 14, 30];
-            const BG_CARD = [17, 23, 46];
-            const BG_CARD_ALT = [23, 31, 60];
-            const BORDER = [40, 52, 90];
-            const TX_WHITE = [255, 255, 255];
-            const TX_GRAY = [148, 163, 184];
-            const TX_MUTED = [100, 116, 139];
-            const ACCENT = [acR, acG, acB];
+            const BG_PAGE     = isLight ? [242, 240, 235] : [10, 14, 30];
+            const BG_CARD     = isLight ? [255, 255, 255] : [17, 23, 46];
+            const BG_CARD_ALT = isLight ? [235, 232, 226] : [23, 31, 60];
+            const BORDER      = isLight ? [215, 210, 202] : [40, 52, 90];
+            const TX_WHITE    = isLight ? [18, 16, 14]   : [255, 255, 255];
+            const TX_GRAY     = isLight ? [70, 65, 60]   : [148, 163, 184];
+            const TX_MUTED    = isLight ? [115, 110, 102] : [100, 116, 139];
+            const ACCENT      = [acR, acG, acB];
 
             // Helper Drawing Functions
             const fillBg = (c) => doc.setFillColor(c[0], c[1], c[2]);
@@ -1088,29 +1460,37 @@ const Report = {
 
             // Top Header Accent Line
             fillBg(ACCENT);
-            doc.rect(0, 0, PW, 3, 'F');
+            doc.rect(0, 0, PW, 3.5, 'F');
 
             // ── HEADER BLOCK ──
             fillBg(BG_CARD);
             strokeBd(BORDER);
             doc.roundedRect(12, 10, PW - 24, 28, 4, 4, 'FD');
 
-            // Brand Logo & Title
+            // Brand Logo Disc & Title
+            fillBg(ACCENT);
+            doc.roundedRect(18, 16, 10, 10, 2.5, 2.5, 'F');
+            // Vector lightning shape inside logo box
+            if (isLight) doc.setFillColor(255, 255, 255);
+            else doc.setFillColor(0, 0, 0);
+            doc.triangle(23, 17.5, 20.5, 21.5, 23, 21.5, 'F');
+            doc.triangle(22.5, 20.5, 25, 20.5, 22.5, 24.5, 'F');
+
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(16);
+            doc.setFontSize(15);
             textCol(TX_WHITE);
-            doc.text('FOCUSSIUM 3.0', 20, 22);
+            doc.text('FOCUSSIUM 3.0', 32, 22);
 
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
             textCol(TX_GRAY);
-            doc.text('EXECUTIVE PRODUCTIVITY AUDIT & WEEKLY DOSSIER', 20, 28);
+            doc.text('EXECUTIVE PRODUCTIVITY AUDIT & WEEKLY DOSSIER', 32, 28);
 
             // User Info on Right
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(10);
             textCol(TX_WHITE);
-            doc.text(Utils.escape(username), PW - 20, 20, { align: 'right' });
+            doc.text(username, PW - 20, 20, { align: 'right' });
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(7.5);
@@ -1127,7 +1507,7 @@ const Report = {
             // ── SECTION 1: VIBE SCORE & PERFORMANCE MATRIX ──
             fillBg(BG_CARD);
             strokeBd(BORDER);
-            doc.roundedRect(12, curY, PW - 24, 38, 4, 4, 'FD');
+            doc.roundedRect(12, curY, PW - 24, 40, 4, 4, 'FD');
 
             // Score Display
             doc.setFont('helvetica', 'bold');
@@ -1148,11 +1528,11 @@ const Report = {
             // Velocity Tier Badge
             fillBg(BG_CARD_ALT);
             strokeBd(ACCENT);
-            doc.roundedRect(20, curY + 28, 48, 6, 2, 2, 'FD');
+            doc.roundedRect(20, curY + 29, 48, 6.5, 2, 2, 'FD');
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(6.5);
             textCol(TX_WHITE);
-            doc.text(velocityBadge, 44, curY + 32.5, { align: 'center' });
+            doc.text(velocityBadge, 44, curY + 33.5, { align: 'center' });
 
             // Triad Summary Columns on Right
             const kpiX1 = 80, kpiX2 = 122, kpiX3 = 164;
@@ -1203,9 +1583,9 @@ const Report = {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6.5);
             textCol(TX_MUTED);
-            doc.text(`Score Breakdown: Tasks (+${breakdown.tasks} pts) • Focus (+${breakdown.focus} pts) • Rhythm (+${breakdown.streak} pts) • Consistency (+${breakdown.consistency} pts)`, 80, curY + 34);
+            doc.text(`Score Breakdown: Tasks (+${breakdown.tasks} pts) • Focus (+${breakdown.focus} pts) • Rhythm (+${breakdown.streak} pts) • Consistency (+${breakdown.consistency} pts)`, 80, curY + 35);
 
-            curY += 44;
+            curY += 46;
 
             // ── SECTION 2: 7-DAY VISUAL FOCUS BAR CHART ──
             doc.setFont('helvetica', 'bold');
@@ -1221,6 +1601,11 @@ const Report = {
             const maxDailyFocus = Math.max(...w.days.map(d => d.focus), 1);
             const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const chartSlotW = (PW - 24 - 24) / 7;
+
+            // Baseline guide line
+            doc.setDrawColor(BORDER[0], BORDER[1], BORDER[2]);
+            doc.setLineWidth(0.4);
+            doc.line(18, curY + 34, PW - 18, curY + 34);
 
             w.days.forEach((d, i) => {
                 const barX = 20 + i * chartSlotW;
@@ -1243,7 +1628,7 @@ const Report = {
                     // Value label
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(5.5);
-                    textCol(TX_WHITE);
+                    textCol(isLight ? TX_WHITE : [255, 255, 255]);
                     doc.text(`${d.focus}m`, barX + barWidth / 2, barY + trackH - fillH - 1.5, { align: 'center' });
                 }
 
@@ -1281,7 +1666,7 @@ const Report = {
             // Table Rows
             const dayFullNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
             w.days.forEach((d, i) => {
-                const rowBg = (i % 2 === 0) ? BG_CARD : BG_PAGE;
+                const rowBg = (i % 2 === 0) ? BG_CARD : (isLight ? [248, 246, 242] : BG_PAGE);
                 fillBg(rowBg);
                 strokeBd(BORDER);
                 doc.rect(12, curY, PW - 24, 6.5, 'FD');
@@ -1318,7 +1703,8 @@ const Report = {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6);
             textCol(TX_MUTED);
-            doc.text('Focussium 3.0 • Confidential Productivity Audit • Generated locally on device', 12, PH - 6);
+            const timeStampStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            doc.text(`Focussium 3.0 • Verified Audit • Generated ${timeStampStr}`, 12, PH - 6);
             doc.text(`Page 1 of 2`, PW - 12, PH - 6, { align: 'right' });
 
 
@@ -1331,7 +1717,7 @@ const Report = {
 
             // Top Header Accent Line
             fillBg(ACCENT);
-            doc.rect(0, 0, PW, 3, 'F');
+            doc.rect(0, 0, PW, 3.5, 'F');
 
             curY = 14;
 
@@ -1344,16 +1730,18 @@ const Report = {
 
             fillBg(BG_CARD);
             strokeBd(BORDER);
-            const taskBoxH = 64;
+            const maxTaskItems = Math.min(8, completedTasksThisWeek.length);
+            const taskBoxH = maxTaskItems > 0 ? Math.max(30, 10 + maxTaskItems * 6.8) : 34;
             doc.roundedRect(12, curY, PW - 24, taskBoxH, 4, 4, 'FD');
 
             if (completedTasksThisWeek.length > 0) {
                 completedTasksThisWeek.slice(0, 8).forEach((t, i) => {
                     const ty = curY + 7 + (i * 6.8);
-                    doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(7);
-                    textCol(ACCENT);
-                    doc.text('✓', 18, ty);
+                    // Vector checkmark in PDF
+                    doc.setDrawColor(ACCENT[0], ACCENT[1], ACCENT[2]);
+                    doc.setLineWidth(0.5);
+                    doc.line(16.5, ty - 1, 18, ty);
+                    doc.line(18, ty, 20.5, ty - 2.8);
 
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(7);
@@ -1371,7 +1759,7 @@ const Report = {
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(7);
                 textCol(TX_GRAY);
-                doc.text('No completed tasks logged for this week. Focus momentum is ready to be built!', 20, curY + 24);
+                doc.text('No completed tasks logged for this week. Focus momentum is ready to be built!', 20, curY + 18);
             }
 
             curY += taskBoxH + 8;
@@ -1385,7 +1773,8 @@ const Report = {
 
             fillBg(BG_CARD);
             strokeBd(BORDER);
-            const habitBoxH = 58;
+            const habitRows = Math.min(6, habitConfigs.length);
+            const habitBoxH = habitRows > 0 ? Math.max(36, 12 + habitRows * 8.2) : 34;
             doc.roundedRect(12, curY, PW - 24, habitBoxH, 4, 4, 'FD');
 
             if (habitConfigs.length > 0) {
@@ -1394,34 +1783,45 @@ const Report = {
                     doc.setFont('helvetica', 'bold');
                     doc.setFontSize(7);
                     textCol(TX_WHITE);
-                    doc.text(h.label || h.name || 'Habit', 18, hy);
+                    const habitLabel = (h.label || h.name || 'Habit');
+                    doc.text(habitLabel.length > 30 ? habitLabel.substring(0, 28) + '…' : habitLabel, 18, hy);
 
                     // 7 days tick boxes
                     dates.forEach((d, dayIdx) => {
                         const isDone = (State.data?.habits?.[d] || []).includes(h.id);
-                        const dotX = 84 + dayIdx * 12;
+                        const dotX = 84 + dayIdx * 11;
                         fillBg(isDone ? ACCENT : BG_CARD_ALT);
                         strokeBd(isDone ? ACCENT : BORDER);
                         doc.roundedRect(dotX, hy - 3.5, 7.5, 4.8, 1, 1, 'FD');
                         doc.setFont('helvetica', 'bold');
                         doc.setFontSize(5);
-                        textCol(isDone ? [0, 0, 0] : TX_MUTED);
+                        textCol(isDone ? (isLight ? [255, 255, 255] : [0, 0, 0]) : TX_MUTED);
                         doc.text(dayFullNames[dayIdx].substring(0, 1), dotX + 3.75, hy - 0.2, { align: 'center' });
                     });
 
-                    // Compliance Rate
+                    // Compliance Rate + visual progress bar
                     const doneCount = dates.filter(d => (State.data?.habits?.[d] || []).includes(h.id)).length;
                     const compRate = Math.round((doneCount / 7) * 100);
+
+                    const pBarW = 16;
+                    const pFillW = (pBarW * compRate) / 100;
+                    fillBg(BG_CARD_ALT);
+                    doc.roundedRect(PW - 46, hy - 2.5, pBarW, 3, 0.8, 0.8, 'F');
+                    if (pFillW > 0) {
+                        fillBg(ACCENT);
+                        doc.roundedRect(PW - 46, hy - 2.5, pFillW, 3, 0.8, 0.8, 'F');
+                    }
+
                     doc.setFont('helvetica', 'bold');
-                    doc.setFontSize(7);
+                    doc.setFontSize(6.5);
                     textCol(compRate >= 70 ? ACCENT : TX_GRAY);
-                    doc.text(`${compRate}% (${doneCount}/7d)`, PW - 20, hy, { align: 'right' });
+                    doc.text(`${compRate}%`, PW - 18, hy, { align: 'right' });
                 });
             } else {
                 doc.setFont('helvetica', 'italic');
                 doc.setFontSize(7);
                 textCol(TX_GRAY);
-                doc.text('No active habits configured. Establish daily habits in the Habits tab to track streaks.', 20, curY + 24);
+                doc.text('No active habits configured. Establish daily habits in the Habits tab to track streaks.', 20, curY + 18);
             }
 
             curY += habitBoxH + 8;
@@ -1440,7 +1840,13 @@ const Report = {
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(7.5);
             textCol(TX_WHITE);
-            const stoicQuoteText = "“We suffer more often in imagination than in reality.” — Seneca";
+            const stoicQuotes = [
+                "“We suffer more often in imagination than in reality.” — Seneca",
+                "“You have power over your mind, not outside events.” — Marcus Aurelius",
+                "“First say to yourself what you would be; and then do what you have to do.” — Epictetus",
+                "“Action is the true measure of discipline.” — Toji"
+            ];
+            const stoicQuoteText = stoicQuotes[Math.floor(Math.random() * stoicQuotes.length)];
             doc.text(stoicQuoteText, 18, curY + 9);
 
             doc.setFont('helvetica', 'normal');
@@ -1455,22 +1861,26 @@ const Report = {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(6);
             textCol(TX_MUTED);
-            doc.text('Focussium 3.0 • Confidential Productivity Audit • Generated locally on device', 12, PH - 6);
+            doc.text(`Focussium 3.0 • Verified Audit • Generated ${timeStampStr}`, 12, PH - 6);
             doc.text(`Page 2 of 2`, PW - 12, PH - 6, { align: 'right' });
 
             // Save PDF
             doc.save(`Focussium_Executive_Audit_${dates[0]}.pdf`);
             if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
-            Toast.show('Detailed 2-Page PDF Report downloaded! 📄');
+            Toast.show('Detailed 2-Page PDF Report downloaded!');
         } catch (e) {
             handleError('PDF Export', e);
             Toast.show('PDF generation failed');
+        } finally {
+            if (btn) btn.classList.remove('loading');
         }
     },
 
     async copyImage() {
+        const btn = document.querySelector('[data-action="export-copy-clipboard"]');
+        if (btn) btn.classList.add('loading');
         try {
-            Toast.show('Capturing card… 📋');
+            Toast.show('Capturing card…');
             const canvas = await this.generateCardCanvas();
             canvas.toBlob(async (blob) => {
                 if (!blob) throw new Error('Blob generation failed');
@@ -1479,7 +1889,7 @@ const Report = {
                         new ClipboardItem({ 'image/png': blob })
                     ]);
                     if (typeof Sound !== 'undefined' && Sound.success) Sound.success();
-                    Toast.show('Infographic copied to clipboard! 📋');
+                    Toast.show('Infographic copied to clipboard!');
                 } catch(clipErr) {
                     const dates = Utils.weekDates(State.weekOffset);
                     const link = document.createElement('a');
@@ -1489,11 +1899,14 @@ const Report = {
                     link.click();
                     document.body.removeChild(link);
                     Toast.show('Downloaded image (Clipboard permission restricted)');
+                } finally {
+                    if (btn) btn.classList.remove('loading');
                 }
             }, 'image/png');
         } catch(e) {
             handleError('Copy image', e);
             Toast.show('Failed to copy card');
+            if (btn) btn.classList.remove('loading');
         }
     }
 };
@@ -1509,9 +1922,14 @@ document.addEventListener('click', (e) => {
         const w = Utils.weekData(State.weekOffset);
         const m = Report.getMonthData(State.monthOffset);
         Report.renderDayDetails(w, m);
+        Report.renderWeekTimeline(w);
         Report.renderHeatmap(w);
         Report.renderMonthOverview(m);
         Sound.click();
+
+        if (State.reportMode === 'month') {
+            document.getElementById('reportCardDayDetail')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }
 });
 

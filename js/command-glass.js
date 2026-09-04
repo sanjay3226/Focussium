@@ -42,18 +42,18 @@ const CommandGlass = {
                 Storage.save();
                 Dump.render();
                 Nav.updateBadges();
-                Toast.show('Brain dump saved 🧠');
+                Toast.show('Brain dump saved');
             }
         } else if (text.toLowerCase().startsWith('focus')) {
             /* ── Jump to focus page ── */
             Nav.go('focus');
-            Toast.show('Focus mode activated ⏱️');
+            Toast.show('Focus mode activated');
         } else if (text.toLowerCase() === 'report') {
             Nav.go('report');
-            Toast.show('Weekly Report 📊');
+            Toast.show('Weekly Report');
         } else if (text.toLowerCase() === 'habits') {
             Nav.go('habits');
-            Toast.show('Habits tracker 🛡️');
+            Toast.show('Habits tracker');
         } else {
             /* ── Default: quick task ── */
             State.data.tasks.unshift({
@@ -75,7 +75,7 @@ const CommandGlass = {
             Tasks.render();
             Home.render();
             Nav.updateBadges();
-            Toast.show('Task added ⚡');
+            Toast.show('Task added');
         }
 
         this.close();

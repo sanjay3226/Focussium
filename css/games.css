@@ -1,0 +1,732 @@
+/* ═══════════════════════════════════════════════════════════
+   FOCUSSIUM 3.2 — FOCUS GAMES STYLES
+   Mini-games for breaks, mental clarity & focus recharge
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Games Page Container ── */
+.games-intro {
+    margin-bottom: 20px;
+}
+
+.games-hero-card {
+    background: linear-gradient(135deg, rgba(var(--acr), 0.12) 0%, rgba(var(--acr), 0.03) 100%);
+    border: 1px solid rgba(var(--acr), 0.25);
+    border-radius: var(--radius-card);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.games-zen-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: rgba(var(--acr), 0.15);
+    border: 1px solid rgba(var(--acr), 0.35);
+    border-radius: 20px;
+    font-size: 0.60rem;
+    font-weight: 800;
+    color: var(--ac);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+}
+
+.games-hero-info h3 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--tx1);
+    margin-bottom: 4px;
+}
+
+.games-hero-info p {
+    font-size: 0.72rem;
+    color: var(--tx3);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.games-hero-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    padding: 8px 12px;
+    min-width: 68px;
+}
+
+.games-hero-xp-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--ac);
+    line-height: 1;
+}
+
+.games-hero-xp-lbl {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tx3);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+}
+
+/* ── Library Grid ── */
+.games-library-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 360px) {
+    .games-library-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.game-card {
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s, box-shadow 0.25s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(var(--acr), 0.4);
+    box-shadow: 0 8px 24px rgba(var(--acr), 0.12);
+}
+
+.game-card:active {
+    transform: scale(0.98);
+}
+
+.game-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.game-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: rgba(var(--acr), 0.12);
+    color: var(--ac);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+}
+
+.game-card:hover .game-card-icon {
+    transform: scale(1.08);
+}
+
+.game-card-xp {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: var(--ac);
+    background: rgba(var(--acr), 0.12);
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(var(--acr), 0.25);
+}
+
+.game-card-title {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--tx1);
+    margin-bottom: 4px;
+}
+
+.game-card-desc {
+    font-size: 0.70rem;
+    color: var(--tx3);
+    line-height: 1.35;
+    margin-bottom: 14px;
+    flex: 1;
+}
+
+.game-card-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    color: var(--tx1);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.game-card:hover .game-card-btn {
+    background: var(--ac);
+    color: var(--ac-text, #fff);
+    border-color: var(--ac);
+}
+
+/* ── Game Arena (Full screen game container) ── */
+.game-arena {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal, 1000);
+    background: var(--bg1);
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    animation: arenaFadeIn 0.28s ease-out;
+}
+
+.game-arena.active {
+    display: flex;
+}
+
+@keyframes arenaFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.arena-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--bd);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.arena-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.arena-game-icon {
+    color: var(--ac);
+    display: flex;
+    align-items: center;
+}
+
+.arena-game-name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--tx1);
+}
+
+.arena-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.arena-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    color: var(--tx2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.arena-close-btn:active {
+    transform: scale(0.92);
+}
+
+.arena-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ── Breathing Game ── */
+.breathe-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+}
+
+.breathe-ring-wrap {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+}
+
+.breathe-outer-glow {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(var(--acr), 0.35) 0%, transparent 70%);
+    filter: blur(16px);
+    transition: transform 3.8s ease-in-out, opacity 3.8s ease-in-out;
+}
+
+.breathe-circle-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.breathe-bg-track {
+    fill: none;
+    stroke: var(--bg3);
+    stroke-width: 8;
+}
+
+.breathe-progress-bar {
+    fill: none;
+    stroke: var(--ac);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 690;
+    stroke-dashoffset: 690;
+    transition: stroke-dashoffset 0.1s linear;
+}
+
+.breathe-inner-ball {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ac) 0%, var(--acl, var(--ac)) 100%);
+    box-shadow: 0 0 30px rgba(var(--acr), 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--ac-text, #fff);
+    transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 2;
+}
+
+.breathe-phase-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.breathe-phase-timer {
+    font-size: 0.85rem;
+    font-weight: 700;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
+.breathe-stats {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.breathe-stat-chip {
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--tx2);
+}
+
+.breathe-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.breathe-btn {
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+.breathe-btn.primary {
+    background: var(--ac);
+    color: var(--ac-text, #fff);
+}
+
+.breathe-btn.secondary {
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    color: var(--tx1);
+}
+
+/* ── Challenge Cards ── */
+.challenge-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.challenge-streak-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--ac);
+    background: rgba(var(--acr), 0.12);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(var(--acr), 0.25);
+}
+
+.challenge-card-perspective {
+    width: 100%;
+    max-width: 340px;
+    height: 220px;
+    perspective: 1000px;
+    margin-bottom: 24px;
+}
+
+.challenge-card-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.challenge-card-inner.flipped {
+    transform: rotateY(180deg);
+}
+
+.challenge-card-front,
+.challenge-card-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--bg2);
+    border: 2px solid rgba(var(--acr), 0.3);
+}
+
+.challenge-card-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, rgba(var(--acr), 0.15) 0%, var(--bg2) 100%);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.challenge-card-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--ac);
+    letter-spacing: 0.08em;
+}
+
+.challenge-card-text {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.45;
+    color: var(--tx1);
+    text-align: center;
+    margin: auto 0;
+}
+
+.challenge-card-footer {
+    font-size: 0.68rem;
+    color: var(--tx3);
+    text-align: center;
+}
+
+.challenge-card-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 340px;
+}
+
+.challenge-act-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 14px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+.challenge-act-btn.done {
+    background: var(--ac);
+    color: var(--ac-text, #fff);
+}
+
+.challenge-act-btn.skip {
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    color: var(--tx2);
+}
+
+/* ── Reaction Reflex Game ── */
+.reflex-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.reflex-stats-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 360px;
+    margin-bottom: 14px;
+}
+
+.reflex-stat-box {
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 12px;
+    padding: 6px 14px;
+    text-align: center;
+}
+
+.reflex-stat-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--ac);
+}
+
+.reflex-stat-lbl {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--tx3);
+    text-transform: uppercase;
+}
+
+.reflex-board {
+    width: 100%;
+    max-width: 360px;
+    height: 320px;
+    background: var(--bg0);
+    border: 2px dashed var(--bd);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+    user-select: none;
+    margin-bottom: 18px;
+}
+
+.reflex-target-dot {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: var(--ac);
+    box-shadow: 0 0 20px rgba(var(--acr), 0.7);
+    cursor: pointer;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ac-text, #fff);
+    animation: targetPulse 1.2s infinite ease-in-out;
+}
+
+.reflex-target-dot.visible {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+@keyframes targetPulse {
+    0%, 100% { box-shadow: 0 0 16px rgba(var(--acr), 0.6); }
+    50%      { box-shadow: 0 0 28px rgba(var(--acr), 0.95); }
+}
+
+.reflex-board-message {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--tx3);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ── Zen Garden Game ── */
+.zen-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.zen-timer-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--tx2);
+    margin-bottom: 14px;
+}
+
+.zen-canvas-wrap {
+    width: 100%;
+    max-width: 360px;
+    aspect-ratio: 1;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--bd);
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.08);
+    position: relative;
+    background: var(--bg2);
+    touch-action: none;
+    margin-bottom: 16px;
+}
+
+.zen-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: crosshair;
+}
+
+.zen-toolbar {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 360px;
+}
+
+.zen-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--bd);
+    color: var(--tx1);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.zen-btn:active {
+    transform: scale(0.96);
+}
+
+/* ── Game Stats & Summary Cards ── */
+.games-stats-summary {
+    background: var(--bg2);
+    border: 1px solid var(--bd);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    margin-top: 10px;
+}
+
+.games-stats-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--tx1);
+    margin-bottom: 12px;
+}
+
+.games-stats-header svg {
+    color: var(--ac);
+}
+
+.games-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.games-stat-box {
+    background: var(--bg3);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+.games-stat-val {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--tx1);
+}
+
+.games-stat-lbl {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--tx3);
+    text-transform: uppercase;
+    margin-top: 2px;
+}

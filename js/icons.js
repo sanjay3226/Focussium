@@ -509,6 +509,212 @@ const Icons = {
         </svg>`;
     },
 
+    mute(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2V15H6L11 19V5Z"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+        </svg>`;
+    },
+
+    rain(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            <line x1="8" y1="19" x2="6" y2="23"/>
+            <line x1="12" y1="19" x2="10" y2="23"/>
+            <line x1="16" y1="19" x2="14" y2="23"/>
+        </svg>`;
+    },
+
+    ocean(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+            <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+            <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+        </svg>`;
+    },
+
+    meditate(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="2.5"/>
+            <path d="M12 9v5"/>
+            <path d="M5 19c.5-2.5 2-4.5 4-5.5l3 2 3-2c2 1 3.5 3 4 5.5"/>
+            <path d="M8 14.5l-4 2.5 2 3"/>
+            <path d="M16 14.5l4 2.5-2 3"/>
+            <path d="M9 21h6"/>
+        </svg>`;
+    },
+
+    deepHum(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12h2"/>
+            <path d="M6 8v8"/>
+            <path d="M10 4v16"/>
+            <path d="M14 7v10"/>
+            <path d="M18 9v6"/>
+            <path d="M22 12h-2"/>
+        </svg>`;
+    },
+
+    moon(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>
+        </svg>`;
+    },
+
+    sun(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>`;
+    },
+
+    auto(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/>
+        </svg>`;
+    },
+
+    cloud(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+        </svg>`;
+    },
+
+    smileHappy(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>`;
+    },
+
+    smileNeutral(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="8" y1="15" x2="16" y2="15"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>`;
+    },
+
+    smileSad(size = 16) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M16 16s-1.5-2-4-2-4 2-4 2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>`;
+    },
+
+    lotus(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3c-1.5 3-3.5 6-3.5 9.5 0 2.5 1.5 4.5 3.5 5.5 2-1 3.5-3 3.5-5.5C15.5 9 13.5 6 12 3z"/>
+            <path d="M12 18c-3.5 0-6.5-1.5-8-4 1.5-2.5 4.5-4 7-3.5"/>
+            <path d="M12 18c3.5 0 6.5-1.5 8-4-1.5-2.5-4.5-4-7-3.5"/>
+            <path d="M5 19c2 1.5 4.5 2 7 2s5-.5 7-2"/>
+        </svg>`;
+    },
+
+    rocket(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+            <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+        </svg>`;
+    },
+
+    seedling(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22V12"/>
+            <path d="M12 12C12 7 8 4 4 4C4 8 7 12 12 12Z"/>
+            <path d="M12 12C12 7 16 4 20 4C20 8 17 12 12 12Z"/>
+        </svg>`;
+    },
+
+    gamepad(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="12" x2="10" y2="12"/>
+            <line x1="8" y1="10" x2="8" y2="14"/>
+            <line x1="15" y1="13" x2="15.01" y2="13"/>
+            <line x1="18" y1="11" x2="18.01" y2="11"/>
+            <rect x="2" y="6" width="20" height="12" rx="6"/>
+        </svg>`;
+    },
+
+    lungs(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4v7"/>
+            <path d="M7 11c-2.5 1-4 3.5-4 6.5a4.5 4.5 0 0 0 7 3.8V11"/>
+            <path d="M17 11c2.5 1 4 3.5 4 6.5a4.5 4.5 0 0 1-7 3.8V11"/>
+        </svg>`;
+    },
+
+    cards(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="5" width="13" height="16" rx="2.5"/>
+            <path d="M8 5V3.5A1.5 1.5 0 0 1 9.5 2h11A1.5 1.5 0 0 1 22 3.5v13a1.5 1.5 0 0 1-1.5 1.5H16"/>
+        </svg>`;
+    },
+
+    target(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="6"/>
+            <circle cx="12" cy="12" r="2"/>
+        </svg>`;
+    },
+
+    garden(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 17c3-2 6-2 9 0s6 2 9 0"/>
+            <path d="M3 12c3-2 6-2 9 0s6 2 9 0"/>
+            <path d="M12 4v4"/>
+            <path d="M7 8h10"/>
+        </svg>`;
+    },
+
+    trophy(size = 20) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/>
+            <path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+            <path d="M4 3h16v7a8 8 0 0 1-16 0V3z"/>
+            <path d="M12 17v4"/>
+            <path d="M8 21h8"/>
+        </svg>`;
+    },
+
     getHabitIcon(name, size = 20) {
         if (!name) return this.habitDefault(size);
         const clean = String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -527,6 +733,8 @@ function injectIcons() {
         'loadingLogo': () => Icons.logo(56),
         'loginLogo': () => Icons.logo(64),
         'googleIcon': () => Icons.google(20),
+        'loginBadgeLockIcon': () => Icons.lock(12),
+        'loginBadgeZapIcon': () => Icons.zap(12),
 
         'headerDumpBtn': () => Icons.dump(18),
         'headerSettingsBtn': () => Icons.settings(18),
@@ -537,6 +745,7 @@ function injectIcons() {
         'pageIconDump': () => Icons.brain(24),
         'pageIconFocus': () => Icons.target(24),
         'pageIconReport': () => Icons.chart(24),
+        'pageIconGames': () => Icons.gamepad(24),
 
         'userAvatarFallback': () => Icons.user(20),
 
@@ -547,12 +756,24 @@ function injectIcons() {
         'navIconHabits': () => Icons.shield(20),
         'navIconDump': () => Icons.dump(20),
         'navIconFocus': () => Icons.focus(20),
+        'navIconGames': () => Icons.gamepad(20),
         'navIconReport': () => Icons.report(20),
 
         'fabIcon': () => Icons.plus(22),
         'dumpSendBtn': () => Icons.sendUp(16),
         'moodLoggerIcon': () => Icons.fire(16),
         'quoteSparkleIcon': () => Icons.spark(16),
+        'moodBtnCalm': () => Icons.meditate(14),
+        'moodBtnHigh': () => Icons.zap(14),
+        'moodBtnFlow': () => Icons.ocean(14),
+        'moodBtnTired': () => Icons.habitSleep(14),
+        'moodBtnClouded': () => Icons.cloud(14),
+
+        'ambientBtnNone': () => Icons.mute(18),
+        'ambientBtnRain': () => Icons.rain(18),
+        'ambientBtnWaves': () => Icons.ocean(18),
+        'ambientBtnBinaural': () => Icons.meditate(18),
+        'ambientBtnBrown': () => Icons.deepHum(18),
 
         'pomoResetBtn': () => Icons.reset(18),
         'pomoSkipBtn': () => Icons.skip(18),
@@ -573,6 +794,7 @@ function injectIcons() {
         'reportMonthIcon': () => Icons.calendar(16),
         'reportDayIcon': () => Icons.calendar(16),
         'reportHabitsCardIcon': () => Icons.shield(16),
+        'reportStreakCardIcon': () => Icons.fire(16),
         'aiInsightsIcon': () => Icons.spark(12),
         'downloadIcon': () => Icons.download(18),
 
@@ -589,6 +811,23 @@ function injectIcons() {
         'settingsAccentIcon': () => Icons.palette(16),
         'settingsSoundIcon': () => Icons.sound(16),
         'settingsAvatarIcon': () => Icons.user(16),
+
+        'onboardFeat0': () => Icons.clock(14),
+        'onboardFeat1': () => Icons.tasks(14),
+        'onboardFeat2': () => Icons.brain(14),
+        'onboardFeat3': () => Icons.seedling(14),
+        'onboardFeat4': () => Icons.chart(14),
+
+        'onboardThemeDark': () => Icons.moon(14),
+        'onboardThemeLight': () => Icons.sun(14),
+        'onboardThemeAuto': () => Icons.auto(14),
+        'onboardFinalBadge': () => Icons.meditate(36),
+
+        'closeAddTaskModalIcon': () => Icons.close(14),
+        'closeSettingsModalIcon': () => Icons.close(14),
+        'closeAccountModalIcon': () => Icons.close(14),
+        'closeExportModalIcon': () => Icons.close(14),
+        'closeHabitModalIcon': () => Icons.close(14),
 
         'onboardEmoji0': () => Icons.logo(64),
         'onboardEmoji1': () => Icons.user(64),

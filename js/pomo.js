@@ -28,14 +28,6 @@ const Pomo = {
         this.updatePlayButton(false);
         this.cycleInsight(true);
         this.initAmbientUI();
-
-        // Inject fullscreen overlay icons
-        const fsClose = document.getElementById('fsCloseIcon');
-        const fsReset = document.getElementById('fsResetIcon');
-        const fsSkip  = document.getElementById('fsSkipIcon');
-        if (fsClose) fsClose.innerHTML = Icons.close(18);
-        if (fsReset) fsReset.innerHTML = Icons.reset(20);
-        if (fsSkip)  fsSkip.innerHTML  = Icons.skip(20);
     },
 
     initAmbientUI() {
@@ -230,7 +222,7 @@ const Pomo = {
             Storage.save();
             this.renderDots();
             Level.update();
-            Toast.show('Focus done! 🔥');
+            Toast.show('Focus session complete!');
 
             if (State.pomo.count >= State.data.settings.sessions) {
                 State.pomo.count = 0;
@@ -240,7 +232,7 @@ const Pomo = {
                 Sound.breakStart();
             }
         } else {
-            Toast.show('Let\'s focus! 💪');
+            Toast.show('Focus session started');
             this.setMode('focus');
         }
 
@@ -308,9 +300,9 @@ const Pomo = {
         if (!('Notification' in window) || Notification.permission !== 'granted') return;
         try {
             const labels = {
-                focus: '🔥 Focus session complete!',
-                break: '☕ Break is over!',
-                long:  '🌟 Long break done!'
+                focus: 'Focus session complete!',
+                break: 'Break is over!',
+                long:  'Long break done!'
             };
             const body = State.pomo.mode === 'focus'
                 ? `Great work! You completed ${State.data.settings.focusDur} minutes of deep focus.`

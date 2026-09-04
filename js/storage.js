@@ -79,7 +79,7 @@ const Storage = {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            Toast.show('Backup downloaded! 💾');
+            Toast.show('Backup downloaded!');
         } catch (e) {
             handleError('Export failed', e);
             Toast.show('Export failed. Try again.');
@@ -114,7 +114,7 @@ const Storage = {
                 Habits.render();
                 Level.update();
 
-                Toast.show('Data imported successfully! ✅');
+                Toast.show('Data imported successfully!');
             } catch (err) {
                 handleError('Import failed', err);
                 Toast.show('Import failed — invalid backup file.');

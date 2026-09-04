@@ -72,7 +72,7 @@ const Account = {
 
         /* ─── Rank pill ─── */
         const rankEl = document.getElementById('accountRank');
-        if (rankEl)  rankEl.textContent = `⚡ LVL ${xpInfo.level} • ${xpInfo.rank}`;
+        if (rankEl)  rankEl.innerHTML = `${Icons.zap(13)} LVL ${xpInfo.level} • ${xpInfo.rank}`;
 
         /* ─── XP bar ─── */
         const xpFillEl = document.getElementById('accountXpFill');

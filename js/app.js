@@ -47,6 +47,9 @@ const App = {
         const dateInp = document.getElementById('taskDateInput');
         if (dateInp) dateInp.value = Utils.today();
 
+        /* Games lounge init */
+        if (typeof Games !== 'undefined') Games.render();
+
         /* Restore user email display */
         const emailDisp = document.getElementById('userEmailDisplay');
         if (emailDisp) emailDisp.textContent = State.user?.email || '—';
@@ -56,12 +59,12 @@ const App = {
 
         /* Initial hash page route */
         const hash = location.hash.replace('#', '');
-        const validPages = ['home', 'tasks', 'focus', 'dump', 'report', 'habits'];
+        const validPages = ['home', 'tasks', 'focus', 'dump', 'report', 'habits', 'games'];
         if (typeof Nav !== 'undefined' && validPages.includes(hash)) {
             Nav.go(hash);
         }
 
-        console.log(`Focussium 3.0 🚀 | Schema v${CONFIG.SCHEMA_VERSION} | ${Utils.today()}`);
+        console.log(`Focussium 3.2 | Schema v${CONFIG.SCHEMA_VERSION} | ${Utils.today()}`);
     }
 };
 
@@ -75,8 +78,24 @@ window.addEventListener('load', () => {
     /* Firebase Auth bootstrap (handles login screen + onboard check) */
     if (typeof Auth !== 'undefined') Auth.init();
 
-    /* Service Worker — auto-update on new version */
-    if ('serviceWorker' in navigator) {
+    /* Localhost dev bypass: Unregister SW and purge caches so changes reflect immediately */
+    const isLocalhost = Boolean(
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1' ||
+        location.hostname.endsWith('.localhost')
+    );
+
+    if (isLocalhost && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+            for (const reg of regs) {
+                reg.unregister();
+            }
+        });
+        if ('caches' in window) {
+            caches.keys().then(names => names.forEach(name => caches.delete(name)));
+        }
+    } else if ('serviceWorker' in navigator) {
+        /* Service Worker — auto-update on new version in production */
         navigator.serviceWorker
             .register('./sw.js')
             .then(reg => {

@@ -3,7 +3,7 @@
    Network-first, auto-updates, v3.0 cache manifest
 ═══════════════════════════════════════════════════════════ */
 
-const APP_VERSION = '2026.08.23.v311';
+const APP_VERSION = '2026.09.04.v330';
 const CACHE_NAME  = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -23,6 +23,7 @@ const ASSETS = [
     './css/modals.css',
     './css/timer.css',
     './css/charts.css',
+    './css/games.css',
 
     /* JS — core */
     './js/config.js',
@@ -42,9 +43,10 @@ const ASSETS = [
     './js/tasks.js',
     './js/dump.js',
     './js/pomo.js',
+    './js/habits.js',
     './js/home.js',
     './js/report.js',
-    './js/habits.js',
+    './js/games.js',
     './js/account.js',
     './js/settings.js',
     './js/onboard.js',
@@ -54,8 +56,6 @@ const ASSETS = [
     './js/sounds.js',
     './js/icons.js',
     './js/firebase-config.js',
-    './js/threebg_dark.js',
-    './js/threebg_light.js',
 
     /* Boot */
     './js/app.js',

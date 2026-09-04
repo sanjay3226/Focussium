@@ -320,6 +320,7 @@ body {
     overflow: hidden;
     position: relative;
     min-height: 0;
+    overscroll-behavior: contain;
 }
 
 /* ── Pages — NO scrollbar visible, no x-overflow ── */
@@ -328,6 +329,10 @@ body {
     inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-padding-top: 16px;
     padding: 14px 20px 110px;
     opacity: 0;
     transform: translateX(16px);
@@ -406,7 +411,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 6px 8px;
+    padding: 6px 4px;
     padding-bottom: max(10px, env(safe-area-inset-bottom));
     background: var(--nav-bg);
     backdrop-filter: blur(8px);
@@ -420,15 +425,17 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 2px;
-    padding: 7px 14px;
-    border-radius: 14px;
+    padding: 6px 2px;
+    border-radius: 12px;
     position: relative;
     background: transparent;
     cursor: pointer;
     border: none;
     -webkit-tap-highlight-color: transparent;
     transition: background .25s, opacity .15s;
-    min-width: 44px; /* tap target */
+    min-width: 0;
+    flex: 1 1 0;
+    max-width: 68px;
     min-height: 44px;
     justify-content: center;
 }
@@ -449,14 +456,18 @@ body {
 }
 
 .nav-label {
-    font-size: .54rem;
+    font-size: .52rem;
     font-weight: 700;
     color: var(--tx3);
-    letter-spacing: .04em;
+    letter-spacing: .03em;
     text-transform: uppercase;
     transition: color .25s;
     position: relative;
     z-index: 1;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-badge {

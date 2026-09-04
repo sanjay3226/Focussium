@@ -21,13 +21,13 @@ const Habits = {
 
         const bonusHTML = allDone ? `
         <div class="habits-bonus-banner">
-            ${Icons.bolt ? Icons.bolt(14) : '⚡'} All habits complete! +${CONFIG.XP_PER_HABIT_DAY} XP earned.
+            ${Icons.bolt(14)} All habits complete! +${CONFIG.XP_PER_HABIT_DAY} XP earned.
         </div>` : '';
 
         container.innerHTML = `
         <div class="habits-header">
             <div class="habits-header-meta">
-                <span class="habits-streak">${Icons.fire ? Icons.fire(14) : '🔥'} ${streak} day streak</span>
+                <span class="habits-streak">${Icons.fire(14)} ${streak} day streak</span>
                 <span class="habits-xp-hint">${todayDone.length}/${enabled.length} done</span>
             </div>
             <div class="habits-progress-bar-wrap">
@@ -38,7 +38,7 @@ const Habits = {
         <div class="habits-list">
             ${enabled.length === 0 ? `
             <div class="habits-empty-state">
-                <div class="habits-empty-icon">${Icons.shield ? Icons.shield(32) : '🛡️'}</div>
+                <div class="habits-empty-icon">${Icons.shield(32)}</div>
                 <p>No habits yet.<br>Tap <strong>Add Habit</strong> to begin your streak.</p>
             </div>` :
             enabled.map(habit => {
@@ -47,9 +47,9 @@ const Habits = {
                 <button class="habit-item ${done ? 'done' : ''}"
                         data-action="toggle-habit" data-habit-id="${habit.id}"
                         aria-pressed="${done}">
-                    <span class="habit-icon">${Icons.getHabitIcon ? Icons.getHabitIcon(habit.icon, 20) : '✦'}</span>
+                    <span class="habit-icon">${Icons.getHabitIcon(habit.icon, 20)}</span>
                     <span class="habit-label">${Utils.escape(habit.label)}</span>
-                    <span class="habit-check">${Icons.check ? Icons.check(14) : '✓'}</span>
+                    <span class="habit-check">${Icons.check(14)}</span>
                 </button>`;
             }).join('')}
         </div>
@@ -69,7 +69,7 @@ const Habits = {
                 config.map(h => `
                 <div class="habit-config-row">
                     <div class="habit-config-left">
-                        <span class="habit-config-icon">${Icons.getHabitIcon ? Icons.getHabitIcon(h.icon, 16) : '✦'}</span>
+                        <span class="habit-config-icon">${Icons.getHabitIcon(h.icon, 16)}</span>
                         <span class="habit-config-label ${!h.enabled ? 'disabled' : ''}">${Utils.escape(h.label)}</span>
                     </div>
                     <div class="habit-config-actions">
@@ -79,10 +79,10 @@ const Habits = {
                              role="switch"
                              aria-checked="${h.enabled}"></div>
                         <button class="habit-edit-btn" data-action="open-habit-edit" data-habit-id="${h.id}" title="Edit">
-                            ${Icons.edit ? Icons.edit(13) : '✏️'}
+                            ${Icons.edit(13)}
                         </button>
                         <button class="habit-delete-btn" data-action="habit-delete" data-habit-id="${h.id}" title="Delete">
-                            ${Icons.trash ? Icons.trash(13) : '🗑️'}
+                            ${Icons.trash(13)}
                         </button>
                     </div>
                 </div>`).join('')}
@@ -113,7 +113,7 @@ const Habits = {
             State.data._habitBonusAwardedDays.push(today);
             State.data.totalHabitDaysCompleted = (State.data.totalHabitDaysCompleted || 0) + 1;
             if (typeof Level !== 'undefined') Level.update();
-            Toast.show(`All habits done! ⚡ +${CONFIG.XP_PER_HABIT_DAY} XP`);
+            Toast.show(`All habits done! +${CONFIG.XP_PER_HABIT_DAY} XP`);
             Sound.success();
         } else {
             Sound.click();
@@ -138,10 +138,13 @@ const Habits = {
 
     /* ─── DELETE HABIT ─── */
     deleteHabit(habitId) {
+        const id = habitId || document.getElementById('editingHabitId')?.value;
+        if (!id) return;
         if (!State.data.habitConfig) State.data.habitConfig = [...DEFAULT_HABITS];
         if (!confirm('Delete this habit? This cannot be undone.')) return;
-        State.data.habitConfig = State.data.habitConfig.filter(h => h.id !== habitId);
+        State.data.habitConfig = State.data.habitConfig.filter(h => h.id !== id);
         Storage.save();
+        document.getElementById('habitModal')?.classList.remove('on');
         this.render();
         if (typeof Home !== 'undefined') Home.renderHabitsPreview();
         Sound.click();
@@ -155,6 +158,8 @@ const Habits = {
         document.getElementById('habitIconSelect').value        = 'workout';
         document.getElementById('editingHabitId').value         = '';
         document.getElementById('habitSubmitBtn').textContent   = 'Add Habit';
+        const delBtn = document.getElementById('habitDeleteBtn');
+        if (delBtn) delBtn.style.display = 'none';
         document.getElementById('habitModal').classList.add('on');
         Sound.click();
     },
@@ -170,6 +175,8 @@ const Habits = {
         document.getElementById('habitIconSelect').value        = habit.icon || 'workout';
         document.getElementById('editingHabitId').value         = habitId;
         document.getElementById('habitSubmitBtn').textContent   = 'Save Changes';
+        const delBtn = document.getElementById('habitDeleteBtn');
+        if (delBtn) delBtn.style.display = 'block';
         document.getElementById('habitModal').classList.add('on');
         Sound.click();
     },
@@ -194,12 +201,12 @@ const Habits = {
                 habit.label = label;
                 habit.icon  = icon;
             }
-            Toast.show('Habit updated! ✓');
+            Toast.show('Habit updated!');
         } else {
             // Add new — generate unique ID
             const id = 'habit_' + Date.now();
             State.data.habitConfig.push({ id, label, icon, enabled: true });
-            Toast.show('New habit added! 🌱');
+            Toast.show('New habit added!');
         }
 
         Storage.save();
@@ -287,7 +294,7 @@ const Habits = {
         return `
         <div class="home-habits-card" data-action="nav-go" data-page="habits">
             <div class="home-habits-header">
-                <span class="home-habits-title">${Icons.shield ? Icons.shield(13) : '🛡️'} Daily Habits</span>
+                <span class="home-habits-title">${Icons.shield(13)} Daily Habits</span>
                 <span class="home-habits-count">${done}/${enabled.length}</span>
             </div>
             <div class="home-habits-progress-bar">
@@ -298,7 +305,7 @@ const Habits = {
                     const isDone = (State.data.habits?.[today] || []).includes(h.id);
                     return `
                     <div class="home-habit-chip ${isDone ? 'done' : ''}" title="${Utils.escape(h.label)}">
-                        <span class="home-habit-icon">${Icons.getHabitIcon ? Icons.getHabitIcon(h.icon, 14) : '✦'}</span>
+                        <span class="home-habit-icon">${Icons.getHabitIcon(h.icon, 14)}</span>
                         <span class="home-habit-name">${Utils.escape(h.label)}</span>
                     </div>`;
                 }).join('')}
@@ -315,7 +322,7 @@ document.addEventListener('click', (e) => {
 
     if (action === 'toggle-habit')       Habits.toggle(el.dataset.habitId);
     if (action === 'habit-toggle-enable') Habits.toggleEnable(el.dataset.habitId);
-    if (action === 'habit-delete')        Habits.deleteHabit(el.dataset.habitId);
+    if (action === 'habit-delete')        Habits.deleteHabit(el.dataset.habitId || document.getElementById('editingHabitId')?.value);
     if (action === 'open-habit-add')      Habits.openAddModal();
     if (action === 'open-habit-edit')     Habits.openEditModal(el.dataset.habitId);
     if (action === 'habit-submit')        Habits.submitHabit();

@@ -73,8 +73,8 @@
     /* Text — pure black → slate hierarchy, all WCAG AA+ */
     --tx1: #12100E;    /* main text — 18:1 */
     --tx2: #38342F;    /* body — 10:1 */
-    --tx3: #6B665F;    /* muted — 5.5:1 ✓ AA */
-    --tx4: #908B83;    /* placeholders — 4.6:1 ✓ AA */
+    --tx3: #6B665F;    /* muted — 5.5:1 [pass AA] */
+    --tx4: #6B5F58;    /* placeholders — 4.6:1 [pass AA] */
 
     /* Borders */
     --bd:  rgba(0, 0, 0, 0.09);
@@ -495,3 +495,11 @@
     --habit-done-bd:    var(--acd);
     --habit-done-tx:    var(--acd);
 }
+
+[data-theme="light"] .tab-count {
+    background: rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] .tab.active .tab-count {
+    background: rgba(0, 0, 0, 0.18);
+}
+

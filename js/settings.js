@@ -96,7 +96,7 @@ const Settings = {
         Storage.save();
         this.render();
         Sound.toggle();
-        Toast.show('Custom accent applied ✨');
+        Toast.show('Custom accent applied');
     },
 
     updateCustomSwatch() {
@@ -150,7 +150,7 @@ const Settings = {
         Storage.save();
         this.renderSoundPalette();
         Sound.toggle();
-        Toast.show(`Sound Vibe: ${palette === 'retro' ? 'Retro Synth 🕹️' : 'Zen Chimes 🪷'}`);
+        Toast.show(`Sound Vibe: ${palette === 'retro' ? 'Retro Synth' : 'Zen Chimes'}`);
     },
 
     /* ─── TIMER ADJUST ─── */
@@ -187,9 +187,16 @@ const Settings = {
                 inner = `<img src="${av.src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${av.n}">`;
             } else if (av.type === 'custom') {
                 const cu = State.data.settings?.customAvatarDataUrl;
-                inner = cu ? `<img src="${cu}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="custom">` : `📸`;
+                inner = cu ? `<img src="${cu}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="custom">` : Icons.camera(20);
             } else {
-                inner = `<span style="font-size:1.4rem;">${{seed:'🌱',lotus:'🪷',voyager:'🚀',deity:'⚡',user:'👤'}[av.icon] || '👤'}</span>`;
+                const avatarIconMap = {
+                    seed: Icons.seedling(24),
+                    lotus: Icons.lotus(24),
+                    voyager: Icons.rocket(24),
+                    deity: Icons.zap(24),
+                    user: Icons.user(24)
+                };
+                inner = `<span class="avatar-icon-svg" style="display:flex;align-items:center;justify-content:center;color:var(--tx1);">${avatarIconMap[av.icon] || Icons.user(24)}</span>`;
             }
             return `<button class="avatar-btn ${isActive ? 'active' : ''}"
                          data-action="set-avatar" data-avatar="${av.id}"
@@ -208,7 +215,7 @@ const Settings = {
         Storage.save();
         this.renderAvatars();
         Sound.toggle();
-        Toast.show('Avatar updated 🔮');
+        Toast.show('Avatar updated');
     },
 
     handleAvatarUpload(event) {
@@ -228,7 +235,7 @@ const Settings = {
                 Storage.save();
                 this.renderAvatars();
                 Sound.success();
-                Toast.show('Custom photo saved! 📸');
+                Toast.show('Custom photo saved!');
             };
             img.src = e.target.result;
         };

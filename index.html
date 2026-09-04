@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="css/modals.css">
     <link rel="stylesheet" href="css/timer.css">
     <link rel="stylesheet" href="css/charts.css">
+    <link rel="stylesheet" href="css/games.css">
 </head>
 
 <body>
@@ -82,8 +83,8 @@
             <div class="login-error" id="loginError"></div>
 
             <div class="login-footer-row">
-                <span class="login-footer-badge">🔒 Cloud Encrypted Sync</span>
-                <span class="login-footer-badge">⚡ Offline Mode</span>
+                <span class="login-footer-badge" id="loginBadgeLock"><span class="badge-icon" id="loginBadgeLockIcon"></span> Cloud Encrypted Sync</span>
+                <span class="login-footer-badge" id="loginBadgeZap"><span class="badge-icon" id="loginBadgeZapIcon"></span> Offline Mode</span>
             </div>
         </div>
     </div>
@@ -98,11 +99,11 @@
                 <h2 class="onboard-title">Welcome to Focussium</h2>
                 <p class="onboard-desc">Your 30-second zen setup. Tailored for your unique rhythm.</p>
                 <div class="onboard-feature-pills">
-                    <span class="feat-pill">⏱️ Focus Timer</span>
-                    <span class="feat-pill">📋 Task Manager</span>
-                    <span class="feat-pill">🧠 Brain Dump</span>
-                    <span class="feat-pill">🌱 Habits</span>
-                    <span class="feat-pill">📊 Vibe Analytics</span>
+                    <span class="feat-pill"><span class="pill-icon" id="onboardFeat0"></span> Focus Timer</span>
+                    <span class="feat-pill"><span class="pill-icon" id="onboardFeat1"></span> Task Manager</span>
+                    <span class="feat-pill"><span class="pill-icon" id="onboardFeat2"></span> Brain Dump</span>
+                    <span class="feat-pill"><span class="pill-icon" id="onboardFeat3"></span> Habits</span>
+                    <span class="feat-pill"><span class="pill-icon" id="onboardFeat4"></span> Vibe Analytics</span>
                 </div>
                 <button class="onboard-btn primary" data-action="onboard-next">Begin Setup →</button>
             </div>
@@ -132,23 +133,23 @@
                 <p class="onboard-desc">Select your preferred space aesthetic.</p>
                 <div class="onboard-themes">
                     <button class="onboard-theme active" data-theme="dark" data-action="onboard-theme">
-                        <span class="theme-icon">🌙</span> Dark
+                        <span class="theme-icon" id="onboardThemeDark"></span> Dark
                     </button>
                     <button class="onboard-theme" data-theme="light" data-action="onboard-theme">
-                        <span class="theme-icon">☀️</span> Light
+                        <span class="theme-icon" id="onboardThemeLight"></span> Light
                     </button>
                     <button class="onboard-theme" data-theme="system" data-action="onboard-theme">
-                        <span class="theme-icon">⚙️</span> Auto
+                        <span class="theme-icon" id="onboardThemeAuto"></span> Auto
                     </button>
                 </div>
                 <button class="onboard-btn primary" data-action="onboard-next">Continue</button>
             </div>
 
             <div class="onboard-step" data-step="4">
-                <div class="onboard-hero-badge final-badge"><span>🧘✨</span></div>
+                <div class="onboard-hero-badge final-badge" id="onboardFinalBadge"></div>
                 <h2 class="onboard-title">You're All Set!</h2>
                 <p class="onboard-desc">Your customised zen space is ready for deep flow.</p>
-                <button class="onboard-btn primary pulse" data-action="onboard-done">Enter Zen Space ✨</button>
+                <button class="onboard-btn primary pulse" data-action="onboard-done">Enter Zen Space</button>
             </div>
 
             <div class="onboard-dots" id="onboardDots"></div>
@@ -330,11 +331,11 @@
                     </div>
                     <p class="mood-logger-subtitle">Log your current mental frequency to trace focus trends.</p>
                     <div class="mood-selectors" id="moodSelectors">
-                        <button class="mood-btn calm"    data-action="log-mood" data-mood="calm"    title="Calm Zen">🧘 Calm</button>
-                        <button class="mood-btn high"    data-action="log-mood" data-mood="high"    title="High Energy">⚡ Sparked</button>
-                        <button class="mood-btn flow"    data-action="log-mood" data-mood="flow"    title="Deep Flow">🌊 Flow</button>
-                        <button class="mood-btn tired"   data-action="log-mood" data-mood="tired"   title="Resting">💤 Resting</button>
-                        <button class="mood-btn clouded" data-action="log-mood" data-mood="clouded" title="Overwhelmed">☁️ Clouded</button>
+                        <button class="mood-btn calm"    data-action="log-mood" data-mood="calm"    title="Calm Zen"><span class="mood-btn-icon" id="moodBtnCalm"></span> Calm</button>
+                        <button class="mood-btn high"    data-action="log-mood" data-mood="high"    title="High Energy"><span class="mood-btn-icon" id="moodBtnHigh"></span> Sparked</button>
+                        <button class="mood-btn flow"    data-action="log-mood" data-mood="flow"    title="Deep Flow"><span class="mood-btn-icon" id="moodBtnFlow"></span> Flow</button>
+                        <button class="mood-btn tired"   data-action="log-mood" data-mood="tired"   title="Resting"><span class="mood-btn-icon" id="moodBtnTired"></span> Resting</button>
+                        <button class="mood-btn clouded" data-action="log-mood" data-mood="clouded" title="Overwhelmed"><span class="mood-btn-icon" id="moodBtnClouded"></span> Clouded</button>
                     </div>
                 </div>
             </section>
@@ -396,11 +397,11 @@
                     <!-- Ambient sounds -->
                     <div class="ambient-compact-row">
                         <div class="ambient-icons-group">
-                            <button class="ambient-icon-btn active" data-sound="none"     data-action="pomo-ambient" title="Silence">🔇</button>
-                            <button class="ambient-icon-btn"        data-sound="rain"     data-action="pomo-ambient" title="Rainfall">🌧️</button>
-                            <button class="ambient-icon-btn"        data-sound="waves"    data-action="pomo-ambient" title="Ocean Waves">🌊</button>
-                            <button class="ambient-icon-btn"        data-sound="binaural" data-action="pomo-ambient" title="Binaural">🧘</button>
-                            <button class="ambient-icon-btn"        data-sound="brown"    data-action="pomo-ambient" title="Deep Hum">📿</button>
+                            <button class="ambient-icon-btn active" data-sound="none"     data-action="pomo-ambient" title="Silence" id="ambientBtnNone"></button>
+                            <button class="ambient-icon-btn"        data-sound="rain"     data-action="pomo-ambient" title="Rainfall" id="ambientBtnRain"></button>
+                            <button class="ambient-icon-btn"        data-sound="waves"    data-action="pomo-ambient" title="Ocean Waves" id="ambientBtnWaves"></button>
+                            <button class="ambient-icon-btn"        data-sound="binaural" data-action="pomo-ambient" title="Binaural" id="ambientBtnBinaural"></button>
+                            <button class="ambient-icon-btn"        data-sound="brown"    data-action="pomo-ambient" title="Deep Hum" id="ambientBtnBrown"></button>
                         </div>
                         <div class="ambient-slider-container">
                             <span class="ambient-slider-icon" id="ambientVolIcon"></span>
@@ -472,17 +473,18 @@
 
                 <div class="report-stats report-week-only" id="reportStats"></div>
 
-                <!-- Heatmap -->
+                <!-- Weekly Rhythm & Day Timeline -->
                 <div class="report-card report-week-only expanded" id="reportCardHeatmap">
                     <div class="report-card-header" data-action="report-collapse" data-card="reportCardHeatmap">
                         <div class="report-card-header-left">
                             <span class="report-card-icon" id="reportHeatIcon"></span>
-                            <span>Activity Map</span>
+                            <span>Weekly Rhythm &amp; Timeline</span>
                         </div>
                         <span class="report-card-chevron" id="reportHeatChevron"></span>
                     </div>
                     <div class="report-card-body">
-                        <div class="heatmap-grid" id="reportHeatGrid"></div>
+                        <div class="report-week-timeline" id="reportWeekTimeline"></div>
+                        <div class="heatmap-grid" id="reportHeatGrid" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -515,6 +517,7 @@
                     </div>
                     <div class="report-card-body">
                         <div class="month-stats" id="monthStats"></div>
+                        <div class="month-sparkline-container" id="monthSparklineContainer"></div>
                         <div class="month-calendar" id="monthCalendar"></div>
                         <div class="month-insight" id="monthInsight"></div>
                     </div>
@@ -533,7 +536,7 @@
                 </div>
 
                 <!-- Habits heatmap (v3.0) -->
-                <div class="report-card expanded" id="reportCardHabits">
+                <div class="report-card report-week-only expanded" id="reportCardHabits">
                     <div class="report-card-header" data-action="report-collapse" data-card="reportCardHabits">
                         <div class="report-card-header-left">
                             <span class="report-card-icon" id="reportHabitsCardIcon"></span>
@@ -542,6 +545,18 @@
                         <span class="report-card-chevron" id="reportHabitsChevron"></span>
                     </div>
                     <div class="report-card-body" id="reportHabitsHeatmap"></div>
+                </div>
+
+                <!-- Consistency Streak (v3.1) -->
+                <div class="report-card expanded" id="reportCardStreak">
+                    <div class="report-card-header" data-action="report-collapse" data-card="reportCardStreak">
+                        <div class="report-card-header-left">
+                            <span class="report-card-icon" id="reportStreakCardIcon"></span>
+                            <span>Consistency Streak</span>
+                        </div>
+                        <span class="report-card-chevron" id="reportStreakChevron"></span>
+                    </div>
+                    <div class="report-card-body" id="reportStreakBody"></div>
                 </div>
 
                 <!-- AI Insights -->
@@ -557,6 +572,16 @@
                     <span id="downloadIcon"></span>
                     <span>Download Report</span>
                 </button>
+            </section>
+
+            <!-- ── GAMES ── -->
+            <section class="page" data-page="games">
+                <div class="page-header">
+                    <span class="page-icon" id="pageIconGames"></span>
+                    <h2>Focus Games</h2>
+                </div>
+
+                <div id="gamesLibrary"></div>
             </section>
 
         </main>
@@ -580,11 +605,31 @@
                 <span class="nav-icon" id="navIconFocus"></span>
                 <span class="nav-label">Focus</span>
             </button>
+            <button class="nav-item" data-page="games"  data-action="nav-go" aria-label="Focus games">
+                <span class="nav-icon" id="navIconGames"></span>
+                <span class="nav-label">Games</span>
+            </button>
             <button class="nav-item" data-page="report" data-action="nav-go" aria-label="Weekly report">
                 <span class="nav-icon" id="navIconReport"></span>
                 <span class="nav-label">Vibe</span>
             </button>
         </nav>
+
+        <!-- Game Arena Overlay -->
+        <div class="game-arena" id="gameArena" role="dialog" aria-modal="true" aria-label="Game arena">
+            <div class="arena-header">
+                <div class="arena-title-wrap">
+                    <span class="arena-game-icon" id="arenaGameIcon"></span>
+                    <span class="arena-game-name" id="arenaGameTitle">Mini-Game</span>
+                </div>
+                <div class="arena-actions">
+                    <button class="arena-close-btn" data-action="exit-game" title="Exit Game">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6L18 18"/><path d="M18 6L6 18"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="arena-body" id="arenaBody"></div>
+        </div>
 
         <!-- FAB -->
         <button class="fab" id="fabButton" data-action="tasks-open-add" aria-label="Add new task">
@@ -598,7 +643,7 @@
     <div class="modal" id="addTaskModal" role="dialog" aria-modal="true" aria-label="Task editor">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
-            <button class="account-close-btn" data-action="modal-close" data-modal="addTaskModal" title="Close">✕</button>
+            <button class="account-close-btn" data-action="modal-close" data-modal="addTaskModal" title="Close"><span id="closeAddTaskModalIcon"></span></button>
             <div class="modal-title" id="taskModalTitle">New Task</div>
 
             <div class="form-group">
@@ -683,7 +728,7 @@
     <div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
-            <button class="account-close-btn" data-action="settings-close" title="Close Settings">✕</button>
+            <button class="account-close-btn" data-action="settings-close" title="Close Settings"><span id="closeSettingsModalIcon"></span></button>
             <div class="modal-title">Settings</div>
 
             <div class="settings-section">
@@ -822,7 +867,7 @@
     <div class="modal" id="accountModal" role="dialog" aria-modal="true" aria-label="Account Profile">
         <div class="modal-sheet account-sheet">
             <div class="modal-handle"></div>
-            <button class="account-close-btn" data-action="account-close" title="Close Profile">✕</button>
+            <button class="account-close-btn" data-action="account-close" title="Close Profile"><span id="closeAccountModalIcon"></span></button>
 
             <div class="account-card-header">
                 <div class="account-avatar-ring">
@@ -929,7 +974,7 @@
     <div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-label="Export Productivity Report">
         <div class="modal-sheet export-studio-sheet">
             <div class="modal-handle"></div>
-            <button class="account-close-btn" data-action="export-close" title="Close">✕</button>
+            <button class="account-close-btn" data-action="export-close" title="Close"><span id="closeExportModalIcon"></span></button>
             <div class="modal-title">Export Studio</div>
             <p class="export-studio-sub">Shareable Infographic Card & High-DPI Document</p>
 
@@ -962,7 +1007,7 @@
     <div class="modal" id="habitModal" role="dialog" aria-modal="true" aria-label="Habit Editor">
         <div class="modal-sheet">
             <div class="modal-handle"></div>
-            <button class="account-close-btn" data-action="habit-modal-close" title="Close">✕</button>
+            <button class="account-close-btn" data-action="habit-modal-close" title="Close"><span id="closeHabitModalIcon"></span></button>
             <div class="modal-title" id="habitModalTitle">Add Habit</div>
 
             <div class="form-group">
@@ -973,18 +1018,19 @@
             <div class="form-group">
                 <label class="form-label">Category / Icon</label>
                 <select class="form-select" id="habitIconSelect">
-                    <option value="workout">🏋️ Workout / Fitness</option>
-                    <option value="water">💧 Hydration / Water</option>
-                    <option value="sleep">🌙 Sleep / Rest</option>
-                    <option value="study">📚 Deep Study / Learning</option>
-                    <option value="journal">✍️ Journal / Writing</option>
-                    <option value="noscreen">📵 Screen Detox</option>
-                    <option value="default">🌱 General Habit</option>
+                    <option value="workout">Workout / Fitness</option>
+                    <option value="water">Hydration / Water</option>
+                    <option value="sleep">Sleep / Rest</option>
+                    <option value="study">Deep Study / Learning</option>
+                    <option value="journal">Journal / Writing</option>
+                    <option value="noscreen">Screen Detox</option>
+                    <option value="default">General Habit</option>
                 </select>
             </div>
 
             <input type="hidden" id="editingHabitId" value="">
             <button class="form-submit-btn" id="habitSubmitBtn" data-action="habit-submit">Add Habit</button>
+            <button class="form-delete-btn" id="habitDeleteBtn" data-action="habit-delete" style="display:none">Delete Habit</button>
         </div>
     </div>
 
@@ -1026,6 +1072,7 @@
     <script src="js/settings.js"></script>
     <script src="js/onboard.js"></script>
     <script src="js/command-glass.js"></script>
+    <script src="js/games.js"></script>
 
     <!-- Boot (last — all modules must be defined first) -->
     <script src="js/app.js"></script>
@@ -1077,6 +1124,15 @@
         if (action === 'tasks-submit')            { Tasks.submitTask(); return; }
         if (action === 'tasks-delete-from-modal') { Tasks.deleteFromModal(); return; }
         if (action === 'tasks-add-subtask')       { Tasks.addTempSubtask(); return; }
+
+        /* ── Habits ── */
+        if (action === 'open-habit-add')       { Habits.openAddModal(); return; }
+        if (action === 'open-habit-edit')      { Habits.openEditModal(el.dataset.habitId); return; }
+        if (action === 'habit-submit')         { Habits.submitHabit(); return; }
+        if (action === 'habit-delete')         { Habits.deleteHabit(el.dataset.habitId || document.getElementById('editingHabitId')?.value); return; }
+        if (action === 'toggle-habit')         { Habits.toggle(el.dataset.habitId); return; }
+        if (action === 'habit-toggle-enable')  { Habits.toggleEnable(el.dataset.habitId); return; }
+        if (action === 'habit-modal-close')    { document.getElementById('habitModal')?.classList.remove('on'); Sound.close(); return; }
 
         /* ── Dump ── */
         if (action === 'dump-add')   { Dump.add(); return; }
@@ -1131,7 +1187,11 @@
             e.target.style.setProperty('--val', e.target.value + '%');
             Pomo.setAmbientVolume(e.target.value);
         }
-        if (e.target.id === 'avatarFileInput') {
+    });
+
+    /* ── File inputs (change event) ── */
+    document.addEventListener('change', (e) => {
+        if (e.target.id === 'avatarFileInput' || e.target.dataset.action === 'settings-avatar-upload') {
             Settings.handleAvatarUpload(e);
         }
     });

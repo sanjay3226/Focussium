@@ -538,6 +538,8 @@
     box-shadow: var(--shadow-xs);
     -webkit-tap-highlight-color: transparent;
     transition: opacity .15s;
+    transform: translateZ(0);
+    will-change: transform, opacity;
 }
 
 .task-item:active {
@@ -826,6 +828,17 @@
 .report-week-only  { display: block; }
 .report-month-only { display: none;  }
 
+.page[data-report-mode="week"] .report-week-only  { display: block !important; }
+.page[data-report-mode="week"] .report-month-only { display: none !important;  }
+
+.page[data-report-mode="month"] .report-week-only  { display: none !important; }
+.page[data-report-mode="month"] .report-month-only { display: block !important; }
+
+.page[data-report-mode="month"] .report-month-only,
+.page[data-report-mode="week"] .report-week-only {
+    animation: fadeIn .3s cubic-bezier(.16, 1, 0.3, 1) both;
+}
+
 .report-mode-panel {
     background: var(--bg2);
     border: 1px solid var(--bd);
@@ -876,11 +889,13 @@
     flex-direction: column;
     gap: 3px;
     -webkit-tap-highlight-color: transparent;
-    transition: opacity .15s;
+    transition: opacity .15s, transform .15s;
+    animation: chipFadeIn .35s cubic-bezier(.16,1,.3,1) backwards;
 }
 
 .report-mode-chip:active {
     opacity: .8;
+    transform: scale(.98);
 }
 
 .report-mode-chip-label {
@@ -992,11 +1007,18 @@
     background: var(--bg3);
     border: 1px solid var(--bd);
     border-radius: 10px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.breakdown-item:hover {
+    border-color: rgba(var(--acr), 0.35);
+    box-shadow: 0 2px 8px rgba(var(--acr), 0.12);
+    transform: translateX(2px);
 }
 
 .breakdown-label { font-size: .72rem; color: var(--tx2); font-weight: 600; }
 
-.breakdown-val { font-size: .78rem; font-weight: 800; line-height: 1; }
+.breakdown-val { font-size: .78rem; font-weight: 800; line-height: 1; font-family: var(--font-sans); }
 .breakdown-val.positive { color: var(--ac); }
 .breakdown-val.negative { color: #EF4444; }
 
@@ -1039,6 +1061,7 @@
     border-radius: 18px;
     margin-bottom: 12px;
     overflow: hidden;
+    scroll-margin-top: 14px;
 }
 
 .report-card.expanded .report-card-body { max-height: 1400px; opacity: 1; }

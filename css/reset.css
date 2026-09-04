@@ -15,7 +15,6 @@ html {
     -webkit-tap-highlight-color: transparent;
     overflow: hidden;
     height: 100%;
-    scroll-behavior: smooth;
 }
 
 body {

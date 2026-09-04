@@ -12,11 +12,34 @@
 | **Remote** | `https://github.com/sanjay3226/Focussium` |
 | **Branch** | `main` |
 | **Deploy** | GitHub Pages → `https://sanjay3226.github.io/Focussium/` |
-| **PWA cache key** | `focussium-2026.08.23.v300` |
+| **PWA cache key** | `focussium-2026.09.04.v330` |
 
 ---
 
 ## 🚀 Version History
+
+### v3.2.0-dev — 2026-09-04 — "Focus Games Prototype & Vibe Overhaul (WIP)"
+**Commit**: `feat(wip): Focus Games prototype, Vibe analytics overhaul, zero-emoji migration`
+
+**Status**: ⚠️ Active Development / Work-in-Progress
+
+**Summary:**
+- 🎮 **Focus Games Module (Prototype)**:
+  - Added dedicated Games tab (`js/games.js`, `css/games.css`) with 4 mindful recharge activities: Box Breathing, Focus Micro-Cards, Reaction Reflex, and Zen Sand Garden.
+  - Dedicated "Mindful Sparks" system decoupled completely from account Level XP to protect productivity integrity.
+  - Full-screen Game Arena overlay with responsive canvas and animation loops.
+  - *Note: Game UX, mechanics, and design are in active development.*
+- 📊 **Vibe (Report) Section Polish**:
+  - Implemented Month vs Week view switching (fixed missing CSS display toggle rules).
+  - GitHub-style 30-day activity heatmap, dynamic sparkline, consistency streak, and analytics chart tabs.
+- 🎨 **100% Zero-Emoji Migration**:
+  - Replaced all raw unicode emoji characters throughout the entire codebase with curated vector SVGs (`Icons.*`).
+- ⚡ **Navigation & Performance**:
+  - Bottom navigation refactored to fit 6 items (`Home`, `Tasks`, `Habits`, `Focus`, `Games`, `Vibe`) responsively without layout shifts.
+  - Added localhost/dev service worker cache bypass to avoid stale asset lockouts.
+  - PWA cache manifest updated to `focussium-2026.09.04.v330`.
+
+---
 
 ### v3.0.0 — 2026-08-23 — "Deep Focus Overhaul"
 **Commit**: `feat: Focussium 3.0 — full modular rewrite + colour system`
@@ -150,7 +173,8 @@ F:\Life OS\Projects\Focussium\
 │   ├── pages.css       ← Page-specific styles
 │   ├── modals.css      ← Modals, login, onboarding
 │   ├── timer.css       ← Pomodoro + fullscreen
-│   └── charts.css      ← Heatmap, line charts, calendar
+│   ├── charts.css      ← Heatmap, line charts, calendar
+│   └── games.css       ← Mini-games & arena styles (WIP)
 └── js/
     ├── config.js       ← CONFIG, ACCENTS, RANKS
     ├── state.js        ← State + schema + migration
@@ -170,6 +194,7 @@ F:\Life OS\Projects\Focussium\
     ├── habits.js       ← Habits tracker (v3.0 new)
     ├── home.js         ← Dashboard
     ├── report.js       ← Analytics + charts
+    ├── games.js        ← Focus recharge games (WIP)
     ├── account.js      ← Profile modal
     ├── settings.js     ← Settings
     ├── onboard.js      ← Onboarding flow
@@ -186,6 +211,7 @@ F:\Life OS\Projects\Focussium\
 
 ## 🐛 Known Issues / Future TODOs
 
+- [ ] `games.js` / `games.css` — Refine games UX, add sound effects, polish game arena animations, and introduce deeper mindful game types (actively in development)
 - [ ] `habits.js` — Add ability to edit/delete habits from UI (currently add-only)
 - [ ] `report.js` — Wire up habits heatmap in analytics view
 - [ ] Drag-and-drop task reorder needs touch event polish on iOS

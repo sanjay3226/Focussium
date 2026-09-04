@@ -150,7 +150,7 @@ const Home = {
         if (!preview.length) {
             container.innerHTML = `
             <div class="empty-state small">
-                <p>All clear ${Icons.spark ? Icons.spark(14) : '✨'}</p>
+                <p>All clear ${Icons.spark(14)}</p>
             </div>`;
             return;
         }
