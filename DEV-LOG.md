@@ -41,6 +41,22 @@
 
 ---
 
+### v3.1.0 — 2026-09-01 — "Report Canvas Infographic & Habits CRUD"
+**Commit**: `feat: polish report page css styling and canvas infographic generator` (`d36ae9c`)
+
+**New features & polish:**
+- ✅ **High-Res Canvas Infographic Generator (`js/report.js`)**:
+  - Publication-grade 1200×1600 Weekly Productivity Dossier card.
+  - Radial gradient glows, custom accent styling, tier badge engine (`ELITE`, `STRONG`, `STEADY`, `BUILDING`), habit rhythm scoring, and one-tap clipboard copy / PNG download fallback.
+- ✅ **Habits CRUD & Streak Engine (`js/habits.js`)**:
+  - Modal-based Add & Edit habit controls (`openAddModal`, `openEditModal`, `submitHabit`).
+  - Habit deletion (`deleteHabit`) and enable/disable toggling (`toggleEnable`).
+  - Grace-day calculation preventing premature streak wipeouts.
+  - Home dashboard mini-card preview.
+- ✅ **CSS/UI Scoped Polish**: Mobile-first tap targets, glassmorphic stat chips, and layout fixes across `css/pages.css`, `css/layout.css`, `css/timer.css`, `css/modals.css`.
+
+---
+
 ### v3.0.0 — 2026-08-23 — "Deep Focus Overhaul"
 **Commit**: `feat: Focussium 3.0 — full modular rewrite + colour system`
 
@@ -212,7 +228,7 @@ F:\Life OS\Projects\Focussium\
 ## 🐛 Known Issues / Future TODOs
 
 - [ ] `games.js` / `games.css` — Refine games UX, add sound effects, polish game arena animations, and introduce deeper mindful game types (actively in development)
-- [ ] `habits.js` — Add ability to edit/delete habits from UI (currently add-only)
+- [x] `habits.js` — Add ability to edit/delete habits from UI (completed in v3.1.0)
 - [ ] `report.js` — Wire up habits heatmap in analytics view
 - [ ] Drag-and-drop task reorder needs touch event polish on iOS
 - [ ] Consider adding a Sync page for explicit cloud push/pull controls
