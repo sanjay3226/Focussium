@@ -3,7 +3,7 @@
    Network-first, auto-updates, v3.0 cache manifest
 ═══════════════════════════════════════════════════════════ */
 
-const APP_VERSION = '2026.09.04.v330';
+const APP_VERSION = '2026.09.04.v331';
 const CACHE_NAME  = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -12,6 +12,8 @@ const ASSETS = [
     './manifest.json',
     './icon-192.png',
     './icon-512.png',
+    './og-image.png',
+    './og-image.jpg',
 
     /* CSS — modular */
     './css/tokens.css',
