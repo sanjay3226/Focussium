@@ -824,15 +824,13 @@
 .mood-btn:active { opacity: .75; }
 .mood-btn.active { background: var(--ac); color: var(--ac-text, #fff); border-color: var(--ac); }
 
-/* ── Report page shells ── */
-.report-week-only  { display: block; }
-.report-month-only { display: none;  }
+/* ── Report page shells (Preserve native flex & grid displays) ── */
+.report-month-only { display: none !important; }
 
-.page[data-report-mode="week"] .report-week-only  { display: block !important; }
-.page[data-report-mode="week"] .report-month-only { display: none !important;  }
-
+.page[data-report-mode="week"] .report-month-only { display: none !important; }
 .page[data-report-mode="month"] .report-week-only  { display: none !important; }
-.page[data-report-mode="month"] .report-month-only { display: block !important; }
+.page[data-report-mode="month"] .report-month-only { display: block; }
+.page[data-report-mode="month"] .week-nav.report-month-only { display: flex !important; }
 
 .page[data-report-mode="month"] .report-month-only,
 .page[data-report-mode="week"] .report-week-only {
@@ -914,18 +912,19 @@
 }
 
 .week-nav {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 14px;
-    padding: 6px;
+    padding: 6px 12px;
     background: var(--bg2);
-    border-radius: 14px;
+    border-radius: 16px;
     border: 1px solid var(--bd);
+    box-sizing: border-box;
 }
 
 .week-nav-btn {
-    width: 36px; height: 36px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     background: var(--bg3);
     border: 1px solid var(--bd);
@@ -935,11 +934,14 @@
     justify-content: center;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: opacity .15s;
+    transition: opacity .15s, background .2s, transform .15s, color .2s;
+    flex-shrink: 0;
 }
 
-.week-nav-btn:active { opacity: .7; }
-.week-nav-label { font-size: .78rem; font-weight: 700; color: var(--tx2); }
+.week-nav-btn:hover { background: var(--bg4); color: var(--tx1); }
+.week-nav-btn:active { transform: scale(0.92); opacity: .75; }
+.week-nav-btn.disabled, .week-nav-btn[disabled] { opacity: .25; pointer-events: none; }
+.week-nav-label { font-size: .82rem; font-weight: 700; color: var(--tx1); letter-spacing: -.01em; text-align: center; }
 
 /* ── Score Hero ── */
 .score-hero {

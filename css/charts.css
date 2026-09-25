@@ -4,40 +4,53 @@
 
 /* ── Report stats bar ── */
 .report-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
     margin-bottom: 14px;
 }
 
-@media (max-width: 380px) {
+@media (min-width: 440px) {
     .report-stats {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 
 .report-stat {
     background: var(--bg2);
     border: 1px solid var(--bd);
-    border-radius: 14px;
-    padding: 10px 12px;
+    border-radius: 16px;
+    padding: 12px 10px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.report-stat:hover {
+    border-color: rgba(var(--acr), 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(var(--acr), 0.12);
 }
 
 .report-stat-val {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     font-weight: 800;
-    color: var(--ac);
+    color: var(--tx1);
     line-height: 1;
+    letter-spacing: -.02em;
 }
 
 .report-stat-lbl {
-    font-size: .6rem;
+    font-size: .62rem;
     color: var(--tx3);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .04em;
-    margin-top: 4px;
+    letter-spacing: .06em;
 }
 
 /* ── Heatmap ── */
@@ -554,6 +567,34 @@
 
 .timeline-day:active {
     transform: scale(0.99);
+}
+
+.timeline-day.rest {
+    grid-template-columns: 56px 1fr auto;
+    padding: 10px 14px;
+    background: var(--bg2);
+    opacity: 0.88;
+}
+
+.timeline-day-rest-info {
+    display: flex;
+    align-items: center;
+}
+
+.timeline-rest-sub {
+    font-size: 0.72rem;
+    color: var(--tx4);
+    font-weight: 500;
+}
+
+.timeline-rest-tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--tx3);
+    background: var(--bg3);
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--bd);
 }
 
 .timeline-day.today {

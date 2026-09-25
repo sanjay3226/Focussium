@@ -61,17 +61,17 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS — modular (tokens first, then reset, then layout) -->
-    <link rel="stylesheet" href="css/tokens.css?v=336">
-    <link rel="stylesheet" href="css/reset.css?v=336">
-    <link rel="stylesheet" href="css/animations.css?v=336">
-    <link rel="stylesheet" href="css/layout.css?v=336">
-    <link rel="stylesheet" href="css/components.css?v=336">
-    <link rel="stylesheet" href="css/pages.css?v=336">
-    <link rel="stylesheet" href="css/modals.css?v=336">
-    <link rel="stylesheet" href="css/timer.css?v=336">
-    <link rel="stylesheet" href="css/charts.css?v=336">
-    <link rel="stylesheet" href="css/games.css?v=336">
-    <link rel="stylesheet" href="css/vibe-revamp.css?v=336">
+    <link rel="stylesheet" href="css/tokens.css?v=337">
+    <link rel="stylesheet" href="css/reset.css?v=337">
+    <link rel="stylesheet" href="css/animations.css?v=337">
+    <link rel="stylesheet" href="css/layout.css?v=337">
+    <link rel="stylesheet" href="css/components.css?v=337">
+    <link rel="stylesheet" href="css/pages.css?v=337">
+    <link rel="stylesheet" href="css/modals.css?v=337">
+    <link rel="stylesheet" href="css/timer.css?v=337">
+    <link rel="stylesheet" href="css/charts.css?v=337">
+    <link rel="stylesheet" href="css/games.css?v=337">
+    <link rel="stylesheet" href="css/vibe-revamp.css?v=337">
 </head>
 
 <body>
@@ -438,10 +438,6 @@
                         </div>
                     </div>
 
-                    <button class="pomo-fullscreen-btn" data-action="pomo-fullscreen">
-                        <span id="pomoFullscreenIcon"></span>
-                        <span>Focus Mode</span>
-                    </button>
                 </div>
             </section>
 
@@ -457,20 +453,24 @@
                         <button class="report-mode-btn active" id="reportModeWeekBtn"  data-action="report-mode" data-mode="week">Week</button>
                         <button class="report-mode-btn"        id="reportModeMonthBtn" data-action="report-mode" data-mode="month">Month</button>
                     </div>
-                    <div class="report-mode-insight" id="reportModeInsight">Weekly momentum in detail.</div>
-                    <div class="report-mode-metrics" id="reportModeMetrics"></div>
+                    <div class="report-mode-insight" id="reportModeInsight">Building steady momentum.</div>
                 </div>
 
                 <div class="week-nav report-week-only">
-                    <button class="week-nav-btn" data-action="report-week" data-dir="-1" id="weekPrevBtn"></button>
-                    <span class="week-nav-label" id="weekNavLabel">This Week</span>
-                    <button class="week-nav-btn" data-action="report-week" data-dir="1"  id="weekNextBtn"></button>
+                    <button class="week-nav-btn" data-action="report-week" data-dir="-1" id="weekPrevBtn" aria-label="Previous week"></button>
+                    <div class="week-nav-center">
+                        <span class="week-nav-label" id="weekNavLabel">This Week</span>
+                        <span class="week-nav-sub" id="weekNavRange"></span>
+                    </div>
+                    <button class="week-nav-btn" data-action="report-week" data-dir="1"  id="weekNextBtn" aria-label="Next week"></button>
                 </div>
 
                 <div class="week-nav report-month-only">
-                    <button class="week-nav-btn" data-action="report-month" data-dir="-1" id="monthPrevBtn"></button>
-                    <span class="week-nav-label" id="monthNavLabel">This Month</span>
-                    <button class="week-nav-btn" data-action="report-month" data-dir="1"  id="monthNextBtn"></button>
+                    <button class="week-nav-btn" data-action="report-month" data-dir="-1" id="monthPrevBtn" aria-label="Previous month"></button>
+                    <div class="week-nav-center">
+                        <span class="week-nav-label" id="monthNavLabel">This Month</span>
+                    </div>
+                    <button class="week-nav-btn" data-action="report-month" data-dir="1"  id="monthNextBtn" aria-label="Next month"></button>
                 </div>
 
                 <!-- Score Hero -->
@@ -498,7 +498,8 @@
                     <div class="score-breakdown" id="scoreBreakdownList"></div>
                 </div>
 
-                <div class="report-stats report-week-only" id="reportStats"></div>
+                <!-- Unified KPI Metric Grid (No Duplicates) -->
+                <div class="report-stats" id="reportStats"></div>
 
                 <!-- Weekly Rhythm & Day Timeline -->
                 <div class="report-card report-week-only expanded" id="reportCardHeatmap">

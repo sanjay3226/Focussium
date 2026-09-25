@@ -4,13 +4,33 @@
    Touch-first: active states only, no hover
 ═══════════════════════════════════════════════════════════ */
 
-/* ── Pomo container — tight, no scroll needed ── */
-.pomo-container {
+/* ── Focus page container — ZERO SCROLL, cozy first view ── */
+.page[data-page="focus"] {
+    overflow: hidden !important;
     display: flex;
     flex-direction: column;
+    padding: 8px 18px 74px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.page[data-page="focus"] .page-header {
+    margin-bottom: 4px;
+    flex-shrink: 0;
+}
+
+.pomo-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
     padding: 0;
+    min-height: 0;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
 /* ── Mode tabs ── */
@@ -22,7 +42,9 @@
     padding: 3px;
     border: 1px solid var(--bd);
     width: 100%;
+    max-width: 280px;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .pomo-mode-tab {
@@ -35,7 +57,7 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    transition: color .2s;
+    transition: color .2s, background .2s;
     letter-spacing: .02em;
     -webkit-tap-highlight-color: transparent;
 }
@@ -48,14 +70,15 @@
     box-shadow: 0 3px 10px rgba(var(--acr), .32);
 }
 
-/* ── Timer ring — compact: 220px not 260px ── */
+/* ── Timer ring — compact responsive clamp ── */
 .pomo-timer {
     position: relative;
-    width: 220px;
-    height: 220px;
+    width: clamp(170px, 24vh, 210px);
+    height: clamp(170px, 24vh, 210px);
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .pomo-ring-bg {
@@ -140,11 +163,12 @@
 .pomo-controls {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    flex-shrink: 0;
 }
 
 .pomo-ctrl-btn {
-    width: 48px; height: 48px;
+    width: 44px; height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -153,13 +177,14 @@
     border: none;
     -webkit-tap-highlight-color: transparent;
     transition: opacity .15s, transform .2s;
+    flex-shrink: 0;
 }
 
 .pomo-ctrl-btn.primary {
-    width: 62px; height: 62px;
+    width: 58px; height: 58px;
     background: var(--acgr);
     color: var(--ac-text, #fff);
-    box-shadow: 0 5px 20px rgba(var(--acr), .38);
+    box-shadow: 0 4px 18px rgba(var(--acr), .38);
 }
 
 .pomo-ctrl-btn.secondary {
@@ -170,7 +195,7 @@
 
 .pomo-ctrl-btn:active { transform: scale(.90); opacity: .8; }
 
-.pomo-ctrl-btn svg { width: 18px; height: 18px; }
+.pomo-ctrl-btn svg { width: 17px; height: 17px; }
 .pomo-ctrl-btn.primary svg { width: 22px; height: 22px; }
 
 /* ── Session dots ── */
@@ -178,10 +203,11 @@
     display: flex;
     gap: 7px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .session-dot {
-    width: 9px; height: 9px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: var(--bg4);
     border: 1.5px solid var(--bd);
@@ -201,30 +227,35 @@
 }
 
 /* ── Live insight ── */
-.pomo-live-insight-wrapper { width: 100%; }
+.pomo-live-insight-wrapper {
+    width: 100%;
+    flex-shrink: 0;
+}
 
 .pomo-live-insight {
     font-size: .72rem;
     color: var(--tx3);
     font-weight: 500;
     text-align: center;
-    line-height: 1.5;
-    min-height: 18px;
+    line-height: 1.4;
+    min-height: 16px;
     transition: opacity .5s;
-    padding: 0 8px;
+    padding: 0 10px;
 }
 
-/* ── Ambient controls — compact row ── */
+/* ── Ambient controls — compact cozy row ── */
 .ambient-compact-row {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     background: var(--bg2);
     border-radius: var(--radius-card);
     border: 1px solid var(--bd);
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .ambient-icons-group {
@@ -289,24 +320,7 @@
     cursor: pointer;
 }
 
-/* ── Focus Mode button — compact ── */
-.pomo-fullscreen-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 18px;
-    border-radius: 20px;
-    background: var(--bg2);
-    border: 1.5px solid var(--bd);
-    color: var(--tx2);
-    font-size: .75rem;
-    font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: opacity .15s;
-}
 
-.pomo-fullscreen-btn:active { opacity: .7; }
 
 /* ── Fullscreen pomo ── */
 .fullscreen-pomo {

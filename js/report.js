@@ -1,9 +1,18 @@
-﻿/* ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════
    FOCUSSIUM 3.0 — REPORT MODULE
    Analytics, SVG charts, heatmap, PDF export
 ═══════════════════════════════════════════════════════════ */
 
 const Report = {
+
+    /* ─── DURATION FORMATTER (Clean, human time displays) ─── */
+    formatDuration(mins) {
+        if (!mins || mins <= 0) return '0 min';
+        if (mins < 60) return `${mins} min`;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m > 0 ? `${h}h ${m}m` : `${h}h`;
+    },
 
     /* ─── SCORE ENGINE ─── */
     getScore(w) {
@@ -61,9 +70,21 @@ const Report = {
         const end    = new Date(dates[6] + 'T00:00:00');
 
         const weekLabelEl = document.getElementById('weekNavLabel');
-        if (weekLabelEl) weekLabelEl.textContent = State.weekOffset === 0
-            ? 'This Week'
-            : `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}`;
+        const weekRangeEl = document.getElementById('weekNavRange');
+        if (weekLabelEl) weekLabelEl.textContent = State.weekOffset === 0 ? 'This Week' : 'Past Week';
+        if (weekRangeEl) weekRangeEl.textContent = `${months[start.getMonth()]} ${start.getDate()} – ${months[end.getMonth()]} ${end.getDate()}`;
+
+        const nextWeekBtn = document.getElementById('weekNextBtn');
+        if (nextWeekBtn) {
+            nextWeekBtn.classList.toggle('disabled', State.weekOffset >= 0);
+            nextWeekBtn.disabled = State.weekOffset >= 0;
+        }
+
+        const nextMonthBtn = document.getElementById('monthNextBtn');
+        if (nextMonthBtn) {
+            nextMonthBtn.classList.toggle('disabled', State.monthOffset >= 0);
+            nextMonthBtn.disabled = State.monthOffset >= 0;
+        }
 
         const monthLabelEl = document.getElementById('monthNavLabel');
         if (monthLabelEl) monthLabelEl.textContent = `${months[m.month]} ${m.year}`;
@@ -74,7 +95,7 @@ const Report = {
         this.renderModePanel(w, m);
         this.applyModeVisibility();
         this.renderScoreHero(w);
-        this.renderStats(w);
+        this.renderStats(w, m);
         this.renderWeekTimeline(w);
         this.renderHeatmap(w);
         this.setChartTab(State.reportChartTab);
@@ -105,33 +126,18 @@ const Report = {
         const monthDays    = m.days.length || 1;
         const monthRhythm  = Math.round((m.activeDays / monthDays) * 100);
         const weekRhythm   = Math.round((w.activeDays / 7) * 100);
-        const avgDailyFocus= Math.round(m.totalFocus / monthDays);
-        const weekAvgFocus = Math.round(w.totalFocus / 7);
 
         const insightEl = document.getElementById('reportModeInsight');
-        if (insightEl) insightEl.textContent = mode === 'month'
-            ? `Monthly mode: ${m.totalTasks} tasks, ${m.totalFocus} focus minutes, ${monthRhythm}% rhythm across ${monthDays} days.`
-            : `Weekly mode: ${w.totalTasks} tasks done, ${w.totalFocus} focus minutes, ${weekRhythm}% rhythm. Tap a day to drill in.`;
-
-        const chips = [
-            { label: 'Weekly Score',  value: `${this.getScore(w)}` },
-            { label: 'Week Focus',    value: `${w.totalFocus}m` },
-            { label: 'Week Rhythm',   value: `${weekRhythm}%` },
-            { label: 'Week Avg/Day',  value: `${weekAvgFocus}m` },
-            { label: 'Month Tasks',   value: `${m.totalTasks}` },
-            { label: 'Month Focus',   value: `${m.totalFocus}m` },
-            { label: 'Month Rhythm',  value: `${monthRhythm}%` },
-            { label: 'Avg Focus/Day', value: `${avgDailyFocus}m` },
-        ];
-        const visible = mode === 'week' ? chips.slice(0, 4) : chips.slice(4);
-
-        const metricsEl = document.getElementById('reportModeMetrics');
-        if (metricsEl) {
-            metricsEl.innerHTML = visible.map((chip, idx) => `
-            <div class="report-mode-chip" style="animation-delay:${0.05 + idx * 0.05}s">
-                <div class="report-mode-chip-label">${chip.label}</div>
-                <div class="report-mode-chip-value">${chip.value}</div>
-            </div>`).join('');
+        if (insightEl) {
+            if (mode === 'month') {
+                insightEl.textContent = (m.totalFocus > 0 || m.totalTasks > 0)
+                    ? `${m.totalTasks} tasks done · ${this.formatDuration(m.totalFocus)} deep work logged (${monthRhythm}% monthly rhythm).`
+                    : 'Fresh month ahead. Establish your deep work momentum.';
+            } else {
+                insightEl.textContent = (w.totalFocus > 0 || w.totalTasks > 0)
+                    ? `${w.totalTasks} tasks done · ${this.formatDuration(w.totalFocus)} deep work logged (${weekRhythm}% weekly rhythm).`
+                    : 'Fresh week ahead. Start a 25m focus block to build your flow.';
+            }
         }
     },
 
@@ -199,17 +205,28 @@ const Report = {
         }
     },
 
-    renderStats(w) {
+    renderStats(w, m) {
         const container = document.getElementById('reportStats');
         if (!container) return;
-        const stats = [
-            { val: w.totalTasks, lbl: 'Tasks Done' },
-            { val: `${w.totalFocus}m`, lbl: 'Focus Time' },
-            { val: `${w.activeDays}/7`, lbl: 'Active Days' },
-            { val: State.data.streak || 0, lbl: 'Day Streak' }
+        const mode = State.reportMode || 'week';
+        const monthDays = (m && m.days && m.days.length) || 1;
+        const monthRhythm = m ? Math.round((m.activeDays / monthDays) * 100) : 0;
+        const weekRhythm = Math.round((w.activeDays / 7) * 100);
+
+        const stats = mode === 'month' && m ? [
+            { val: this.formatDuration(m.totalFocus), lbl: 'Deep Work' },
+            { val: `${m.totalTasks}`, lbl: 'Tasks Done' },
+            { val: `${monthRhythm}%`, lbl: 'Rhythm' },
+            { val: this.formatDuration(Math.round(m.totalFocus / monthDays)) + '/d', lbl: 'Daily Avg' }
+        ] : [
+            { val: this.formatDuration(w.totalFocus), lbl: 'Deep Work' },
+            { val: `${w.totalTasks}`, lbl: 'Tasks Done' },
+            { val: `${weekRhythm}%`, lbl: 'Rhythm' },
+            { val: `${State.data.streak || 0}d`, lbl: 'Day Streak' }
         ];
-        container.innerHTML = stats.map(s => `
-            <div class="report-stat">
+
+        container.innerHTML = stats.map((s, idx) => `
+            <div class="report-stat" style="animation-delay:${idx * 0.05}s">
                 <div class="report-stat-val">${s.val}</div>
                 <div class="report-stat-lbl">${s.lbl}</div>
             </div>
@@ -245,11 +262,32 @@ const Report = {
             const moodMarkup = mood && moodIcons[mood] ? `<span class="timeline-mood" style="color:var(--ac);">${moodIcons[mood]}</span>` : '';
             const dayScore = day.tasks + Math.floor(day.focus / 25);
             const dateNum = new Date(day.date + 'T00:00:00').getDate();
+            const hasActivity = day.focus > 0 || day.tasks > 0;
+
+            if (!hasActivity) {
+                return `
+                <div class="timeline-day rest ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
+                     data-action="select-report-day" data-date="${day.date}"
+                     style="animation-delay: ${i * 30}ms">
+                    <div class="timeline-day-label">
+                        <span class="timeline-weekday">${day.name.substring(0, 3)}</span>
+                        <span class="timeline-date">${dateNum}</span>
+                        ${isToday ? '<span class="timeline-today-pill">Today</span>' : ''}
+                    </div>
+                    <div class="timeline-day-rest-info">
+                        <span class="timeline-rest-sub">No recorded focus sessions</span>
+                    </div>
+                    <div class="timeline-day-meta">
+                        ${moodMarkup}
+                        <span class="timeline-rest-tag">Rest</span>
+                    </div>
+                </div>`;
+            }
 
             return `
-            <div class="timeline-day ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
+            <div class="timeline-day active-day ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''}"
                  data-action="select-report-day" data-date="${day.date}"
-                 style="animation-delay: ${i * 40}ms">
+                 style="animation-delay: ${i * 30}ms">
                 <div class="timeline-day-label">
                     <span class="timeline-weekday">${day.name.substring(0, 3)}</span>
                     <span class="timeline-date">${dateNum}</span>
@@ -261,19 +299,19 @@ const Report = {
                         <div class="timeline-bar-track">
                             <div class="timeline-bar-fill focus" style="width: ${focusPct}%"></div>
                         </div>
-                        <span class="timeline-bar-val">${day.focus}m</span>
+                        <span class="timeline-bar-val">${this.formatDuration(day.focus)}</span>
                     </div>
                     <div class="timeline-bar-row">
                         <span class="timeline-bar-lbl">Tasks</span>
                         <div class="timeline-bar-track">
                             <div class="timeline-bar-fill tasks" style="width: ${tasksPct}%"></div>
                         </div>
-                        <span class="timeline-bar-val">${day.tasks}</span>
+                        <span class="timeline-bar-val">${day.tasks} ${day.tasks === 1 ? 'task' : 'tasks'}</span>
                     </div>
                 </div>
                 <div class="timeline-day-meta">
                     ${moodMarkup}
-                    ${dayScore > 0 ? `<span class="timeline-pts">+${dayScore} pts</span>` : '<span class="timeline-rest">Rest</span>'}
+                    <span class="timeline-pts">+${dayScore} pts</span>
                 </div>
             </div>`;
         }).join('');
