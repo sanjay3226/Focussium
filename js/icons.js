@@ -725,6 +725,119 @@ const Icons = {
         if (clean.includes('study') || clean.includes('read') || clean.includes('learn') || clean.includes('book')) return this.habitStudy(size);
         if (clean.includes('journal') || clean.includes('write') || clean.includes('diary')) return this.habitJournal(size);
         return this.habitDefault(size);
+    },
+
+    gem(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h12l4 6-10 12L2 9z"/>
+            <path d="M2 9h20"/>
+            <path d="M10 3l-2 6 4 12 4-12-2-6"/>
+        </svg>`;
+    },
+
+    bulb(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6"/>
+            <path d="M10 22h4"/>
+            <path d="M12 2a7 7 0 0 0-7 7c0 2.5 1.5 4.5 3 6h8c1.5-1.5 3-3.5 3-6a7 7 0 0 0-7-7z"/>
+        </svg>`;
+    },
+
+    warning(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>`;
+    },
+
+    stopwatch(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8"/>
+            <path d="M12 9v4l2 2"/>
+            <path d="M10 2h4"/>
+            <path d="M12 2v3"/>
+            <path d="M19 6l-1 1"/>
+        </svg>`;
+    },
+
+    refresh(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2v6h-6"/>
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+            <path d="M3 22v-6h6"/>
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+        </svg>`;
+    },
+
+    flower(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 3a3 3 0 0 0-3 3c0 2 3 3 3 3s3-1 3-3a3 3 0 0 0-3-3z"/>
+            <path d="M12 21a3 3 0 0 0 3-3c0-2-3-3-3-3s-3 1-3 3a3 3 0 0 0 3 3z"/>
+            <path d="M3 12a3 3 0 0 0 3 3c2 0 3-3 3-3s-1-3-3-3a3 3 0 0 0-3 3z"/>
+            <path d="M21 12a3 3 0 0 0-3-3c-2 0-3 3-3 3s1 3 3 3a3 3 0 0 0 3-3z"/>
+        </svg>`;
+    },
+
+    zen(size = 18) {
+        return this.meditate(size);
+    },
+
+    fromEmoji(emoji, size = 16) {
+        if (!emoji) return '';
+        const map = {
+            '🌱': () => this.seedling(size),
+            '🌿': () => this.seedling(size),
+            '⚡': () => this.zap(size),
+            '🔥': () => this.fire(size),
+            '✨': () => this.spark(size),
+            '📈': () => this.trendUp(size),
+            '🔄': () => this.refresh(size),
+            '🎯': () => this.target(size),
+            '🏆': () => this.trophy(size),
+            '⏱️': () => this.stopwatch(size),
+            '⏱': () => this.stopwatch(size),
+            '🧘': () => this.meditate(size),
+            '⚠️': () => this.warning(size),
+            '⚠': () => this.warning(size),
+            '💎': () => this.gem(size),
+            '📅': () => this.calendar(size),
+            '💡': () => this.bulb(size),
+            '🌊': () => this.ocean(size),
+            '⭐': () => this.star(size),
+            '🌙': () => this.moon(size),
+            '🌸': () => this.flower(size),
+            '✓': () => this.check(size),
+            '✅': () => this.check(size),
+            '★': () => this.star(size),
+            '♨': () => this.garden ? this.garden(size) : this.lotus(size)
+        };
+        const clean = String(emoji).trim();
+        if (map[clean]) return map[clean]();
+        const stripped = clean.replace(/[\uFE00-\uFE0F]/g, '');
+        if (map[stripped]) return map[stripped]();
+        return '';
+    },
+
+    parse(iconOrEmoji, size = 16) {
+        if (!iconOrEmoji) return '';
+        if (typeof iconOrEmoji === 'string') {
+            const trimmed = iconOrEmoji.trim();
+            if (trimmed.startsWith('<svg')) return trimmed;
+            if (this[trimmed] && typeof this[trimmed] === 'function') {
+                return this[trimmed](size);
+            }
+            const parsed = this.fromEmoji(trimmed, size);
+            if (parsed) return parsed;
+        }
+        return this.spark(size);
     }
 };
 

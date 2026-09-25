@@ -3,7 +3,7 @@
    Network-first, auto-updates, v3.0 cache manifest
 ═══════════════════════════════════════════════════════════ */
 
-const APP_VERSION = '2026.09.04.v331';
+const APP_VERSION = '2026.09.25.v332';
 const CACHE_NAME  = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -26,6 +26,7 @@ const ASSETS = [
     './css/timer.css',
     './css/charts.css',
     './css/games.css',
+    './css/vibe-revamp.css',
 
     /* JS — core */
     './js/config.js',

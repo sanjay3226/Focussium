@@ -1,4 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
+﻿/* ═══════════════════════════════════════════════════════════
    FOCUSSIUM 3.0 — REPORT MODULE
    Analytics, SVG charts, heatmap, PDF export
 ═══════════════════════════════════════════════════════════ */
@@ -138,18 +138,37 @@ const Report = {
     renderScoreHero(w) {
         const score  = this.getScore(w);
         let vibe = 'Resting Flow';
-        if (score >= 80) vibe = 'Deep Flow State';
-        else if (score >= 60) vibe = 'High Momentum';
-        else if (score >= 35) vibe = 'Building Rhythm';
+        let tierClass = 'b-tier';
+        let tierIcon = 'seedling';
+        let tierText = 'Building';
+        if (score >= 80)      { vibe = 'Deep Flow State'; tierClass = 's-tier'; tierIcon = 'zap';     tierText = 'S-Tier Flow'; }
+        else if (score >= 60) { vibe = 'High Momentum';   tierClass = 's-tier'; tierIcon = 'fire';    tierText = 'High Velocity'; }
+        else if (score >= 40) { vibe = 'Steady Rhythm';   tierClass = 'a-tier'; tierIcon = 'spark';   tierText = 'Steady Rhythm'; }
+        else if (score >= 20) { vibe = 'Building Rhythm'; tierClass = 'a-tier'; tierIcon = 'trendUp'; tierText = 'Building Up'; }
 
         const scoreEl = document.getElementById('reportScoreValue');
         const vibeEl  = document.getElementById('reportVibeTitle');
         const circle  = document.getElementById('reportVibeGaugeCircle');
         if (scoreEl) scoreEl.textContent = score;
-        if (vibeEl)  vibeEl.textContent  = vibe;
+        if (vibeEl) {
+            vibeEl.textContent = vibe;
+            // Inject tier badge with parsed SVG icon after the title
+            const heroMain = vibeEl.closest('.score-hero-main') || vibeEl.parentElement;
+            let badge = heroMain ? heroMain.querySelector('.vibe-tier-badge') : null;
+            const badgeContent = `${Icons.parse(tierIcon, 13)}<span>${tierText}</span>`;
+            if (!badge && heroMain) {
+                badge = document.createElement('div');
+                badge.className = `vibe-tier-badge ${tierClass}`;
+                badge.innerHTML = badgeContent;
+                heroMain.appendChild(badge);
+            } else if (badge) {
+                badge.className = `vibe-tier-badge ${tierClass}`;
+                badge.innerHTML = badgeContent;
+            }
+        }
         if (circle) {
             const circumference = 376.9;
-            const pct = Math.min(100, Math.max(0, score));
+            const pct    = Math.min(100, Math.max(0, score));
             const offset = circumference - (circumference * pct / 100);
             circle.style.strokeDashoffset = `${offset}`;
         }
@@ -157,28 +176,25 @@ const Report = {
         const bdEl = document.getElementById('scoreBreakdownList');
         if (bdEl) {
             const bd = this.getScoreBreakdown(w);
+            const bars = [
+                { label: 'Tasks Done',  val: bd.tasks,       max: 25, positive: true },
+                { label: 'Focus Time',  val: bd.focus,       max: 25, positive: true },
+                { label: 'Active Days', val: bd.consistency, max: 15, positive: true },
+                { label: 'Completion',  val: bd.completion,  max: 20, positive: true },
+                { label: 'Streak',      val: bd.streak,      max: 10, positive: true },
+                ...(bd.overdue > 0 ? [{ label: 'Overdue', val: bd.overdue, max: 10, positive: false }] : [])
+            ];
             bdEl.innerHTML = `
-                <div class="breakdown-item">
-                    <span class="breakdown-label">Tasks Done</span>
-                    <span class="breakdown-val positive">+${bd.tasks}</span>
+                <div class="score-breakdown-bars">
+                    ${bars.map(b => `
+                    <div class="breakdown-bar-item">
+                        <span class="breakdown-bar-label">${b.label}</span>
+                        <div class="breakdown-bar-track">
+                            <div class="breakdown-bar-fill${b.positive ? '' : ' negative'}" style="width:${Math.round((b.val / b.max) * 100)}%"></div>
+                        </div>
+                        <span class="breakdown-bar-val${b.positive ? '' : ' neg'}">${b.positive ? '+' : '-'}${b.val}</span>
+                    </div>`).join('')}
                 </div>
-                <div class="breakdown-item">
-                    <span class="breakdown-label">Focus Time</span>
-                    <span class="breakdown-val positive">+${bd.focus}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span class="breakdown-label">Active Days</span>
-                    <span class="breakdown-val positive">+${bd.consistency}</span>
-                </div>
-                <div class="breakdown-item">
-                    <span class="breakdown-label">Streak Flow</span>
-                    <span class="breakdown-val positive">+${bd.streak}</span>
-                </div>
-                ${bd.overdue > 0 ? `
-                <div class="breakdown-item">
-                    <span class="breakdown-label">Overdue</span>
-                    <span class="breakdown-val negative">-${bd.overdue}</span>
-                </div>` : ''}
             `;
         }
     },
@@ -664,34 +680,57 @@ const Report = {
         const container = document.getElementById('aiInsightsContent');
         if (!container) return;
 
-        const mode = State.reportMode || 'week';
+        const mode     = State.reportMode || 'week';
+        const insights = [];
+
         if (mode === 'month') {
-            const activePct = m.days.length ? Math.round((m.activeDays / m.days.length) * 100) : 0;
+            const activePct  = m.days.length ? Math.round((m.activeDays / m.days.length) * 100) : 0;
             const focusHours = (m.totalFocus / 60).toFixed(1);
             const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-            const curMonth = monthNames[m.month];
+            const curMonth   = monthNames[m.month];
 
             if (m.totalTasks === 0 && m.totalFocus === 0) {
-                container.textContent = `No activity recorded yet for ${curMonth}. Start with a 25-minute Pomodoro session today to kickstart your monthly rhythm.`;
-            } else if (activePct >= 75) {
-                container.textContent = `Phenomenal consistency! Active ${m.activeDays} of ${m.days.length} days (${activePct}%) in ${curMonth} with ${focusHours}h of deep focus. Your peak day was ${m.bestDay?.key || 'recent'} (${m.bestScore} pts).`;
-            } else if (activePct >= 40) {
-                container.textContent = `Solid monthly foundation in ${curMonth}: ${m.totalTasks} tasks completed and ${focusHours}h focused across ${m.activeDays} days. Aim for 3 consecutive active days to strengthen your streak.`;
+                insights.push({ icon: 'seedling', text: `No activity yet for <strong>${curMonth}</strong>. Start with a single 25-min Pomodoro to break inertia.` });
             } else {
-                container.textContent = `${curMonth} shows ${m.totalTasks} tasks and ${m.totalFocus}m focus across ${m.activeDays} active days. Focus on daily micro-sessions to rebuild momentum.`;
+                const icon = activePct >= 75 ? 'zap' : activePct >= 40 ? 'trendUp' : 'refresh';
+                const msg  = activePct >= 75 ? 'exceptional consistency!' : 'aim for 3 consecutive days to strengthen your streak.';
+                insights.push({ icon, text: `Active <strong>${m.activeDays} of ${m.days.length} days</strong> (${activePct}%) in ${curMonth} — ${msg}` });
+                insights.push({ icon: 'target', text: `Completed <strong>${m.totalTasks} tasks</strong> with <strong>${focusHours}h</strong> of deep focus logged.` });
+                if (m.bestDay) insights.push({ icon: 'trophy', text: `Best day: <strong>${m.bestDay.key}</strong> with ${m.bestScore} productivity points.` });
+                if (m.activeDays >= 20) insights.push({ icon: 'fire', text: "Monthly streak potential detected. You're in elite consistency territory." });
             }
         } else {
-            const score = this.getScore(w);
-            let insight = 'Build the habit of completing one deep work block daily. Small wins compound.';
-            if (score >= 80)      insight = `Elite week — ${w.totalFocus}min of deep focus logged across ${w.activeDays} active days. ${State.data.streak}d streak active. Keep this momentum.`;
-            else if (score >= 60) insight = `Solid output: ${w.totalTasks} tasks done, ${w.totalFocus}min focus. Peak output on ${w.bestDay?.name || 'this week'}. Push for 1 more session to enter flow state.`;
-            else if (score >= 35) insight = `Building rhythm. Best day: ${w.bestDay?.name || 'today'}. Clearing pending tasks before weekend will unlock higher momentum.`;
-            else if (score > 0)   insight = `Week needs momentum. Start with just 1 pomodoro to break initial friction. Current score is ${score}/100 — climb from here.`;
-            container.textContent = insight;
+            const score        = this.getScore(w);
+            const overdueCount = State.data.tasks.filter(t => t.date && t.date < Utils.today() && !t.completed).length;
+
+            if      (score >= 80) insights.push({ icon: 'zap', text: `<strong>S-Tier week!</strong> ${w.totalFocus}m deep focus across ${w.activeDays} active days. ${State.data.streak}d streak active.` });
+            else if (score >= 60) insights.push({ icon: 'fire', text: `<strong>Strong momentum:</strong> ${w.totalTasks} tasks done, ${w.totalFocus}m focused.` });
+            else if (score >= 35) insights.push({ icon: 'spark', text: `<strong>Building your rhythm.</strong> Best day: ${w.bestDay?.name || 'this week'}. One more deep work session bumps your score.` });
+            else                  insights.push({ icon: 'seedling', text: `<strong>Week score: ${score}/100.</strong> Start with a single 25m Pomodoro — the first session breaks the friction.` });
+
+            if (w.totalFocus < 60)        insights.push({ icon: 'stopwatch', text: 'Focus time under 60 minutes this week. One 25-min session daily = <strong>175 min of flow</strong> weekly.' });
+            else if (w.totalFocus >= 150) insights.push({ icon: 'meditate', text: `You logged <strong>${w.totalFocus} minutes</strong> of deep focus — elite-level session depth.` });
+
+            if (overdueCount > 0) insights.push({ icon: 'warning', text: `<strong>${overdueCount} overdue task${overdueCount > 1 ? 's' : ''}</strong> detected. Clearing them adds up to 10 points to your Vibe Score.` });
+
+            if ((State.data.streak || 0) >= 7) insights.push({ icon: 'gem', text: `<strong>${State.data.streak}-day streak!</strong> You're in elite consistency territory. Protect it tonight.` });
+
+            if (w.bestDay && w.bestDay.score > 0) insights.push({ icon: 'calendar', text: `Peak day this week: <strong>${w.bestDay.name}</strong>. Recreate that environment for tomorrow's session.` });
         }
+
+        if (!insights.length) {
+            insights.push({ icon: 'bulb', text: 'Start tracking sessions and tasks to unlock personalized weekly insights.' });
+        }
+
+        container.innerHTML = insights.map(item => `
+            <div class="ai-insight-item">
+                <span class="ai-insight-icon" aria-hidden="true">${Icons.parse(item.icon, 15)}</span>
+                <span class="ai-insight-text">${item.text}</span>
+            </div>
+        `).join('');
     },
 
-    /* v3.0 NEW: Habits heatmap in reports */
+    /* v3.2 SUPER REVAMPED: Habits heatmap with completion summary */
     renderHabitsHeatmap() {
         const container = document.getElementById('reportHabitsHeatmap');
         if (!container) return;
@@ -701,15 +740,54 @@ const Report = {
         const dates   = Utils.weekDates(State.weekOffset);
         const dayHeaders = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
+        if (!enabled.length) {
+            container.innerHTML = `<p style="color:var(--tx3);font-size:0.80rem;text-align:center;padding:12px 0;">No habits configured yet. Add habits to track them here.</p>`;
+            return;
+        }
+
+        // Build summary stats
+        let totalPossible = 0, totalDone = 0;
+        enabled.forEach(h => {
+            dates.forEach(date => {
+                totalPossible++;
+                if ((State.data.habits?.[date] || []).includes(h.id)) totalDone++;
+            });
+        });
+        const completionPct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
+        const perfectDays   = dates.filter(date => enabled.every(h => (State.data.habits?.[date] || []).includes(h.id))).length;
+        const activeDays    = dates.filter(date => (State.data.habits?.[date] || []).length > 0).length;
+
         container.innerHTML = `
+        <div class="habits-completion-summary">
+            <div class="habits-completion-stat">
+                <div class="habits-completion-val">${completionPct}%</div>
+                <div class="habits-completion-lbl">Completion</div>
+            </div>
+            <div class="habits-completion-stat">
+                <div class="habits-completion-val">${totalDone}</div>
+                <div class="habits-completion-lbl">Checks</div>
+            </div>
+            <div class="habits-completion-stat">
+                <div class="habits-completion-val">${activeDays}/7</div>
+                <div class="habits-completion-lbl">Active Days</div>
+            </div>
+            <div class="habits-completion-stat">
+                <div class="habits-completion-val">${perfectDays}</div>
+                <div class="habits-completion-lbl">Perfect Days</div>
+            </div>
+        </div>
         <div class="habits-heatmap-grid">
             <div class="habits-heatmap-header-row">
                 <span class="habits-heatmap-title-col">Habit</span>
                 <div class="habits-heatmap-day-labels">
                     ${dayHeaders.map(dh => `<span class="habits-heatmap-day-label">${dh}</span>`).join('')}
                 </div>
+                <span class="habits-heatmap-rate">Rate</span>
             </div>
-            ${enabled.map(h => `
+            ${enabled.map(h => {
+                const doneDays = dates.filter(date => (State.data.habits?.[date] || []).includes(h.id)).length;
+                const rate     = Math.round((doneDays / 7) * 100);
+                return `
             <div class="habits-heatmap-row">
                 <div class="habits-heatmap-meta">
                     <span class="habits-heatmap-icon">${Icons.getHabitIcon(h.icon, 16)}</span>
@@ -718,12 +796,15 @@ const Report = {
                 <div class="habits-heatmap-dots">
                     ${dates.map(date => {
                         const done = (State.data.habits?.[date] || []).includes(h.id);
-                        return `<div class="habits-heatmap-dot ${done ? 'done' : ''}" title="${date}: ${done ? 'Completed' : 'Missed'}"></div>`;
+                        return `<div class="habits-heatmap-dot ${done ? 'done' : ''}" title="${date}: ${done ? 'Done \u2713' : 'Missed'}"></div>`;
                     }).join('')}
                 </div>
-            </div>`).join('')}
+                <span class="habits-heatmap-rate">${rate}%</span>
+            </div>`;
+            }).join('')}
         </div>`;
     },
+
 
     /* ─── EXPORT STUDIO (HYBRID 2 + 5: INFOGRAPHIC CARD & HIGH-DPI PDF/PNG) ─── */
     openExportStudio() {
