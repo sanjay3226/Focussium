@@ -9,6 +9,15 @@
     <meta name="color-scheme" content="dark light">
     <title>Focussium — Deep Focus Productivity & Habits PWA</title>
 
+    <!-- Localhost live dev cache unregister -->
+    <script>
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+        }
+    }
+    </script>
+
     <!-- PWA & Mobile Theme -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#D4AF37">
@@ -52,17 +61,17 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS — modular (tokens first, then reset, then layout) -->
-    <link rel="stylesheet" href="css/tokens.css">
-    <link rel="stylesheet" href="css/reset.css">
-    <link rel="stylesheet" href="css/animations.css">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/pages.css">
-    <link rel="stylesheet" href="css/modals.css">
-    <link rel="stylesheet" href="css/timer.css">
-    <link rel="stylesheet" href="css/charts.css">
-    <link rel="stylesheet" href="css/games.css">
-    <link rel="stylesheet" href="css/vibe-revamp.css">
+    <link rel="stylesheet" href="css/tokens.css?v=335">
+    <link rel="stylesheet" href="css/reset.css?v=335">
+    <link rel="stylesheet" href="css/animations.css?v=335">
+    <link rel="stylesheet" href="css/layout.css?v=335">
+    <link rel="stylesheet" href="css/components.css?v=335">
+    <link rel="stylesheet" href="css/pages.css?v=335">
+    <link rel="stylesheet" href="css/modals.css?v=335">
+    <link rel="stylesheet" href="css/timer.css?v=335">
+    <link rel="stylesheet" href="css/charts.css?v=335">
+    <link rel="stylesheet" href="css/games.css?v=335">
+    <link rel="stylesheet" href="css/vibe-revamp.css?v=335">
 </head>
 
 <body>
@@ -194,8 +203,13 @@
                     <button class="header-btn" id="headerSettingsBtn" data-action="open-settings" title="Settings"></button>
                 </div>
             </div>
-            <div class="clock" id="clock">12:00<span class="clock-period">AM</span></div>
-            <div class="date" id="dateDisplay">Sunday, Aug 23</div>
+            <div class="clock-hero-wrap">
+                <div class="clock" id="clock">12:00<span class="clock-period">AM</span></div>
+                <div class="date-chip" id="dateDisplay">
+                    <span class="date-chip-icon" id="dateCalendarIcon"></span>
+                    <span class="date-chip-text">Sunday, Aug 23</span>
+                </div>
+            </div>
         </header>
 
         <!-- Content -->
@@ -1072,7 +1086,7 @@
     <!-- Features (depend on core) -->
     <script src="js/auth.js"></script>
     <script src="js/router.js"></script>
-    <script src="js/clock.js"></script>
+    <script src="js/clock.js?v=335"></script>
     <script src="js/confetti.js"></script>
     <script src="js/quotes.js"></script>
     <script src="js/level.js"></script>
@@ -1087,6 +1101,7 @@
     <script src="js/onboard.js"></script>
     <script src="js/command-glass.js"></script>
     <script src="js/games.js"></script>
+    <script src="js/smooth-scroll.js?v=335"></script>
 
     <!-- Boot (last — all modules must be defined first) -->
     <script src="js/app.js"></script>

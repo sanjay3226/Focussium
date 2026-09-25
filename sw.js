@@ -3,7 +3,7 @@
    Network-first, auto-updates, v3.0 cache manifest
 ═══════════════════════════════════════════════════════════ */
 
-const APP_VERSION = '2026.09.25.v332';
+const APP_VERSION = '2026.09.25.v335';
 const CACHE_NAME  = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -61,6 +61,7 @@ const ASSETS = [
     './js/firebase-config.js',
 
     /* Boot */
+    './js/smooth-scroll.js',
     './js/app.js',
 
     /* Fonts (cache key only — actual fonts from Google CDN) */
@@ -100,6 +101,12 @@ self.addEventListener('fetch', (event) => {
     /* Skip non-GET and chrome-extension requests */
     if (event.request.method !== 'GET') return;
     if (event.request.url.startsWith('chrome-extension://')) return;
+
+    /* Always fetch fresh directly from network on localhost to avoid stale cache during development */
+    if (event.request.url.includes('localhost') || event.request.url.includes('127.0.0.1')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
 
     event.respondWith(
         fetch(event.request)

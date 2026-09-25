@@ -18,7 +18,8 @@ const Clock = {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const dateEl = document.getElementById('dateDisplay');
         if (dateEl) {
-            dateEl.textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+            const calIcon = (typeof Icons !== 'undefined' && Icons.calendar) ? Icons.calendar(12) : '';
+            dateEl.innerHTML = `<span class="date-chip-icon">${calIcon}</span><span class="date-chip-text">${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}</span>`;
         }
 
         let greeting = 'Good morning';

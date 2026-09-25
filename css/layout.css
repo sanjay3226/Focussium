@@ -134,9 +134,14 @@ body {
     padding: 16px 18px 4px;
     background: transparent;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .header-top {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -285,45 +290,116 @@ body {
     z-index: 1;
 }
 
-/* ── Clock ── */
-.clock {
+/* ── Centered Time Hub Architecture ── */
+.clock-hero-wrap {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 6px auto 4px;
+    position: relative;
+    padding: 4px 16px;
+}
+
+.clock-hero-wrap::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    height: 74px;
+    background: radial-gradient(ellipse at center, rgba(var(--acr), 0.12) 0%, transparent 72%);
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+}
+
+.clock, #clock {
     font-family: var(--font-serif);
-    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
     font-weight: 400;
     letter-spacing: -.02em;
     line-height: 1.05;
-    padding: 2px 0 0;
+    padding: 0;
     color: var(--tx1);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    margin: 4px auto 0;
+    text-shadow: 0 2px 24px rgba(var(--acr), 0.22);
 }
 
 .clock-period {
     font-family: var(--font-sans);
-    font-size: .85rem;
-    font-weight: 700;
+    font-size: .80rem;
+    font-weight: 800;
     color: var(--ac);
-    margin-left: 6px;
-    letter-spacing: .05em;
+    margin-left: 8px;
+    letter-spacing: .08em;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(var(--acr), 0.12);
+    border: 1px solid rgba(var(--acr), 0.25);
+    line-height: 1;
     vertical-align: middle;
 }
 
-.date {
+.date, .date-chip, #dateDisplay {
     font-size: .70rem;
     color: var(--tx3);
     font-weight: 600;
     letter-spacing: .08em;
     text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    margin: 6px auto 0;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: rgba(var(--acr), 0.06);
+    border: 1px solid rgba(var(--acr), 0.16);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    position: relative;
+    z-index: 1;
+    transition: border-color 0.2s, background 0.2s;
 }
 
-/* ── Content ── */
+.date-chip:hover {
+    background: rgba(var(--acr), 0.12);
+    border-color: rgba(var(--acr), 0.35);
+}
+
+.date-chip-icon svg {
+    display: inline-block;
+    vertical-align: middle;
+    width: 12px;
+    height: 12px;
+    color: var(--ac);
+}
+
+/* ── Content — Smooth Edge Masks ── */
 .content {
     flex: 1;
     overflow: hidden;
     position: relative;
     min-height: 0;
     overscroll-behavior: contain;
+    /* Soft gradient edge masks so content dissolves into header/footer */
+    mask-image: linear-gradient(to bottom, transparent 0%, black 14px, black calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14px, black calc(100% - 24px), transparent 100%);
 }
 
-/* ── Pages — NO scrollbar visible, no x-overflow ── */
+/* ── Pages — Silky Smooth Momentum Scroll ── */
 .page {
     position: absolute;
     inset: 0;
@@ -332,20 +408,50 @@ body {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    scroll-padding-top: 16px;
-    padding: 14px 20px 110px;
+    scroll-padding-top: 18px;
+    padding: 16px 20px 110px;
     opacity: 0;
-    transform: translateX(16px);
+    transform: translateY(8px) scale(0.995);
     pointer-events: none;
-    transition: opacity .38s cubic-bezier(.16,1,.3,1), transform .38s cubic-bezier(.16,1,.3,1), filter .38s;
-    filter: blur(6px);
-    /* Hide scrollbar on all browsers */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1), filter .35s ease;
+    filter: blur(4px);
     will-change: transform, opacity;
+    /* Custom sleek glassmorphic scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--acr), 0.22) transparent;
 }
 
-.page::-webkit-scrollbar { display: none; }
+/* Chrome / Safari / Edge slim glassmorphic scrollbar */
+.page::-webkit-scrollbar,
+.modal-body::-webkit-scrollbar,
+.dump-notes-wrap::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.page::-webkit-scrollbar-track,
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.page::-webkit-scrollbar-thumb,
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(var(--acr), 0.16);
+    border-radius: 10px;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page:hover::-webkit-scrollbar-thumb,
+.page.is-scrolling::-webkit-scrollbar-thumb,
+.modal-body:hover::-webkit-scrollbar-thumb {
+    background: rgba(var(--acr), 0.45);
+    box-shadow: 0 0 8px rgba(var(--acr), 0.35);
+}
+
+.page::-webkit-scrollbar-thumb:active {
+    background: var(--ac);
+    box-shadow: 0 0 12px rgba(var(--acr), 0.6);
+}
 
 .page.active {
     opacity: 1;
@@ -530,3 +636,4 @@ body {
 .fab.show { display: flex; }
 .fab:active { transform: scale(.92); opacity: .85; }
 .fab svg { width: 22px; height: 22px; color: var(--ac-text, #fff); }
+
