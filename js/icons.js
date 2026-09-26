@@ -549,6 +549,25 @@ const Icons = {
         </svg>`;
     },
 
+    birds(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 7h.01"/>
+            <path d="M3.4 18H12a8 8 0 0 0 8-8V7a4 4 0 0 0-7.28-2.3L2 16.5V18h1.4z"/>
+            <path d="M20 7l2-2-3-1"/>
+            <path d="M10 18v3"/>
+            <path d="M14 18v3"/>
+        </svg>`;
+    },
+
+    exam(size = 18) {
+        return `
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>`;
+    },
+
     deepHum(size = 18) {
         return `
         <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
@@ -884,9 +903,12 @@ function injectIcons() {
 
         'ambientBtnNone': () => Icons.mute(18),
         'ambientBtnRain': () => Icons.rain(18),
-        'ambientBtnWaves': () => Icons.ocean(18),
+        'ambientBtnBirds': () => Icons.birds(18),
+        'ambientBtnExam': () => Icons.exam(18),
         'ambientBtnBinaural': () => Icons.meditate(18),
-        'ambientBtnBrown': () => Icons.deepHum(18),
+        'ambientBtnFire': () => Icons.fire(18),
+        'ambientBtnWaves': () => Icons.birds(18),
+        'ambientBtnBrown': () => Icons.exam(18),
 
         'pomoResetBtn': () => Icons.reset(18),
         'pomoSkipBtn': () => Icons.skip(18),

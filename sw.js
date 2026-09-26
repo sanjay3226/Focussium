@@ -3,7 +3,7 @@
    Network-first, auto-updates, v3.0 cache manifest
 ═══════════════════════════════════════════════════════════ */
 
-const APP_VERSION = '2026.09.25.v337';
+const APP_VERSION = '2026.09.26.v340';
 const CACHE_NAME  = `focussium-${APP_VERSION}`;
 
 const ASSETS = [
@@ -63,6 +63,14 @@ const ASSETS = [
     /* Boot */
     './js/smooth-scroll.js',
     './js/app.js',
+
+    /* Ambient Audio Recordings */
+    './sounds/rain.mp3',
+    './sounds/birds.mp3',
+    './sounds/library.mp3',
+    './sounds/clock.mp3',
+    './sounds/fire.mp3',
+    './sounds/binaural.wav',
 
     /* Fonts (cache key only — actual fonts from Google CDN) */
     'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700;800&display=swap'

@@ -8,24 +8,78 @@ const Sound = (() => {
     let delayNode = null;
     let delayGain = null;
 
-    let ambientSourceNode = null;
-    let ambientVolumeNode = null;
-    let ambientOscNodes = [];
-    let ambientLfoNode = null;
-    let activeAmbientType = 'none';
+    /* ═══════════════════════════════════════════════════════════
+       AUTHENTIC HIGH-FIDELITY STUDIO AMBIENT AUDIO ENGINE
+       Studio recordings, seamless infinite loops, smooth crossfades
+       ═══════════════════════════════════════════════════════════ */
+    const ambientTracks = {
+        rain: [
+            { src: 'sounds/rain.mp3', weight: 1.0, audio: null }
+        ],
+        birds: [
+            { src: 'sounds/birds.mp3', weight: 1.0, audio: null }
+        ],
+        exam: [
+            { src: 'sounds/library.mp3', weight: 0.95, audio: null },
+            { src: 'sounds/clock.mp3', weight: 0.28, audio: null }
+        ],
+        binaural: [
+            { src: 'sounds/binaural.wav', weight: 0.85, audio: null }
+        ],
+        fire: [
+            { src: 'sounds/fire.mp3', weight: 1.0, audio: null }
+        ]
+    };
 
-    function createBrownNoiseBuffer(c) {
-        const bufferSize = 4 * c.sampleRate; // 4 second loop
-        const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-        const output = buffer.getChannelData(0);
-        let lastOut = 0.0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            output[i] = (lastOut + (0.02 * white)) / 1.02;
-            lastOut = output[i];
-            output[i] *= 5.5; // Compensate for volume drop — louder base
+    let activeAmbientType = 'none';
+    let currentActiveElements = [];
+    let fadeInterval = null;
+
+    function getAudioElement(item) {
+        if (!item.audio) {
+            item.audio = new Audio(item.src);
+            item.audio.loop = true;
+            item.audio.preload = 'auto';
         }
-        return buffer;
+        return item.audio;
+    }
+
+    function stopAllAmbient(fadeMs = 350) {
+        if (fadeInterval) {
+            clearInterval(fadeInterval);
+            fadeInterval = null;
+        }
+
+        const elementsToFade = [...currentActiveElements];
+        currentActiveElements = [];
+        activeAmbientType = 'none';
+
+        if (elementsToFade.length === 0) return;
+
+        const steps = 14;
+        const stepTime = fadeMs / steps;
+        let step = 0;
+
+        fadeInterval = setInterval(() => {
+            step++;
+            const factor = Math.max(0, 1 - (step / steps));
+            elementsToFade.forEach(({ audio, targetVol }) => {
+                try {
+                    audio.volume = Math.max(0, targetVol * factor);
+                } catch(e) {}
+            });
+
+            if (step >= steps) {
+                clearInterval(fadeInterval);
+                fadeInterval = null;
+                elementsToFade.forEach(({ audio }) => {
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch(e) {}
+                });
+            }
+        }, stepTime);
     }
 
     /** Safe getter for AudioContext */
@@ -144,176 +198,80 @@ const Sound = (() => {
         startAmbient(type, vol = 0.4) {
             try {
                 const c = getContext();
-                if (c.state === 'suspended') {
+                if (c && c.state === 'suspended') {
                     c.resume();
                 }
 
-                if (activeAmbientType === type && ambientVolumeNode) {
+                // Backward-compatibility aliases
+                if (type === 'waves') type = 'birds';
+                if (type === 'brown') type = 'exam';
+
+                if (activeAmbientType === type && currentActiveElements.length > 0) {
                     this.setAmbientVolume(vol);
                     return;
                 }
 
-                this.stopAmbient();
+                stopAllAmbient(350);
+
+                if (type === 'none' || !ambientTracks[type]) {
+                    activeAmbientType = 'none';
+                    return;
+                }
+
                 activeAmbientType = type;
-                if (type === 'none') return;
+                const trackItems = ambientTracks[type];
+                const newElements = [];
 
-                ambientVolumeNode = c.createGain();
-                ambientVolumeNode.gain.setValueAtTime(0.0001, c.currentTime);
-                ambientVolumeNode.gain.exponentialRampToValueAtTime(vol * 0.75, c.currentTime + 0.8);
-                ambientVolumeNode.connect(c.destination);
+                trackItems.forEach(item => {
+                    const audio = getAudioElement(item);
+                    const targetVol = Math.max(0, Math.min(1, vol * item.weight));
+                    audio.volume = 0;
 
-                if (type === 'rain') {
-                    const noiseBuffer = createBrownNoiseBuffer(c);
-                    ambientSourceNode = c.createBufferSource();
-                    ambientSourceNode.buffer = noiseBuffer;
-                    ambientSourceNode.loop = true;
-
-                    const lowpass = c.createBiquadFilter();
-                    lowpass.type = 'lowpass';
-                    lowpass.frequency.setValueAtTime(700, c.currentTime);
-
-                    ambientLfoNode = c.createOscillator();
-                    ambientLfoNode.frequency.value = 0.12;
-                    const lfoGain = c.createGain();
-                    lfoGain.gain.value = 150;
-
-                    ambientLfoNode.connect(lfoGain);
-                    lfoGain.connect(lowpass.frequency);
-
-                    ambientSourceNode.connect(lowpass);
-                    lowpass.connect(ambientVolumeNode);
-
-                    ambientLfoNode.start();
-                    ambientSourceNode.start();
-                } 
-                else if (type === 'waves') {
-                    const noiseBuffer = createBrownNoiseBuffer(c);
-                    ambientSourceNode = c.createBufferSource();
-                    ambientSourceNode.buffer = noiseBuffer;
-                    ambientSourceNode.loop = true;
-
-                    const lowpass = c.createBiquadFilter();
-                    lowpass.type = 'lowpass';
-                    lowpass.frequency.setValueAtTime(350, c.currentTime);
-
-                    ambientLfoNode = c.createOscillator();
-                    ambientLfoNode.frequency.value = 0.08;
-                    const lfoGain = c.createGain();
-                    lfoGain.gain.value = 120;
-
-                    ambientLfoNode.connect(lfoGain);
-                    lfoGain.connect(lowpass.frequency);
-
-                    const panner = c.createStereoPanner ? c.createStereoPanner() : null;
-                    const panOsc = c.createOscillator();
-                    panOsc.frequency.value = 0.06;
-                    
-                    if (panner) {
-                        panOsc.connect(panner.pan);
-                        panOsc.start();
-                        ambientOscNodes.push(panOsc);
-
-                        ambientSourceNode.connect(lowpass);
-                        lowpass.connect(panner);
-                        panner.connect(ambientVolumeNode);
-                    } else {
-                        ambientSourceNode.connect(lowpass);
-                        lowpass.connect(ambientVolumeNode);
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(err => {
+                            console.warn('Ambient play notice:', err);
+                        });
                     }
 
-                    ambientLfoNode.start();
-                    ambientSourceNode.start();
-                }
-                else if (type === 'binaural') {
-                    const oscL = c.createOscillator();
-                    const oscR = c.createOscillator();
-                    oscL.frequency.value = 160;
-                    oscR.frequency.value = 165;
+                    newElements.push({ audio, item, targetVol });
+                });
 
-                    const pannerL = c.createStereoPanner ? c.createStereoPanner() : null;
-                    const pannerR = c.createStereoPanner ? c.createStereoPanner() : null;
+                currentActiveElements = newElements;
 
-                    if (pannerL && pannerR) {
-                        pannerL.pan.value = -0.8;
-                        pannerR.pan.value = 0.8;
+                const steps = 16;
+                const stepTime = 400 / steps;
+                let step = 0;
 
-                        oscL.connect(pannerL);
-                        pannerL.connect(ambientVolumeNode);
+                const inInterval = setInterval(() => {
+                    step++;
+                    const factor = Math.min(1, step / steps);
+                    newElements.forEach(({ audio, targetVol }) => {
+                        try {
+                            audio.volume = Math.min(1, Math.max(0, targetVol * factor));
+                        } catch(e) {}
+                    });
 
-                        oscR.connect(pannerR);
-                        pannerR.connect(ambientVolumeNode);
-                    } else {
-                        oscL.connect(ambientVolumeNode);
-                        oscR.connect(ambientVolumeNode);
+                    if (step >= steps) {
+                        clearInterval(inInterval);
                     }
+                }, stepTime);
 
-                    oscL.start();
-                    oscR.start();
-                    ambientOscNodes.push(oscL, oscR);
-                }
-                else if (type === 'brown') {
-                    const noiseBuffer = createBrownNoiseBuffer(c);
-                    ambientSourceNode = c.createBufferSource();
-                    ambientSourceNode.buffer = noiseBuffer;
-                    ambientSourceNode.loop = true;
-
-                    const lowpass = c.createBiquadFilter();
-                    lowpass.type = 'lowpass';
-                    lowpass.frequency.value = 250;
-
-                    ambientSourceNode.connect(lowpass);
-                    lowpass.connect(ambientVolumeNode);
-
-                    ambientSourceNode.start();
-                }
             } catch(e) {
-                console.error("Ambient audio synthesis error: ", e);
+                console.error("Ambient audio playback error: ", e);
             }
         },
 
         stopAmbient() {
-            try {
-                const c = getContext();
-                if (ambientVolumeNode) {
-                    const currentVol = ambientVolumeNode.gain.value;
-                    ambientVolumeNode.gain.setValueAtTime(currentVol, c.currentTime);
-                    ambientVolumeNode.gain.linearRampToValueAtTime(0.0001, c.currentTime + 1.0);
-                }
-
-                const source = ambientSourceNode;
-                const volume = ambientVolumeNode;
-                const oscs = [...ambientOscNodes];
-                const lfo = ambientLfoNode;
-
-                setTimeout(() => {
-                    try { if (source) source.stop(); } catch(e) {}
-                    try { if (source) source.disconnect(); } catch(e) {}
-                    try { if (lfo) lfo.stop(); } catch(e) {}
-                    try { if (lfo) lfo.disconnect(); } catch(e) {}
-                    oscs.forEach(osc => {
-                        try { osc.stop(); } catch(e) {}
-                        try { osc.disconnect(); } catch(e) {}
-                    });
-                    try { if (volume) volume.disconnect(); } catch(e) {}
-                }, 1100);
-
-                ambientSourceNode = null;
-                ambientVolumeNode = null;
-                ambientOscNodes = [];
-                ambientLfoNode = null;
-                activeAmbientType = 'none';
-            } catch(e) {
-                console.error("Ambient audio stop error: ", e);
-            }
+            stopAllAmbient(400);
         },
 
         setAmbientVolume(vol) {
             try {
-                const c = getContext();
-                if (ambientVolumeNode) {
-                    ambientVolumeNode.gain.setValueAtTime(ambientVolumeNode.gain.value, c.currentTime);
-                    ambientVolumeNode.gain.linearRampToValueAtTime(vol * 0.75, c.currentTime + 0.1);
-                }
+                currentActiveElements.forEach(({ audio, item }) => {
+                    const targetVol = Math.max(0, Math.min(1, vol * item.weight));
+                    audio.volume = targetVol;
+                });
             } catch(e) {}
         },
 

@@ -36,7 +36,8 @@ const Home = {
         const streakEl  = document.getElementById('progressStreak');
         if (pctEl)    pctEl.textContent    = `${percent}%`;
         if (tasksEl)  tasksEl.textContent  = `${done}/${total}`;
-        if (focusEl)  focusEl.textContent  = `${focusMin}m`;
+        const focusStr = (typeof Report !== 'undefined' && Report.formatDuration) ? Report.formatDuration(focusMin) : `${focusMin}m`;
+        if (focusEl)  focusEl.textContent  = focusStr;
         if (streakEl) streakEl.textContent = State.data.streak || 0;
     },
 
@@ -132,7 +133,8 @@ const Home = {
 
     renderStats(total, done, focus, streak) {
         const icons  = [Icons.tasks(16), Icons.check(16), Icons.fire(16), Icons.shield(16)];
-        const values = [total, done, `${focus}m`, streak];
+        const focusStr = (typeof Report !== 'undefined' && Report.formatDuration) ? Report.formatDuration(focus) : (focus > 0 ? `${focus} min` : '0 min');
+        const values = [total, done, focusStr, streak];
 
         for (let i = 0; i < 4; i++) {
             const iconEl  = document.getElementById(`statIcon${i}`);

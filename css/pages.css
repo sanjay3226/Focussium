@@ -837,39 +837,86 @@
     animation: fadeIn .3s cubic-bezier(.16, 1, 0.3, 1) both;
 }
 
-.report-mode-panel {
-    background: var(--bg2);
-    border: 1px solid var(--bd);
-    border-radius: 18px;
-    padding: 14px 16px;
-    margin-bottom: 14px;
+/* ── New pill-slider toggle ── */
+.report-toggle-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
 }
 
-.report-mode-switch { display: flex; gap: 6px; margin-bottom: 8px; }
-
-.report-mode-btn {
-    flex: 1;
-    padding: 7px 12px;
-    border-radius: 12px;
-    font-size: .75rem;
-    font-weight: 700;
-    border: 1.5px solid var(--bd);
+.report-toggle-pill {
+    position: relative;
+    display: flex;
     background: var(--bg3);
+    border-radius: 30px;
+    padding: 4px;
+    border: 1px solid var(--bd);
+    width: 200px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.25);
+}
+
+/* The sliding highlight */
+.report-toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: linear-gradient(135deg, var(--ac), rgba(var(--acr), .75));
+    border-radius: 24px;
+    box-shadow: 0 2px 10px rgba(var(--acr), .38), 0 0 0 1px rgba(var(--acr), .25);
+    transition: transform .32s cubic-bezier(.34, 1.56, .64, 1);
+    pointer-events: none;
+    will-change: transform;
+}
+
+/* When month is active, slide right */
+.page[data-report-mode="month"] .report-toggle-slider {
+    transform: translateX(calc(100% + 4px));
+}
+
+.report-toggle-btn {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    padding: 7px 0;
+    border-radius: 24px;
+    font-family: var(--font-sans);
+    font-size: .78rem;
+    font-weight: 700;
     color: var(--tx3);
+    background: transparent;
+    border: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: opacity .15s;
+    transition: color .25s;
+    text-align: center;
+    letter-spacing: .02em;
 }
 
-.report-mode-btn:active { opacity: .75; }
-.report-mode-btn.active { background: var(--ac); color: var(--ac-text, #fff); border-color: var(--ac); }
+.report-toggle-btn.active {
+    color: var(--ac-text, #fff);
+}
 
-.report-mode-insight {
-    font-size: .72rem;
+.report-toggle-insight {
+    font-size: .71rem;
     color: var(--tx3);
-    margin-bottom: 10px;
+    font-weight: 500;
+    text-align: center;
     line-height: 1.5;
+    margin: 0;
+    padding: 0 8px;
+    max-width: 260px;
+    transition: opacity .4s;
 }
+
+/* Keep old .report-mode-btn/.report-mode-panel for any JS that still touches them */
+.report-mode-panel { display: none; }
+.report-mode-btn { display: none; }
+.report-mode-insight { display: none; }
+
 
 .report-mode-metrics {
     display: grid;
@@ -1041,19 +1088,29 @@
 }
 
 .report-stat-val {
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--ac);
-    line-height: 1;
+    line-height: 1.1;
+    word-break: break-word;
+    hyphens: none;
 }
 
 .report-stat-lbl {
     font-size: .55rem;
     color: var(--tx3);
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .04em;
     margin-top: 4px;
+}
+
+/* Light unit suffix — e.g. the '/30d' in '12/30d', or 'day' in '5 min/day' */
+.stat-unit {
+    font-size: .78em;
+    font-weight: 500;
+    color: var(--tx3);
+    opacity: 0.85;
 }
 
 /* ── Report cards ── */
@@ -1198,18 +1255,19 @@
 }
 
 .day-stat-val {
-    font-size: 1.25rem;
-    font-weight: 800;
+    font-size: 1.1rem;
+    font-weight: 700;
     color: var(--ac);
-    line-height: 1;
+    line-height: 1.15;
+    word-break: break-word;
 }
 
 .day-stat-label {
-    font-size: .62rem;
-    font-weight: 700;
+    font-size: .60rem;
+    font-weight: 600;
     color: var(--tx3);
     text-transform: uppercase;
-    letter-spacing: .05em;
+    letter-spacing: .04em;
 }
 
 .day-detail-tasks-list {

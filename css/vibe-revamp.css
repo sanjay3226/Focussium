@@ -281,10 +281,11 @@
 }
 
 .report-stat-val {
-    font-size: 1.2rem;
-    font-weight: 800;
+    font-size: 1.05rem;
+    font-weight: 700;
     color: var(--ac);
-    line-height: 1;
+    line-height: 1.15;
+    word-break: break-word;
 }
 
 .report-stat-lbl {

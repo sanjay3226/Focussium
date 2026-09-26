@@ -250,7 +250,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 6px 12px;
+    padding: 6px 10px;
     background: var(--bg2);
     border-radius: var(--radius-card);
     border: 1px solid var(--bd);
@@ -262,25 +262,41 @@
     display: flex;
     gap: 2px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .ambient-icon-btn {
-    width: 30px; height: 30px;
+    width: 28px; height: 28px;
     border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: .9rem;
+    font-size: .85rem;
     background: transparent;
     border: 1.5px solid transparent;
     cursor: pointer;
     opacity: .55;
     -webkit-tap-highlight-color: transparent;
-    transition: opacity .15s;
+    transition: opacity .15s, background .15s, border-color .15s, transform .1s;
+    color: var(--tx2);
 }
 
-.ambient-icon-btn:active { opacity: .85; }
-.ambient-icon-btn.active { opacity: 1; background: rgba(var(--acr), .12); border-color: var(--ac); }
+.ambient-icon-btn:hover {
+    opacity: .85;
+    background: var(--bg3);
+}
+
+.ambient-icon-btn:active {
+    opacity: .95;
+    transform: scale(0.92);
+}
+
+.ambient-icon-btn.active {
+    opacity: 1;
+    background: rgba(var(--acr), .14);
+    border-color: var(--ac);
+    color: var(--ac);
+}
 
 .ambient-slider-container {
     display: flex;
@@ -400,4 +416,42 @@
     display: flex;
     gap: 16px;
     align-items: center;
+}
+
+/* ── Focus Mode entry button — compact pill, fits within screen ── */
+.pomo-focus-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 18px;
+    border-radius: 22px;
+    background: rgba(var(--acr), .10);
+    border: 1.5px solid rgba(var(--acr), .28);
+    color: var(--ac);
+    font-family: var(--font-sans);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .2s, border-color .2s, transform .15s, box-shadow .2s;
+    white-space: nowrap;
+}
+
+.pomo-focus-mode-btn svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+}
+
+.pomo-focus-mode-btn:active {
+    transform: scale(.95);
+    background: rgba(var(--acr), .2);
+}
+
+.pomo-focus-mode-btn:hover {
+    background: rgba(var(--acr), .16);
+    border-color: rgba(var(--acr), .5);
+    box-shadow: 0 0 14px rgba(var(--acr), .2);
 }

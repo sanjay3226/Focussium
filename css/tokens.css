@@ -10,7 +10,7 @@
 :root {
     /* ── Two-Font Typography Hybrid ── */
     --font-serif: 'DM Serif Display', Georgia, serif;
-    --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-sans:  'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root,

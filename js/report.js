@@ -117,8 +117,14 @@ const Report = {
     applyModeVisibility() {
         const mode = State.reportMode || 'week';
         document.querySelector('.page[data-page="report"]')?.setAttribute('data-report-mode', mode);
+
+        // Old toggle buttons (kept for JS compat)
         document.querySelectorAll('.report-mode-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(mode === 'month' ? 'reportModeMonthBtn' : 'reportModeWeekBtn')?.classList.add('active');
+
+        // New pill-slider toggle buttons
+        document.querySelectorAll('.report-toggle-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.report-toggle-btn[data-mode="${mode}"]`)?.classList.add('active');
     },
 
     renderModePanel(w, m) {
@@ -213,16 +219,19 @@ const Report = {
         const monthRhythm = m ? Math.round((m.activeDays / monthDays) * 100) : 0;
         const weekRhythm = Math.round((w.activeDays / 7) * 100);
 
+        const dailyAvgRaw = m ? Math.round(m.totalFocus / monthDays) : 0;
+        const dailyAvgStr = dailyAvgRaw <= 0 ? '—' : this.formatDuration(dailyAvgRaw) + '/day';
+
         const stats = mode === 'month' && m ? [
             { val: this.formatDuration(m.totalFocus), lbl: 'Deep Work' },
             { val: `${m.totalTasks}`, lbl: 'Tasks Done' },
             { val: `${monthRhythm}%`, lbl: 'Rhythm' },
-            { val: this.formatDuration(Math.round(m.totalFocus / monthDays)) + '/d', lbl: 'Daily Avg' }
+            { val: dailyAvgStr, lbl: 'Daily Avg' }
         ] : [
             { val: this.formatDuration(w.totalFocus), lbl: 'Deep Work' },
             { val: `${w.totalTasks}`, lbl: 'Tasks Done' },
             { val: `${weekRhythm}%`, lbl: 'Rhythm' },
-            { val: `${State.data.streak || 0}d`, lbl: 'Day Streak' }
+            { val: `${State.data.streak || 0} days`, lbl: 'Streak' }
         ];
 
         container.innerHTML = stats.map((s, idx) => `
@@ -462,8 +471,8 @@ const Report = {
         const statsEl = document.getElementById('monthStats');
         if (statsEl) statsEl.innerHTML = `
             <div class="month-stat-chip"><span class="month-stat-label">Tasks</span><span class="month-stat-value">${m.totalTasks}</span></div>
-            <div class="month-stat-chip"><span class="month-stat-label">Focus</span><span class="month-stat-value">${m.totalFocus}m</span></div>
-            <div class="month-stat-chip"><span class="month-stat-label">Active</span><span class="month-stat-value">${m.activeDays}/${m.days.length}</span></div>
+            <div class="month-stat-chip"><span class="month-stat-label">Focus</span><span class="month-stat-value">${this.formatDuration(m.totalFocus)}</span></div>
+            <div class="month-stat-chip"><span class="month-stat-label">Active</span><span class="month-stat-value">${m.activeDays}<span class="stat-unit">/${m.days.length}d</span></span></div>
             <div class="month-stat-chip"><span class="month-stat-label">Rhythm</span><span class="month-stat-value">${completionRate}%</span></div>`;
 
         const calEl = document.getElementById('monthCalendar');
@@ -681,7 +690,7 @@ const Report = {
                     <span class="day-stat-label">Tasks Done</span>
                 </div>
                 <div class="day-detail-stat">
-                    <span class="day-stat-val">${dayData.focus || 0}m</span>
+                    <span class="day-stat-val">${this.formatDuration(dayData.focus || 0)}</span>
                     <span class="day-stat-label">Focus Logged</span>
                 </div>
             </div>

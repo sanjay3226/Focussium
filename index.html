@@ -58,7 +58,7 @@
     <!-- Fonts (DM Serif Display + Inter Hybrid) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS — modular (tokens first, then reset, then layout) -->
     <link rel="stylesheet" href="css/tokens.css?v=337">
@@ -421,14 +421,21 @@
                         <div class="pomo-live-insight" id="pomoLiveInsight"></div>
                     </div>
 
+                    <!-- Focus Mode button — inline, no scroll needed -->
+                    <button class="pomo-focus-mode-btn" data-action="pomo-fullscreen" id="pomoFocusModeBtn" title="Enter Focus Mode">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                        Focus Mode
+                    </button>
+
                     <!-- Ambient sounds -->
                     <div class="ambient-compact-row">
                         <div class="ambient-icons-group">
                             <button class="ambient-icon-btn active" data-sound="none"     data-action="pomo-ambient" title="Silence" id="ambientBtnNone"></button>
                             <button class="ambient-icon-btn"        data-sound="rain"     data-action="pomo-ambient" title="Rainfall" id="ambientBtnRain"></button>
-                            <button class="ambient-icon-btn"        data-sound="waves"    data-action="pomo-ambient" title="Ocean Waves" id="ambientBtnWaves"></button>
-                            <button class="ambient-icon-btn"        data-sound="binaural" data-action="pomo-ambient" title="Binaural" id="ambientBtnBinaural"></button>
-                            <button class="ambient-icon-btn"        data-sound="brown"    data-action="pomo-ambient" title="Deep Hum" id="ambientBtnBrown"></button>
+                            <button class="ambient-icon-btn"        data-sound="birds"    data-action="pomo-ambient" title="Nature Birds" id="ambientBtnBirds"></button>
+                            <button class="ambient-icon-btn"        data-sound="exam"     data-action="pomo-ambient" title="Exam Hall" id="ambientBtnExam"></button>
+                            <button class="ambient-icon-btn"        data-sound="binaural" data-action="pomo-ambient" title="Binaural Beats" id="ambientBtnBinaural"></button>
+                            <button class="ambient-icon-btn"        data-sound="fire"     data-action="pomo-ambient" title="Campfire" id="ambientBtnFire"></button>
                         </div>
                         <div class="ambient-slider-container">
                             <span class="ambient-slider-icon" id="ambientVolIcon"></span>
@@ -445,15 +452,17 @@
             <section class="page" data-page="report">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconReport"></span>
-                    <h2>Weekly Vibe</h2>
+                    <h2>Vibe Report</h2>
                 </div>
 
-                <div class="report-mode-panel">
-                    <div class="report-mode-switch">
-                        <button class="report-mode-btn active" id="reportModeWeekBtn"  data-action="report-mode" data-mode="week">Week</button>
-                        <button class="report-mode-btn"        id="reportModeMonthBtn" data-action="report-mode" data-mode="month">Month</button>
+                <!-- Revamped pill toggle -->
+                <div class="report-toggle-wrap">
+                    <div class="report-toggle-pill" id="reportTogglePill">
+                        <div class="report-toggle-slider" id="reportToggleSlider"></div>
+                        <button class="report-toggle-btn active" id="reportModeWeekBtn"  data-action="report-mode" data-mode="week">Week</button>
+                        <button class="report-toggle-btn"        id="reportModeMonthBtn" data-action="report-mode" data-mode="month">Month</button>
                     </div>
-                    <div class="report-mode-insight" id="reportModeInsight">Building steady momentum.</div>
+                    <p class="report-toggle-insight" id="reportModeInsight">Building steady momentum.</p>
                 </div>
 
                 <div class="week-nav report-week-only">
@@ -642,6 +651,21 @@
                 <span class="nav-label">Vibe</span>
             </button>
         </nav>
+
+        <!-- Fullscreen Focus Mode Overlay -->
+        <div class="fullscreen-pomo" id="fullscreenPomo" role="dialog" aria-modal="true" aria-label="Fullscreen focus mode">
+            <div class="fs-bg" id="fsBg"></div>
+            <button class="fs-close-btn" data-action="pomo-exit-fullscreen" title="Exit Focus Mode">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6L18 18"/><path d="M18 6L6 18"/></svg>
+            </button>
+            <div class="fs-time" id="fsTime">25:00</div>
+            <div class="fs-label" id="fsLabel">Focus Time</div>
+            <div class="fs-controls">
+                <button class="pomo-ctrl-btn secondary" data-action="pomo-reset" style="width:44px;height:44px;" id="fsResetBtn"></button>
+                <button class="pomo-ctrl-btn primary" data-action="pomo-toggle" style="width:64px;height:64px;" id="fsPlayBtn"></button>
+                <button class="pomo-ctrl-btn secondary" data-action="pomo-skip" style="width:44px;height:44px;" id="fsSkipBtn"></button>
+            </div>
+        </div>
 
         <!-- Game Arena Overlay -->
         <div class="game-arena" id="gameArena" role="dialog" aria-modal="true" aria-label="Game arena">
