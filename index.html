@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="dark" data-accent="neon">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
-    <meta name="description" content="Focussium 3.0 — High-contrast offline-first productivity PWA. Deep focus timer, tasks, brain dump, habits tracker & vibe analytics.">
+    <meta name="description" content="Focussium 3.0 â€” High-contrast offline-first productivity PWA. Deep focus timer, tasks, brain dump, habits tracker & vibe analytics.">
     <meta name="keywords" content="productivity, pomodoro, focus timer, task manager, PWA, offline, habits">
     <meta name="color-scheme" content="dark light">
-    <title>Focussium — Deep Focus Productivity & Habits PWA</title>
+    <title>Focussium â€” Deep Focus Productivity & Habits PWA</title>
 
     <!-- Localhost live dev cache unregister -->
     <script>
@@ -40,19 +40,19 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://sanjay3226.github.io/Focussium/">
     <meta property="og:site_name" content="Focussium">
-    <meta property="og:title" content="Focussium — Deep Focus Productivity & Habits PWA">
+    <meta property="og:title" content="Focussium â€” Deep Focus Productivity & Habits PWA">
     <meta property="og:description" content="Master your focus. High-contrast offline-first PWA with deep focus timer, task manager, habit streaks, focus mini-games, and vibe analytics.">
     <meta property="og:image" content="https://sanjay3226.github.io/Focussium/og-image.png">
     <meta property="og:image:secure_url" content="https://sanjay3226.github.io/Focussium/og-image.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="675">
-    <meta property="og:image:alt" content="Focussium — Deep Focus Productivity PWA Banner">
+    <meta property="og:image:alt" content="Focussium â€” Deep Focus Productivity PWA Banner">
 
     <!-- Twitter / X / Discord Large Banner Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://sanjay3226.github.io/Focussium/">
-    <meta name="twitter:title" content="Focussium — Deep Focus Productivity & Habits PWA">
+    <meta name="twitter:title" content="Focussium â€” Deep Focus Productivity & Habits PWA">
     <meta name="twitter:description" content="Master your focus. High-contrast offline-first PWA with deep focus timer, task manager, habit streaks, focus mini-games, and vibe analytics.">
     <meta name="twitter:image" content="https://sanjay3226.github.io/Focussium/og-image.png">
 
@@ -61,24 +61,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS — modular (tokens first, then reset, then layout) -->
-    <link rel="stylesheet" href="css/tokens.css?v=337">
-    <link rel="stylesheet" href="css/reset.css?v=337">
-    <link rel="stylesheet" href="css/animations.css?v=337">
-    <link rel="stylesheet" href="css/layout.css?v=337">
-    <link rel="stylesheet" href="css/components.css?v=337">
-    <link rel="stylesheet" href="css/pages.css?v=337">
-    <link rel="stylesheet" href="css/modals.css?v=337">
-    <link rel="stylesheet" href="css/timer.css?v=337">
-    <link rel="stylesheet" href="css/charts.css?v=337">
-    <link rel="stylesheet" href="css/games.css?v=337">
-    <link rel="stylesheet" href="css/vibe-revamp.css?v=337">
+    <!-- CSS â€” modular (tokens first, then reset, then layout) -->
+    <link rel="stylesheet" href="css/tokens.css?v=342">
+    <link rel="stylesheet" href="css/reset.css?v=342">
+    <link rel="stylesheet" href="css/animations.css?v=342">
+    <link rel="stylesheet" href="css/layout.css?v=342">
+    <link rel="stylesheet" href="css/components.css?v=342">
+    <link rel="stylesheet" href="css/pages.css?v=342">
+    <link rel="stylesheet" href="css/modals.css?v=342">
+    <link rel="stylesheet" href="css/timer.css?v=342">
+    <link rel="stylesheet" href="css/charts.css?v=342">
+    <link rel="stylesheet" href="css/games.css?v=342">
+    <link rel="stylesheet" href="css/vibe-revamp.css?v=342">
 </head>
 
 <body>
 
 
-    <!-- ── Loading Screen ── -->
+    <!-- â”€â”€ Loading Screen â”€â”€ -->
     <div class="ld-scr" id="loadingScreen">
         <img class="ld-logo" src="icon-512.png" alt="Focussium Logo">
         <div class="ld-title">Focussium</div>
@@ -86,7 +86,7 @@
         <div class="ld-dots"><span></span><span></span><span></span></div>
     </div>
 
-    <!-- ── Login Screen ── -->
+    <!-- â”€â”€ Login Screen â”€â”€ -->
     <div class="login-screen" id="loginScreen">
         <div class="login-card">
             <div class="login-badge-header">
@@ -112,7 +112,7 @@
         </div>
     </div>
 
-    <!-- ── Onboarding ── -->
+    <!-- â”€â”€ Onboarding â”€â”€ -->
     <div class="onboard-screen" id="onboardScreen">
         <div class="onboard-card">
             <div class="onboard-step active" data-step="0">
@@ -128,7 +128,7 @@
                     <span class="feat-pill"><span class="pill-icon" id="onboardFeat3"></span> Habits</span>
                     <span class="feat-pill"><span class="pill-icon" id="onboardFeat4"></span> Vibe Analytics</span>
                 </div>
-                <button class="onboard-btn primary" data-action="onboard-next">Begin Setup →</button>
+                <button class="onboard-btn primary" data-action="onboard-next">Begin Setup â†’</button>
             </div>
 
             <div class="onboard-step" data-step="1">
@@ -179,7 +179,7 @@
         </div>
     </div>
 
-    <!-- ══════════════════════ MAIN APP ══════════════════════ -->
+    <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN APP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
     <div class="app" id="app">
         <div class="sync-indicator" id="syncIndicator" title="Sync status"></div>
 
@@ -216,7 +216,7 @@
         <!-- Content -->
         <main class="content">
 
-            <!-- ── HOME ── -->
+            <!-- â”€â”€ HOME â”€â”€ -->
             <section class="page active" data-page="home">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconHome"></span>
@@ -228,7 +228,7 @@
                     <div class="quote-sparkle" id="quoteSparkleIcon"></div>
                     <div class="quote-content">
                         <p class="quote-text" id="dailyQuoteText">"Loading your zen space..."</p>
-                        <p class="quote-author" id="dailyQuoteAuthor">— Focussium</p>
+                        <p class="quote-author" id="dailyQuoteAuthor">â€” Focussium</p>
                     </div>
                 </div>
 
@@ -324,7 +324,7 @@
                 <div class="tasks-container" id="homeTasksPreview"></div>
             </section>
 
-            <!-- ── TASKS ── -->
+            <!-- â”€â”€ TASKS â”€â”€ -->
             <section class="page" data-page="tasks">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconTasks"></span>
@@ -339,7 +339,7 @@
                 <div class="tasks-container" id="tasksContainer"></div>
             </section>
 
-            <!-- ── BRAIN DUMP ── -->
+            <!-- â”€â”€ BRAIN DUMP â”€â”€ -->
             <section class="page" data-page="dump">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconDump"></span>
@@ -368,7 +368,7 @@
                 </div>
             </section>
 
-            <!-- ── HABITS (v3.0 new page) ── -->
+            <!-- â”€â”€ HABITS (v3.0 new page) â”€â”€ -->
             <section class="page" data-page="habits">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconHabits"></span>
@@ -377,7 +377,7 @@
                 <div id="habitsContainer"></div>
             </section>
 
-            <!-- ── FOCUS ── -->
+            <!-- â”€â”€ FOCUS â”€â”€ -->
             <section class="page" data-page="focus">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconFocus"></span>
@@ -422,7 +422,7 @@
                         <div class="pomo-live-insight" id="pomoLiveInsight"></div>
                     </div>
 
-                    <!-- Focus Mode button — inline, no scroll needed -->
+                    <!-- Focus Mode button â€” inline, no scroll needed -->
                     <button class="pomo-focus-mode-btn" data-action="pomo-fullscreen" id="pomoFocusModeBtn" title="Enter Focus Mode">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
                         Focus Mode
@@ -449,7 +449,7 @@
                 </div>
             </section>
 
-            <!-- ── REPORT ── -->
+            <!-- â”€â”€ REPORT â”€â”€ -->
             <section class="page" data-page="report">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconReport"></span>
@@ -612,7 +612,7 @@
                 </button>
             </section>
 
-            <!-- ── GAMES ── -->
+            <!-- â”€â”€ GAMES â”€â”€ -->
             <section class="page" data-page="games">
                 <div class="page-header">
                     <span class="page-icon" id="pageIconGames"></span>
@@ -624,7 +624,7 @@
 
         </main>
 
-        <!-- ── Bottom Nav ── -->
+        <!-- â”€â”€ Bottom Nav â”€â”€ -->
         <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
             <button class="nav-item active" data-page="home"   data-action="nav-go" aria-label="Home">
                 <span class="nav-icon" id="navIconHome"></span>
@@ -691,7 +691,7 @@
         </button>
     </div>
 
-    <!-- ══ MODALS ══ -->
+    <!-- â•â• MODALS â•â• -->
 
     <!-- Add/Edit Task -->
     <div class="modal" id="addTaskModal" role="dialog" aria-modal="true" aria-label="Task editor">
@@ -862,7 +862,7 @@
                 <div class="settings-row">
                     <div class="settings-row-left"><div class="settings-row-text"><h4>Focus Duration</h4><p>Minutes per session</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" data-action="settings-adjust" data-key="focusDur" data-delta="-5">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="focusDur" data-delta="-5">âˆ’</button>
                         <span class="stepper-value" id="focusDurValue">25</span>
                         <span class="stepper-unit">min</span>
                         <button class="stepper-btn" data-action="settings-adjust" data-key="focusDur" data-delta="5">+</button>
@@ -871,7 +871,7 @@
                 <div class="settings-row">
                     <div class="settings-row-left"><div class="settings-row-text"><h4>Short Break</h4><p>Rest between sessions</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" data-action="settings-adjust" data-key="breakDur" data-delta="-1">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="breakDur" data-delta="-1">âˆ’</button>
                         <span class="stepper-value" id="breakDurValue">5</span>
                         <span class="stepper-unit">min</span>
                         <button class="stepper-btn" data-action="settings-adjust" data-key="breakDur" data-delta="1">+</button>
@@ -880,7 +880,7 @@
                 <div class="settings-row">
                     <div class="settings-row-left"><div class="settings-row-text"><h4>Long Break</h4><p>After completing a set</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" data-action="settings-adjust" data-key="longDur" data-delta="-5">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="longDur" data-delta="-5">âˆ’</button>
                         <span class="stepper-value" id="longDurValue">15</span>
                         <span class="stepper-unit">min</span>
                         <button class="stepper-btn" data-action="settings-adjust" data-key="longDur" data-delta="5">+</button>
@@ -889,7 +889,7 @@
                 <div class="settings-row">
                     <div class="settings-row-left"><div class="settings-row-text"><h4>Sessions per Set</h4><p>Before long break</p></div></div>
                     <div class="stepper">
-                        <button class="stepper-btn" data-action="settings-adjust" data-key="sessions" data-delta="-1">−</button>
+                        <button class="stepper-btn" data-action="settings-adjust" data-key="sessions" data-delta="-1">âˆ’</button>
                         <span class="stepper-value" id="sessionsValue">4</span>
                         <button class="stepper-btn" data-action="settings-adjust" data-key="sessions" data-delta="1">+</button>
                     </div>
@@ -901,7 +901,7 @@
                 <div class="settings-row">
                     <div class="settings-row-left">
                         <div class="settings-row-text">
-                            <h4>Email</h4><p id="userEmailDisplay">—</p>
+                            <h4>Email</h4><p id="userEmailDisplay">â€”</p>
                         </div>
                     </div>
                 </div>
@@ -931,7 +931,7 @@
                 </div>
                 <div class="account-identity">
                     <h3 class="account-name" id="accountName">Focus Warrior</h3>
-                    <p class="account-email" id="accountEmail">—</p>
+                    <p class="account-email" id="accountEmail">â€”</p>
                     <span class="account-rank-pill" id="accountRank">Focus Initiate</span>
                 </div>
             </div>
@@ -944,7 +944,7 @@
                 <div class="account-xp-track">
                     <div class="account-xp-bar" id="accountXpFill"></div>
                 </div>
-                <div class="account-xp-sub">Earn XP: +1 XP/min focus • +10 XP/task • +25 XP/habit day</div>
+                <div class="account-xp-sub">Earn XP: +1 XP/min focus â€¢ +10 XP/task â€¢ +25 XP/habit day</div>
             </div>
 
             <div class="account-stats-section">
@@ -998,7 +998,7 @@
                    placeholder='Task, or "dump <text>"...'
                    aria-label="Quick action input">
             <div class="cmd-footer">
-                <span class="cmd-hint">Press <strong>Enter</strong> to save • <strong>Esc</strong> to cancel</span>
+                <span class="cmd-hint">Press <strong>Enter</strong> to save â€¢ <strong>Esc</strong> to cancel</span>
             </div>
         </div>
     </div>
@@ -1088,7 +1088,7 @@
         </div>
     </div>
 
-    <!-- ══ SCRIPTS (load order matters) ══ -->
+    <!-- â•â• SCRIPTS (load order matters) â•â• -->
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1129,7 +1129,7 @@
     <script src="js/games.js"></script>
     <script src="js/smooth-scroll.js?v=336"></script>
 
-    <!-- Boot (last — all modules must be defined first) -->
+    <!-- Boot (last â€” all modules must be defined first) -->
     <script src="js/app.js"></script>
 
     <!-- Global data-action event bus (replaces all inline onclick) -->
@@ -1139,25 +1139,25 @@
         if (!el) return;
         const action = el.dataset.action;
 
-        /* ── Navigation ── */
+        /* â”€â”€ Navigation â”€â”€ */
         if (action === 'nav-go')       { Nav.go(el.dataset.page); return; }
         if (action === 'nav-dump')     { Nav.go('dump'); return; }
         if (action === 'nav-tasks')    { Nav.go('tasks'); return; }
         if (action === 'nav-habits')   { Nav.go('habits'); return; }
         if (action === 'nav-report')   { Nav.go('report'); return; }
 
-        /* ── Auth ── */
+        /* â”€â”€ Auth â”€â”€ */
         if (action === 'auth-google')  { Auth.signInGoogle(); return; }
         if (action === 'auth-signout') { Auth.signOut(); return; }
 
-        /* ── Account modal ── */
+        /* â”€â”€ Account modal â”€â”€ */
         if (action === 'open-account')  { Account.open(); return; }
         if (action === 'account-close') { Account.close(); return; }
         if (action === 'account-export') { Account.exportData(); return; }
         if (action === 'account-sign-out') { Auth.signOut(); Account.close(); return; }
         if (action === 'account-sign-in')  { Auth.signInGoogle(); return; }
 
-        /* ── Settings ── */
+        /* â”€â”€ Settings â”€â”€ */
         if (action === 'open-settings')             { Settings.open(); return; }
         if (action === 'settings-close')             { Settings.close(); return; }
         if (action === 'settings-theme')             { Settings.setTheme(el.dataset.theme); return; }
@@ -1168,19 +1168,19 @@
             Settings.adjust(el.dataset.key, parseInt(el.dataset.delta, 10)); return;
         }
 
-        /* ── Onboarding ── */
+        /* â”€â”€ Onboarding â”€â”€ */
         if (action === 'onboard-next')  { Onboard.next(); return; }
         if (action === 'onboard-done')  { Onboard.done(); return; }
         if (action === 'onboard-theme') { Onboard.setTheme(el.dataset.theme); return; }
 
-        /* ── Tasks ── */
+        /* â”€â”€ Tasks â”€â”€ */
         if (action === 'tasks-create-list')       { Tasks.createList(); return; }
         if (action === 'tasks-open-add')          { Tasks.openAddModal(); return; }
         if (action === 'tasks-submit')            { Tasks.submitTask(); return; }
         if (action === 'tasks-delete-from-modal') { Tasks.deleteFromModal(); return; }
         if (action === 'tasks-add-subtask')       { Tasks.addTempSubtask(); return; }
 
-        /* ── Habits ── */
+        /* â”€â”€ Habits â”€â”€ */
         if (action === 'open-habit-add')       { Habits.openAddModal(); return; }
         if (action === 'open-habit-edit')      { Habits.openEditModal(el.dataset.habitId); return; }
         if (action === 'habit-submit')         { Habits.submitHabit(); return; }
@@ -1189,11 +1189,11 @@
         if (action === 'habit-toggle-enable')  { Habits.toggleEnable(el.dataset.habitId); return; }
         if (action === 'habit-modal-close')    { document.getElementById('habitModal')?.classList.remove('on'); Sound.close(); return; }
 
-        /* ── Dump ── */
+        /* â”€â”€ Dump â”€â”€ */
         if (action === 'dump-add')   { Dump.add(); return; }
         if (action === 'log-mood')   { Dump.logMood(el.dataset.mood); return; }
 
-        /* ── Pomo ── */
+        /* â”€â”€ Pomo â”€â”€ */
         if (action === 'pomo-mode')            { Pomo.setMode(el.dataset.mode); return; }
         if (action === 'pomo-toggle')          { Pomo.toggle(); return; }
         if (action === 'pomo-reset')           { Pomo.reset(); return; }
@@ -1202,7 +1202,7 @@
         if (action === 'pomo-exit-fullscreen') { Pomo.exitFullscreen(); return; }
         if (action === 'pomo-ambient')         { Pomo.setAmbient(el.dataset.sound); return; }
 
-        /* ── Report & Export Studio ── */
+        /* â”€â”€ Report & Export Studio â”€â”€ */
         if (action === 'report-mode')           { Report.setMode(el.dataset.mode); return; }
         if (action === 'report-week')           { Report.changeWeek(parseInt(el.dataset.dir, 10)); return; }
         if (action === 'report-month')          { Report.changeMonth(parseInt(el.dataset.dir, 10)); return; }
@@ -1214,13 +1214,13 @@
         if (action === 'export-download-pdf')   { Report.downloadPDF(); return; }
         if (action === 'export-copy-clipboard') { Report.copyImage(); return; }
 
-        /* ── Level ── */
+        /* â”€â”€ Level â”€â”€ */
         if (action === 'level-claim') { Level.claimVibe(); return; }
 
-        /* ── Command Glass ── */
+        /* â”€â”€ Command Glass â”€â”€ */
         if (action === 'cmdglass-close') { CommandGlass.close(); return; }
 
-        /* ── Modal backdrop close ── */
+        /* â”€â”€ Modal backdrop close â”€â”€ */
         if (action === 'modal-close') {
             document.getElementById(el.dataset.modal)?.classList.remove('on');
             Sound.close();
@@ -1236,7 +1236,7 @@
         }
     });
 
-    /* ── Ambient volume slider (input not click) ── */
+    /* â”€â”€ Ambient volume slider (input not click) â”€â”€ */
     document.addEventListener('input', (e) => {
         if (e.target.dataset.action === 'pomo-ambient-vol') {
             e.target.style.setProperty('--val', e.target.value + '%');
@@ -1244,7 +1244,7 @@
         }
     });
 
-    /* ── File inputs (change event) ── */
+    /* â”€â”€ File inputs (change event) â”€â”€ */
     document.addEventListener('change', (e) => {
         if (e.target.id === 'avatarFileInput' || e.target.dataset.action === 'settings-avatar-upload') {
             Settings.handleAvatarUpload(e);
@@ -1253,3 +1253,4 @@
     </script>
 </body>
 </html>
+

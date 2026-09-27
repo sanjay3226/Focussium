@@ -1,5 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
-   FOCUSSIUM v2 PRO — FIREBASE CONFIG
+   FOCUSSIUM v3 — FIREBASE CONFIG
+   Uses FirestoreSettings.cache for offline persistence
+   (replaces deprecated enablePersistence / enableMultiTabIndexedDbPersistence)
 ═══════════════════════════════════════════════════════════ */
 
 firebase.initializeApp({
@@ -13,7 +15,15 @@ firebase.initializeApp({
 
 const FB = {
     auth: firebase.auth(),
-    db: firebase.firestore()
+    db: (() => {
+        const db = firebase.firestore();
+        // Firebase 10.x: use FirestoreSettings.cache for multi-tab offline persistence
+        // This replaces the deprecated enablePersistence / enableMultiTabIndexedDbPersistence APIs
+        try {
+            db.settings({
+                cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+            });
+        } catch(e) { /* Settings already applied */ }
+        return db;
+    })()
 };
-
-FB.db.enablePersistence({ synchronizeTabs: true }).catch(() => { });

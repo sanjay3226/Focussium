@@ -82,10 +82,18 @@ const Sound = (() => {
         }, stepTime);
     }
 
-    /** Safe getter for AudioContext */
+    /** Safe lazy getter for AudioContext — only created on user gesture, never at load time */
     function getContext() {
         if (!ctx) {
-            ctx = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                ctx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                return null;
+            }
+        }
+        // Resume if suspended by browser autoplay policy
+        if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
         }
         return ctx;
     }
@@ -120,11 +128,7 @@ const Sound = (() => {
     }) {
         try {
             const c = getContext();
-            
-            // Resume AudioContext if suspended by browser autoplay policy
-            if (c.state === 'suspended') {
-                c.resume();
-            }
+            if (!c) return; // AudioContext not yet available — skip until user gesture
 
             const now = c.currentTime + delay;
             const osc = c.createOscillator();
@@ -180,10 +184,9 @@ const Sound = (() => {
     /** Play hook with mute & palette selector check */
     function play(fn) {
         if (State.data?.settings?.sound !== false) {
-            // Ensure audio context resumes on user gesture
-            const c = getContext();
-            if (c && c.state === 'suspended') {
-                c.resume();
+            // Only try to resume context if it already exists
+            if (ctx && ctx.state === 'suspended') {
+                ctx.resume().catch(() => {});
             }
             fn();
         }

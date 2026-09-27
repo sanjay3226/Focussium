@@ -41,13 +41,23 @@ const Storage = {
         if (!State.user) return;
 
         const indicator = document.getElementById('syncIndicator');
-        if (indicator) indicator.className = 'sync-indicator saving';
+        if (indicator) indicator.className = 'sync-indicator syncing';
+
+        // 5-second timeout — if Firestore is blocked (adblocker), fail fast
+        const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Firestore timeout')), 5000)
+        );
 
         try {
-            await FB.db.collection('users').doc(State.user.uid).set(Utils.clone(State.data));
-            if (indicator) indicator.className = 'sync-indicator';
+            await Promise.race([
+                FB.db.collection('users').doc(State.user.uid).set(Utils.clone(State.data)),
+                timeout
+            ]);
+            if (indicator) indicator.className = 'sync-indicator synced';
         } catch (e) {
-            handleError('Firestore save failed', e);
+            if (e.message !== 'Firestore timeout') {
+                handleError('Firestore save failed', e);
+            }
             if (indicator) indicator.className = 'sync-indicator error';
         }
     },
