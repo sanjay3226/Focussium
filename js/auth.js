@@ -57,20 +57,15 @@ const Auth = {
     _reveal() {
         const app    = document.getElementById('app');
         const splash = document.getElementById('loadingScreen');
-        if (!app || !splash) return;
-
-        // Ensure the app is already in the DOM with its content rendered
-        // but still invisible (opacity:0 from CSS .app rule)
-        app.classList.add('show');
-
-        // Double rAF: first frame triggers layout, second frame commits paint.
-        // This guarantees at least one fully-composited frame exists before
-        // the transition fires — eliminates any FPS drop / jank on reveal.
-        requestAnimationFrame(() => {
+        if (app) {
+            app.style.setProperty('visibility', 'visible');
+            app.classList.add('show');
+        }
+        if (splash) {
             requestAnimationFrame(() => {
                 splash.classList.add('hide');
             });
-        });
+        }
     },
 
     /**
@@ -119,13 +114,16 @@ const Auth = {
         State.data = Storage.load();
 
         // ── Step 2: If user is known (onboarded), render app fully BEHIND the splash ──
-        //    The app is at opacity:0 via CSS — user sees splash, not a blank screen.
         if (State.data && State.data.onboarded) {
             document.getElementById('app')?.style.setProperty('visibility', 'visible');
-            App.init();  // Full render, invisible behind splash
+            try {
+                App.init();  // Full render, invisible behind splash
+            } catch (e) {
+                console.error('[Focussium] Initial App.init error:', e);
+            }
         }
 
-        // ── Step 3: Wait for Firebase auth state (max ~1-2 frames on cached token) ──
+        // ── Step 3: Wait for Firebase auth state ──
         let revealed = false;
 
         const doReveal = () => {
@@ -134,83 +132,88 @@ const Auth = {
             Auth._reveal();
         };
 
-        // Safety net: reveal after 2.5s even if Firebase is slow/blocked
-        const safetyTimer = setTimeout(doReveal, 2500);
+        // Safety net: reveal after 1.2s max even if Firebase is slow/blocked
+        const safetyTimer = setTimeout(doReveal, 1200);
 
-        FB.auth.onAuthStateChanged(async user => {
-            clearTimeout(safetyTimer);
+        if (typeof FB !== 'undefined' && FB.auth) {
+            try {
+                FB.auth.onAuthStateChanged(async user => {
+                    clearTimeout(safetyTimer);
 
-            if (user) {
-                State.user = user;
+                    if (user) {
+                        State.user = user;
 
-                if (typeof Settings !== 'undefined' && Settings.applyAvatarDisplay) {
-                    Settings.applyAvatarDisplay();
-                }
+                        if (typeof Settings !== 'undefined' && Settings.applyAvatarDisplay) {
+                            Settings.applyAvatarDisplay();
+                        }
 
-                const emailDisp = document.getElementById('userEmailDisplay');
-                if (emailDisp) emailDisp.textContent = user.email || '';
+                        const emailDisp = document.getElementById('userEmailDisplay');
+                        if (emailDisp) emailDisp.textContent = user.email || '';
 
-                document.getElementById('loginScreen')?.classList.remove('show');
+                        document.getElementById('loginScreen')?.classList.remove('show');
 
-                if (!State.data.onboarded) {
-                    // New user: show onboarding, then reveal
-                    if (typeof Onboard !== 'undefined' && Onboard.show) Onboard.show();
-                    doReveal();
-                } else {
-                    // Returning user: app already rendered behind splash → reveal now
-                    if (!document.getElementById('app')?.classList.contains('show')) {
-                        App.init();
+                        if (!State.data.onboarded) {
+                            // New user: show onboarding, then reveal
+                            if (typeof Onboard !== 'undefined' && Onboard.show) Onboard.show();
+                            doReveal();
+                        } else {
+                            // Returning user: reveal now
+                            if (!document.getElementById('app')?.classList.contains('show')) {
+                                try { App.init(); } catch (err) {}
+                            }
+                            doReveal();
+                        }
+
+                        // ── Step 4: Background Firestore sync — non-blocking, 5s timeout ──
+                        const syncTimeout = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('sync-timeout')), 5000)
+                        );
+
+                        try {
+                            const doc = await Promise.race([
+                                FB.db.collection('users').doc(user.uid).get(),
+                                syncTimeout
+                            ]);
+
+                            if (doc.exists) {
+                                State.data = Auth._mergeRemoteData(State.data, doc.data());
+                                Storage.saveLocal();
+
+                                const indicator = document.getElementById('syncIndicator');
+                                if (indicator) indicator.className = 'sync-indicator synced';
+
+                                if (typeof Home     !== 'undefined') Home.render();
+                                if (typeof Tasks    !== 'undefined') Tasks.render();
+                                if (typeof Habits   !== 'undefined') Habits.render();
+                                if (typeof Report   !== 'undefined') Report.render();
+                                if (typeof Settings !== 'undefined') Settings.render();
+                            }
+                        } catch (e) {
+                            if (e.message !== 'sync-timeout') {
+                                ErrorLog.log('Firestore background sync failed, using local', e, 'warn');
+                            }
+                        }
+
+                    } else {
+                        // Not signed in
+                        State.user = null;
+
+                        if (!State.data?.onboarded) {
+                            document.getElementById('app')?.classList.remove('show');
+                            document.getElementById('loginScreen')?.classList.add('show');
+                        } else {
+                            try { App.init(); } catch (err) {}
+                        }
+
+                        doReveal();
                     }
-                    doReveal();
-                }
-
-                // ── Step 4: Background Firestore sync — non-blocking, 6s timeout ──
-                const syncTimeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('sync-timeout')), 6000)
-                );
-
-                try {
-                    const doc = await Promise.race([
-                        FB.db.collection('users').doc(user.uid).get(),
-                        syncTimeout
-                    ]);
-
-                    if (doc.exists) {
-                        // Smart merge: never blindly overwrite recent local changes
-                        State.data = Auth._mergeRemoteData(State.data, doc.data());
-                        Storage.saveLocal();
-
-                        // Update sync dot green
-                        const indicator = document.getElementById('syncIndicator');
-                        if (indicator) indicator.className = 'sync-indicator synced';
-
-                        // Silently re-render all views with merged data
-                        if (typeof Home    !== 'undefined') Home.render();
-                        if (typeof Tasks   !== 'undefined') Tasks.render();
-                        if (typeof Habits  !== 'undefined') Habits.render();
-                        if (typeof Report  !== 'undefined') Report.render();
-                        if (typeof Settings !== 'undefined') Settings.render();
-                    }
-                } catch (e) {
-                    if (e.message !== 'sync-timeout') {
-                        ErrorLog.log('Firestore background sync failed, using local', e, 'warn');
-                    }
-                }
-
-            } else {
-                // Not signed in
-                State.user = null;
-
-                if (!State.data?.onboarded) {
-                    document.getElementById('app')?.classList.remove('show');
-                    document.getElementById('loginScreen')?.classList.add('show');
-                } else {
-                    // Offline mode: already rendered from cache
-                    App.init();
-                }
-
+                });
+            } catch (err) {
+                console.warn('[Focussium] FB.auth failed, revealing local:', err);
                 doReveal();
             }
-        });
+        } else {
+            doReveal();
+        }
     }
 };

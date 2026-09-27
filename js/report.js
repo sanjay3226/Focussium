@@ -639,8 +639,8 @@ const Report = {
         }
 
         const dayKey = dayData.date || dayData.key;
-        const [y, m, dt] = dayKey.split('-').map(Number);
-        const date = new Date(y, m - 1, dt, 12, 0, 0);
+        const [yearPart, monthPart, dayPart] = dayKey.split('-').map(Number);
+        const date = new Date(yearPart, monthPart - 1, dayPart, 12, 0, 0);
         const dayLabel = date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
         const completedTasks = State.data.tasks.filter(t =>
