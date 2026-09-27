@@ -16,4 +16,4 @@ const FB = {
     db: firebase.firestore()
 };
 
-FB.db.enablePersistence().catch(() => { });
+FB.db.enablePersistence({ synchronizeTabs: true }).catch(() => { });

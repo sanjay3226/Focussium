@@ -59,26 +59,19 @@ const Auth = {
             if (loadingScreen) loadingScreen.classList.add('hide');
         };
 
-        // Safety fallback if Firebase callback delays
-        setTimeout(hideLoading, 1200);
+        // Instant Paint: load cached localStorage immediately so user never waits on slow network
+        State.data = Storage.load();
+        if (State.data && State.data.onboarded) {
+            document.getElementById('app')?.classList.add('show');
+            App.init();
+            setTimeout(hideLoading, 250);
+        } else {
+            setTimeout(hideLoading, 700);
+        }
 
         FB.auth.onAuthStateChanged(async user => {
             if (user) {
                 State.user = user;
-
-                try {
-                    const doc = await FB.db.collection('users').doc(user.uid).get();
-                    if (doc.exists) {
-                        const remoteData = doc.data();
-                        const migrated = State.migrate(remoteData);
-                        State.data = State.validate(migrated);
-                    } else {
-                        State.data = Storage.load();
-                    }
-                } catch (e) {
-                    ErrorLog.log('Firestore load failed, using local', e, 'warn');
-                    State.data = Storage.load();
-                }
 
                 if (typeof Settings !== 'undefined' && Settings.applyAvatarDisplay) {
                     Settings.applyAvatarDisplay();
@@ -88,20 +81,38 @@ const Auth = {
                 if (emailDisp) emailDisp.textContent = user.email || '';
 
                 document.getElementById('loginScreen')?.classList.remove('show');
-                setTimeout(hideLoading, 300);
+                hideLoading();
 
                 if (!State.data.onboarded) {
                     if (typeof Onboard !== 'undefined' && Onboard.show) Onboard.show();
-                } else {
+                } else if (!document.getElementById('app')?.classList.contains('show')) {
                     document.getElementById('app')?.classList.add('show');
                     App.init();
                 }
+
+                // Background sync from Firestore (non-blocking)
+                try {
+                    const doc = await FB.db.collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        const remoteData = doc.data();
+                        const migrated = State.migrate(remoteData);
+                        State.data = State.validate(migrated);
+                        Storage.save();
+                        if (typeof Home !== 'undefined') Home.render();
+                        if (typeof Tasks !== 'undefined') Tasks.render();
+                        if (typeof Habits !== 'undefined') Habits.render();
+                        if (typeof Report !== 'undefined') Report.render();
+                    }
+                } catch (e) {
+                    ErrorLog.log('Firestore background sync failed, using local', e, 'warn');
+                }
             } else {
                 State.user = null;
-                State.data = Storage.load();
-                document.getElementById('app')?.classList.remove('show');
-                document.getElementById('loginScreen')?.classList.add('show');
-                setTimeout(hideLoading, 300);
+                hideLoading();
+                if (!State.data?.onboarded) {
+                    document.getElementById('app')?.classList.remove('show');
+                    document.getElementById('loginScreen')?.classList.add('show');
+                }
                 App.init();
             }
         });

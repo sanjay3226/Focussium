@@ -158,32 +158,32 @@ const Icons = {
 
     play(size = 26) {
         return `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5.2C8 4.5 8.8 4.1 9.4 4.5L18.5 10.3C19.1 10.7 19.1 11.6 18.5 12L9.4 17.8C8.8 18.2 8 17.1V5.2Z"/>
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;">
+            <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z"/>
         </svg>`;
     },
 
     pause(size = 26) {
         return `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor">
-            <rect x="6" y="4" width="4.5" height="16" rx="1.5"/>
-            <rect x="13.5" y="4" width="4.5" height="16" rx="1.5"/>
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;">
+            <rect x="6" y="4.5" width="4" height="15" rx="2"/>
+            <rect x="14" y="4.5" width="4" height="15" rx="2"/>
         </svg>`;
     },
 
     reset(size = 18) {
         return `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 4V10H9"/>
-            <path d="M4.5 15A8.5 8.5 0 1 0 6.5 6.2L3 10"/>
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:auto;">
+            <path d="M3 4.5v5.5h5.5"/>
+            <path d="M3.8 15a8.5 8.5 0 1 0 2.2-8.8L3 10"/>
         </svg>`;
     },
 
     skip(size = 18) {
         return `
-        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 5L15 12L5 19V5Z" fill="currentColor"/>
-            <path d="M19 5V19"/>
+        <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="currentColor" style="display:block;margin:auto;">
+            <path d="M5.5 5.14v13.72a1 1 0 0 0 1.5.86l9-5.63a1 1 0 0 0 0-1.7l-9-5.63a1 1 0 0 0-1.5.86z"/>
+            <rect x="17.5" y="4.5" width="2.5" height="15" rx="1.25"/>
         </svg>`;
     },
 
