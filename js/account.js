@@ -137,9 +137,6 @@ document.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (!action) return;
 
-    if (action === 'account-sign-out') { Auth.signOut(); Account.close(); }
-    if (action === 'account-sign-in')  { Auth.signInGoogle(); }
-    if (action === 'account-export')   { Account.exportData(); }
     if (action === 'account-import')   { Account.importData(); }
     if (action === 'account-delete')   { Account.deleteAllData(); }
 });

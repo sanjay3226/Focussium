@@ -93,14 +93,11 @@ const Auth = {
             name:        local.name || remote.name || '',
             onboarded:   local.onboarded || remote.onboarded,
 
-            // Habits history: local today always wins (user just ticked/unticked)
-            habits: (() => {
-                const h = { ...(remote.habits || {}) };
-                if (local.habits && local.habits[today]) {
-                    h[today] = local.habits[today];
-                }
-                return h;
-            })(),
+            // Habits history: local always wins for any day recorded locally
+            habits: {
+                ...(remote.habits || {}),
+                ...(local.habits || {})
+            },
 
             // Tasks: prefer whichever side has more (offline edits)
             tasks: (Array.isArray(local.tasks) && local.tasks.length >= (remote.tasks || []).length)

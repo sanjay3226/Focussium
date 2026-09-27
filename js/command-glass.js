@@ -144,11 +144,3 @@ document.addEventListener('keydown', (e) => {
         }
     }
 });
-
-/* ─── MODAL BACKDROP CLICK (global) ─── */
-document.addEventListener('click', (e) => {
-    if (e.target.classList?.contains('modal') && e.target.classList?.contains('on')) {
-        e.target.classList.remove('on');
-        Sound.close();
-    }
-});

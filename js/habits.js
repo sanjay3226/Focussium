@@ -44,7 +44,7 @@ const Habits = {
             enabled.map(habit => {
                 const done = todayDone.includes(habit.id);
                 return `
-                <button class="habit-item ${done ? 'done' : ''}"
+                <button type="button" class="habit-item ${done ? 'done' : ''}"
                         data-action="toggle-habit" data-habit-id="${habit.id}"
                         aria-pressed="${done}">
                     <span class="habit-icon">${Icons.getHabitIcon(habit.icon, 20)}</span>
@@ -90,8 +90,20 @@ const Habits = {
         </div>`;
     },
 
+    _lastToggleTime: 0,
+    _lastToggleId: null,
+
     /* ─── TOGGLE HABIT COMPLETION ─── */
     toggle(habitId) {
+        if (!habitId) return;
+        const now = Date.now();
+        // Guard against duplicate / rapid double triggers within 250ms
+        if (this._lastToggleId === habitId && (now - this._lastToggleTime) < 250) {
+            return;
+        }
+        this._lastToggleTime = now;
+        this._lastToggleId = habitId;
+
         const today = Utils.today();
         if (!State.data.habits) State.data.habits = {};
         if (!State.data.habits[today]) State.data.habits[today] = [];
@@ -255,30 +267,19 @@ const Habits = {
         const enabled = config.filter(h => h.enabled);
         if (!enabled.length) return 0;
 
-        let streak = 0;
-        let date   = Utils.today();
-        let checkedToday = false;
+        const today = Utils.today();
+        const todayHabits = State.data.habits?.[today] || [];
+        const todayDone = enabled.every(h => todayHabits.includes(h.id));
 
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
+        let streak = 0;
+        let dayOffset = todayDone ? 0 : 1;
+
+        for (let i = 0; i < 365; i++) {
+            const date = Utils.daysAgo(dayOffset + i);
             const dayHabits = State.data.habits?.[date] || [];
-            const allDone   = enabled.every(h => dayHabits.includes(h.id));
-            if (!allDone) {
-                // If today is incomplete, don't wipe streak yet; check backwards from yesterday
-                if (!checkedToday && date === Utils.today()) {
-                    checkedToday = true;
-                    const d = new Date(date + 'T00:00:00');
-                    d.setDate(d.getDate() - 1);
-                    date = d.toISOString().split('T')[0];
-                    continue;
-                }
-                break;
-            }
+            const allDone = enabled.every(h => dayHabits.includes(h.id));
+            if (!allDone) break;
             streak++;
-            checkedToday = true;
-            const d = new Date(date + 'T00:00:00');
-            d.setDate(d.getDate() - 1);
-            date = d.toISOString().split('T')[0];
         }
         return streak;
     },
@@ -316,17 +317,26 @@ const Habits = {
 
 /* ─── HABITS EVENT DELEGATION ─── */
 document.addEventListener('click', (e) => {
-    const action = e.target.closest('[data-action]')?.dataset.action;
-    if (!action) return;
     const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
 
-    if (action === 'toggle-habit')       Habits.toggle(el.dataset.habitId);
-    if (action === 'habit-toggle-enable') Habits.toggleEnable(el.dataset.habitId);
-    if (action === 'habit-delete')        Habits.deleteHabit(el.dataset.habitId || document.getElementById('editingHabitId')?.value);
-    if (action === 'open-habit-add')      Habits.openAddModal();
-    if (action === 'open-habit-edit')     Habits.openEditModal(el.dataset.habitId);
-    if (action === 'habit-submit')        Habits.submitHabit();
-    if (action === 'habit-modal-close') {
+    if (action === 'toggle-habit') {
+        e.preventDefault();
+        e.stopPropagation();
+        Habits.toggle(el.dataset.habitId);
+    } else if (action === 'habit-toggle-enable') {
+        e.preventDefault();
+        Habits.toggleEnable(el.dataset.habitId);
+    } else if (action === 'habit-delete') {
+        Habits.deleteHabit(el.dataset.habitId || document.getElementById('editingHabitId')?.value);
+    } else if (action === 'open-habit-add') {
+        Habits.openAddModal();
+    } else if (action === 'open-habit-edit') {
+        Habits.openEditModal(el.dataset.habitId);
+    } else if (action === 'habit-submit') {
+        Habits.submitHabit();
+    } else if (action === 'habit-modal-close') {
         document.getElementById('habitModal')?.classList.remove('on');
         Sound.close();
     }
