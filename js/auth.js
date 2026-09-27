@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    FOCUSSIUM 3.0 — AUTH MODULE
-   Firebase Google Authentication
+   Firebase Google Authentication + Psychological Boot Reveal
 ═══════════════════════════════════════════════════════════ */
 
 const Auth = {
@@ -24,10 +24,8 @@ const Auth = {
 
     async signOut() {
         try {
-            // Close all open modals
             document.querySelectorAll('.modal.on').forEach(m => m.classList.remove('on'));
 
-            // Stop any running pomo timer
             if (State.pomo.running) {
                 clearInterval(State.pomo.interval);
                 State.pomo.running = false;
@@ -51,6 +49,31 @@ const Auth = {
     },
 
     /**
+     * Psychological reveal: app renders fully behind the splash (opacity:0),
+     * then a double-rAF ensures the browser has painted one complete frame
+     * before we trigger the CSS crossfade (splash blurs out, app floats up).
+     * The human eye perceives zero loading because there's no hard cut.
+     */
+    _reveal() {
+        const app    = document.getElementById('app');
+        const splash = document.getElementById('loadingScreen');
+        if (!app || !splash) return;
+
+        // Ensure the app is already in the DOM with its content rendered
+        // but still invisible (opacity:0 from CSS .app rule)
+        app.classList.add('show');
+
+        // Double rAF: first frame triggers layout, second frame commits paint.
+        // This guarantees at least one fully-composited frame exists before
+        // the transition fires — eliminates any FPS drop / jank on reveal.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                splash.classList.add('hide');
+            });
+        });
+    },
+
+    /**
      * Merge remote Firestore data with local data without losing recent local changes.
      * Remote wins for historical records (tasks, pomo sessions, habits history, dumps, moods).
      * Local wins for active user preferences (settings, habitConfig, name).
@@ -58,9 +81,11 @@ const Auth = {
     _mergeRemoteData(local, remote) {
         if (!remote || typeof remote !== 'object') return local;
 
+        const today = (new Date()).toISOString().split('T')[0];
+
         const merged = {
             ...remote,
-            // User preferences: always keep local version (user just changed these)
+            // User preferences: always keep local version
             settings:    { ...remote.settings, ...local.settings },
             habitConfig: (Array.isArray(local.habitConfig) && local.habitConfig.length)
                              ? local.habitConfig
@@ -68,25 +93,23 @@ const Auth = {
             name:        local.name || remote.name || '',
             onboarded:   local.onboarded || remote.onboarded,
 
-            // Habits history: merge by date key — local entries take priority for today
+            // Habits history: local today always wins (user just ticked/unticked)
             habits: (() => {
-                const today = (new Date()).toISOString().split('T')[0];
-                const merged = { ...(remote.habits || {}) };
-                // Local today always wins (user just ticked/unticked today)
+                const h = { ...(remote.habits || {}) };
                 if (local.habits && local.habits[today]) {
-                    merged[today] = local.habits[today];
+                    h[today] = local.habits[today];
                 }
-                return merged;
+                return h;
             })(),
 
-            // Tasks: if local has more tasks, prefer local (offline edits)
+            // Tasks: prefer whichever side has more (offline edits)
             tasks: (Array.isArray(local.tasks) && local.tasks.length >= (remote.tasks || []).length)
                        ? local.tasks
                        : (remote.tasks || []),
 
-            // Keep local pomo streak / bonus tracking if higher (offline sessions)
-            totalFocusMinutes:       Math.max(local.totalFocusMinutes || 0, remote.totalFocusMinutes || 0),
-            totalTasksCompleted:     Math.max(local.totalTasksCompleted || 0, remote.totalTasksCompleted || 0),
+            // Keep highest XP counters (offline sessions)
+            totalFocusMinutes:       Math.max(local.totalFocusMinutes || 0,       remote.totalFocusMinutes || 0),
+            totalTasksCompleted:     Math.max(local.totalTasksCompleted || 0,     remote.totalTasksCompleted || 0),
             totalHabitDaysCompleted: Math.max(local.totalHabitDaysCompleted || 0, remote.totalHabitDaysCompleted || 0),
             level: Math.max(local.level || 1, remote.level || 1),
         };
@@ -95,25 +118,31 @@ const Auth = {
     },
 
     init() {
-        let initialized = false;
-        const hideLoading = () => {
-            if (initialized) return;
-            initialized = true;
-            const loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen) loadingScreen.classList.add('hide');
-        };
-
-        // Instant Paint: load cached localStorage immediately so user never waits on slow network
+        // ── Step 1: Load cached local data instantly (zero network wait) ──
         State.data = Storage.load();
+
+        // ── Step 2: If user is known (onboarded), render app fully BEHIND the splash ──
+        //    The app is at opacity:0 via CSS — user sees splash, not a blank screen.
         if (State.data && State.data.onboarded) {
-            document.getElementById('app')?.classList.add('show');
-            App.init();
-            setTimeout(hideLoading, 250);
-        } else {
-            setTimeout(hideLoading, 700);
+            document.getElementById('app')?.style.setProperty('visibility', 'visible');
+            App.init();  // Full render, invisible behind splash
         }
 
+        // ── Step 3: Wait for Firebase auth state (max ~1-2 frames on cached token) ──
+        let revealed = false;
+
+        const doReveal = () => {
+            if (revealed) return;
+            revealed = true;
+            Auth._reveal();
+        };
+
+        // Safety net: reveal after 2.5s even if Firebase is slow/blocked
+        const safetyTimer = setTimeout(doReveal, 2500);
+
         FB.auth.onAuthStateChanged(async user => {
+            clearTimeout(safetyTimer);
+
             if (user) {
                 State.user = user;
 
@@ -125,17 +154,20 @@ const Auth = {
                 if (emailDisp) emailDisp.textContent = user.email || '';
 
                 document.getElementById('loginScreen')?.classList.remove('show');
-                hideLoading();
 
                 if (!State.data.onboarded) {
+                    // New user: show onboarding, then reveal
                     if (typeof Onboard !== 'undefined' && Onboard.show) Onboard.show();
-                } else if (!document.getElementById('app')?.classList.contains('show')) {
-                    document.getElementById('app')?.classList.add('show');
-                    App.init();
+                    doReveal();
+                } else {
+                    // Returning user: app already rendered behind splash → reveal now
+                    if (!document.getElementById('app')?.classList.contains('show')) {
+                        App.init();
+                    }
+                    doReveal();
                 }
 
-                // Background sync from Firestore (non-blocking, smart merge)
-                // Timeout: 6s — if Firestore is blocked by adblocker, give up cleanly
+                // ── Step 4: Background Firestore sync — non-blocking, 6s timeout ──
                 const syncTimeout = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('sync-timeout')), 6000)
                 );
@@ -147,15 +179,15 @@ const Auth = {
                     ]);
 
                     if (doc.exists) {
-                        // Smart merge: never blindly overwrite local with stale remote
+                        // Smart merge: never blindly overwrite recent local changes
                         State.data = Auth._mergeRemoteData(State.data, doc.data());
-                        Storage.saveLocal(); // persist merged result locally
+                        Storage.saveLocal();
 
-                        // Update sync dot to green
+                        // Update sync dot green
                         const indicator = document.getElementById('syncIndicator');
                         if (indicator) indicator.className = 'sync-indicator synced';
 
-                        // Re-render all affected views with merged data
+                        // Silently re-render all views with merged data
                         if (typeof Home    !== 'undefined') Home.render();
                         if (typeof Tasks   !== 'undefined') Tasks.render();
                         if (typeof Habits  !== 'undefined') Habits.render();
@@ -166,16 +198,21 @@ const Auth = {
                     if (e.message !== 'sync-timeout') {
                         ErrorLog.log('Firestore background sync failed, using local', e, 'warn');
                     }
-                    // Sync dot stays neutral / error — handled by saveRemote in storage.js
                 }
+
             } else {
+                // Not signed in
                 State.user = null;
-                hideLoading();
+
                 if (!State.data?.onboarded) {
                     document.getElementById('app')?.classList.remove('show');
                     document.getElementById('loginScreen')?.classList.add('show');
+                } else {
+                    // Offline mode: already rendered from cache
+                    App.init();
                 }
-                App.init();
+
+                doReveal();
             }
         });
     }

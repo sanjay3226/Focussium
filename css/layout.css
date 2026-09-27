@@ -28,11 +28,21 @@ body {
     gap: 14px;
     background: var(--bg0);
     z-index: var(--z-loading);
-    transition: opacity .5s ease, visibility .5s ease;
+    /* GPU-composited: transform + opacity only — zero layout thrashing */
+    transition:
+        opacity .55s cubic-bezier(.4, 0, .2, 1),
+        transform .55s cubic-bezier(.4, 0, .2, 1),
+        filter .55s cubic-bezier(.4, 0, .2, 1),
+        visibility .55s step-end;
+    will-change: opacity, transform, filter;
+    backface-visibility: hidden;
 }
 
+/* Psychological exit: blur + scale-up — eye reads this as the app "coming forward" */
 .ld-scr.hide {
     opacity: 0;
+    transform: scale(1.06);
+    filter: blur(8px);
     visibility: hidden;
     pointer-events: none;
 }
@@ -88,17 +98,22 @@ body {
     flex-direction: column;
     z-index: var(--z-base);
     opacity: 0;
-    transition: opacity .5s ease;
+    transform: scale(.975) translateY(6px);
+    /* Smooth entrance: app scales up + fades in while splash blurs out */
+    transition:
+        opacity .5s cubic-bezier(.25, .46, .45, .94) .08s,
+        transform .5s cubic-bezier(.25, .46, .45, .94) .08s;
+    will-change: opacity, transform;
+    backface-visibility: hidden;
     overflow: hidden;
     /* Subtle border on PC for visual containment */
     box-shadow: 0 0 0 1px var(--bd), 0 0 80px rgba(0,0,0,.5);
-    /* Force integer pixel alignment — prevents sub-pixel blur */
-    will-change: auto;
     image-rendering: auto;
 }
 
 .app.show {
     opacity: 1;
+    transform: scale(1) translateY(0);
 }
 
 /* ── Sync Indicator ── */
