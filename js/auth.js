@@ -81,7 +81,7 @@ const Auth = {
     _mergeRemoteData(local, remote) {
         if (!remote || typeof remote !== 'object') return local;
 
-        const today = (new Date()).toISOString().split('T')[0];
+        const today = Utils.today();
 
         const merged = {
             ...remote,

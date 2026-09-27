@@ -270,7 +270,7 @@ const Report = {
             const mood = State.data.moods?.find(m => m.date === day.date)?.mood || '';
             const moodMarkup = mood && moodIcons[mood] ? `<span class="timeline-mood" style="color:var(--ac);">${moodIcons[mood]}</span>` : '';
             const dayScore = day.tasks + Math.floor(day.focus / 25);
-            const dateNum = new Date(day.date + 'T00:00:00').getDate();
+            const dateNum = parseInt(day.date.split('-')[2], 10);
             const hasActivity = day.focus > 0 || day.tasks > 0;
 
             if (!hasActivity) {
@@ -448,7 +448,7 @@ const Report = {
         for (let day = 1; day <= monthEnd.getDate(); day++) {
             const d   = new Date(year, monthIdx, day);
             const key = `${year}-${String(monthIdx + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-            const tasks  = State.data.tasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === key).length;
+            const tasks  = State.data.tasks.filter(t => t.completed && t.completedAt && Utils.formatDate(new Date(t.completedAt)) === key).length;
             const focus  = State.data.pomo.filter(p => p.date === key).reduce((sum, p) => sum + p.dur, 0);
             days.push({ day, weekday: d.getDay(), key, tasks, focus, score: tasks + Math.round(focus / 25), isToday: key === Utils.today() });
         }
@@ -574,7 +574,7 @@ const Report = {
         for (let i = 29; i >= 0; i--) {
             const dateStr = Utils.daysAgo(i);
             const isToday = (dateStr === todayKey);
-            const tasksDone = (State.data.tasks || []).filter(t => t.completed && t.completedAt && new Date(t.completedAt).toISOString().split('T')[0] === dateStr).length;
+            const tasksDone = (State.data.tasks || []).filter(t => t.completed && t.completedAt && Utils.formatDate(new Date(t.completedAt)) === dateStr).length;
             const focusMin = (State.data.pomo || []).filter(p => p.date === dateStr).reduce((sum, p) => sum + p.dur, 0);
             const habitsDone = (State.data.habits?.[dateStr] || []).length;
             const active = (tasksDone > 0 || focusMin > 0 || habitsDone > 0);
@@ -639,12 +639,13 @@ const Report = {
         }
 
         const dayKey = dayData.date || dayData.key;
-        const date = new Date(dayKey + 'T00:00:00');
+        const [y, m, dt] = dayKey.split('-').map(Number);
+        const date = new Date(y, m - 1, dt, 12, 0, 0);
         const dayLabel = date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
 
         const completedTasks = State.data.tasks.filter(t =>
             t.completed && t.completedAt &&
-            new Date(t.completedAt).toISOString().split('T')[0] === dayKey
+            Utils.formatDate(new Date(t.completedAt)) === dayKey
         );
 
         const mood = State.data.moods?.find(m => m.date === dayKey)?.mood || '';
@@ -666,7 +667,7 @@ const Report = {
 
         const dayDumps = (State.data.dumps || []).filter(d => {
             if (!d.ts) return false;
-            return new Date(d.ts).toISOString().split('T')[0] === dayKey;
+            return Utils.formatDate(new Date(d.ts)) === dayKey;
         });
 
         // Habits completed on this date
@@ -925,20 +926,17 @@ const Report = {
 
         // Top completed tasks of the week
         const completedTasksThisWeek = (State.data?.tasks || [])
-            .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]))
+            .filter(t => t.completed && t.completedAt && dates.includes(Utils.formatDate(new Date(t.completedAt))))
             .slice(0, 3);
 
         const maxDailyFocus = Math.max(...w.days.map(d => d.focus), 1);
         const daysLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-        // Seneca / Marcus Stoic quote for insight footer
-        const stoicQuotes = [
-            "We suffer more often in imagination than in reality. — Seneca",
-            "You have power over your mind, not outside events. — Marcus Aurelius",
-            "First say to yourself what you would be; and then do what you have to do. — Epictetus",
-            "Action is the true measure of discipline. — Toji"
-        ];
-        const quote = stoicQuotes[Math.floor(Math.random() * stoicQuotes.length)];
+        // Seneca / Marcus Stoic quote from Quotes engine
+        const stoicObj = (typeof Quotes !== 'undefined' && Quotes.getRandomStoic)
+            ? Quotes.getRandomStoic()
+            : { text: "We suffer more often in imagination than in reality.", author: "Seneca" };
+        const quote = `“${stoicObj.text}” — ${stoicObj.author}`;
 
         card.innerHTML = `
             <!-- Header: Brand + User Pill -->
@@ -1557,7 +1555,7 @@ const Report = {
             
             // Completed tasks this week
             const completedTasksThisWeek = (State.data?.tasks || [])
-                .filter(t => t.completed && t.completedAt && dates.includes(new Date(t.completedAt).toISOString().split('T')[0]));
+                .filter(t => t.completed && t.completedAt && dates.includes(Utils.formatDate(new Date(t.completedAt))));
 
             // Colors: Theme-aware (BUG-04)
             const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -1880,7 +1878,7 @@ const Report = {
                     doc.setFont('helvetica', 'normal');
                     doc.setFontSize(6);
                     textCol(TX_MUTED);
-                    const taskDate = t.completedAt ? new Date(t.completedAt).toISOString().split('T')[0] : '';
+                    const taskDate = t.completedAt ? Utils.formatDate(new Date(t.completedAt)) : '';
                     doc.text(taskDate, PW - 20, ty, { align: 'right' });
                 });
             } else {

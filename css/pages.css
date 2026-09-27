@@ -11,10 +11,24 @@
     padding: 12px 16px;
     margin-bottom: 14px;
     display: flex;
-    gap: 10px;
-    align-items: center;
+    gap: 12px;
+    align-items: flex-start;
     box-shadow: var(--shadow-xs);
     animation: fadeIn .4s ease backwards;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform .18s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.daily-quote-card:active {
+    transform: scale(0.985);
+    background: var(--bg3);
+}
+
+.daily-quote-card:hover {
+    border-color: rgba(var(--acr), 0.35);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
 .quote-sparkle {
@@ -22,6 +36,7 @@
     color: var(--ac);
     display: flex;
     align-items: center;
+    margin-top: 2px;
 }
 
 .quote-sparkle svg {
@@ -29,22 +44,67 @@
     height: 14px;
 }
 
-.quote-content { flex: 1; }
+.quote-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.quote-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.quote-badge {
+    font-size: 0.60rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(var(--acr), 0.12);
+    color: var(--ac);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.quote-tap-hint {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--tx4);
+    opacity: 0.7;
+    letter-spacing: 0.02em;
+    transition: opacity .2s;
+}
+
+.daily-quote-card:hover .quote-tap-hint {
+    opacity: 1;
+    color: var(--ac);
+}
 
 .quote-text {
-    font-size: .78rem;
+    font-size: .80rem;
     font-weight: 600;
     color: var(--tx1);
     line-height: 1.45;
-    margin: 0 0 2px;
+    margin: 0 0 3px;
     font-style: italic;
+    transition: opacity .16s ease, transform .16s ease;
 }
 
 .quote-author {
-    font-size: .64rem;
+    font-size: .66rem;
     color: var(--tx3);
-    font-weight: 700;
+    font-weight: 600;
     margin: 0;
+    transition: opacity .16s ease, transform .16s ease;
+}
+
+.quote-fade-out {
+    opacity: 0;
+    transform: translateY(2px);
 }
 
 /* ── Home habits preview ── */

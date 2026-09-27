@@ -45,7 +45,7 @@ const Clock = {
     checkStreak() {
         const today = Utils.today();
         if (State.data.lastVisit !== today) {
-            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            const yesterday = Utils.daysAgo(1);
 
             if (State.data.lastVisit === yesterday) {
                 State.data.streak = (State.data.streak || 0) + 1;

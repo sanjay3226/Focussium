@@ -240,7 +240,8 @@ const Habits = {
             const done    = (State.data.habits?.[date] || []).length;
             const pct     = Math.min(100, Math.round((done / total) * 100));
             const isToday = i === 0;
-            const dayName = new Date(date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short' });
+            const [y, m, dt] = date.split('-').map(Number);
+            const dayName = new Date(y, m - 1, dt, 12, 0, 0).toLocaleDateString('en', { weekday: 'short' });
             days.push({ date, done, pct, isToday, dayName });
         }
 

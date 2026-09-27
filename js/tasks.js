@@ -580,7 +580,7 @@ const Tasks = {
 
                 if (completed.length > 0) {
                     const last = completed[0];
-                    const doneDate = new Date(last.completedAt).toISOString().split('T')[0];
+                    const doneDate = Utils.formatDate(new Date(last.completedAt));
 
                     if (doneDate < today && !State.data.tasks.some(t =>
                         t.repeatGroupId === gid && t.date === today && !t.completed

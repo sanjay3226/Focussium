@@ -37,8 +37,18 @@ function handleError(context, error) {
    UTILITIES
 ───────────────────────────────────────────────────────── */
 const Utils = {
+    /** Format Date object or timestamp to YYYY-MM-DD in LOCAL time (immune to UTC shift) */
+    formatDate(d = new Date()) {
+        const dateObj = (d instanceof Date) ? d : new Date(d);
+        if (isNaN(dateObj.getTime())) return '';
+        const year  = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day   = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    },
+
     today() {
-        return new Date().toISOString().split('T')[0];
+        return this.formatDate(new Date());
     },
 
     isToday(dateStr) {
@@ -51,8 +61,9 @@ const Utils = {
 
     daysAgo(n) {
         const d = new Date();
+        d.setHours(12, 0, 0, 0); // Noon anchor prevents any midnight/DST boundary shifts
         d.setDate(d.getDate() - n);
-        return d.toISOString().split('T')[0];
+        return this.formatDate(d);
     },
 
     escape(str) {
@@ -106,13 +117,14 @@ const Utils = {
         const now = new Date();
         const day = now.getDay();
         const monday = new Date(now);
-        monday.setHours(0, 0, 0, 0);
+        // Anchor at 12:00 noon local time so date arithmetic never crosses midnight/DST boundary
+        monday.setHours(12, 0, 0, 0);
         monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
 
         return Array.from({ length: 7 }, (_, i) => {
             const d = new Date(monday);
             d.setDate(monday.getDate() + i);
-            return d.toISOString().split('T')[0];
+            return this.formatDate(d);
         });
     },
 
@@ -126,7 +138,7 @@ const Utils = {
             tasks: State.data.tasks.filter(t =>
                 t.completed &&
                 t.completedAt &&
-                new Date(t.completedAt).toISOString().split('T')[0] === date
+                this.formatDate(new Date(t.completedAt)) === date
             ).length,
             focus: State.data.pomo
                 .filter(p => p.date === date)

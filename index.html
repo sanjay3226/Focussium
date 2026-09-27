@@ -223,12 +223,16 @@
                     <h2>Dashboard</h2>
                 </div>
 
-                <!-- Quote -->
-                <div class="daily-quote-card" id="dailyQuoteCard" style="display:none;">
+                <!-- Quote & AI Insights -->
+                <div class="daily-quote-card" id="dailyQuoteCard" style="display:none;" data-action="quote-next" title="Tap to cycle quote or AI insight">
                     <div class="quote-sparkle" id="quoteSparkleIcon"></div>
                     <div class="quote-content">
+                        <div class="quote-meta-row">
+                            <span class="quote-badge" id="quoteTag">Wisdom ✦</span>
+                            <span class="quote-tap-hint">Tap to cycle ✦</span>
+                        </div>
                         <p class="quote-text" id="dailyQuoteText">"Loading your zen space..."</p>
-                        <p class="quote-author" id="dailyQuoteAuthor">â€” Focussium</p>
+                        <p class="quote-author" id="dailyQuoteAuthor">— Focussium</p>
                     </div>
                 </div>
 
@@ -1099,38 +1103,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 
     <!-- Core utilities (no dependencies) -->
-    <script src="js/icons.js"></script>
-    <script src="js/sounds.js"></script>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/storage.js"></script>
-    <script src="js/theme.js"></script>
-    <script src="js/toast.js"></script>
+    <script src="js/icons.js?v=345"></script>
+    <script src="js/sounds.js?v=345"></script>
+    <script src="js/firebase-config.js?v=345"></script>
+    <script src="js/config.js?v=345"></script>
+    <script src="js/state.js?v=345"></script>
+    <script src="js/utils.js?v=345"></script>
+    <script src="js/storage.js?v=345"></script>
+    <script src="js/theme.js?v=345"></script>
+    <script src="js/toast.js?v=345"></script>
 
     <!-- Features (depend on core) -->
-    <script src="js/auth.js?v=344"></script>
-    <script src="js/router.js"></script>
-    <script src="js/clock.js?v=344"></script>
-    <script src="js/confetti.js"></script>
-    <script src="js/quotes.js"></script>
-    <script src="js/level.js"></script>
-    <script src="js/tasks.js"></script>
-    <script src="js/dump.js"></script>
-    <script src="js/pomo.js"></script>
-    <script src="js/habits.js?v=344"></script>
-    <script src="js/home.js"></script>
-    <script src="js/report.js"></script>
-    <script src="js/account.js?v=344"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/onboard.js"></script>
-    <script src="js/command-glass.js?v=344"></script>
-    <script src="js/games.js"></script>
-    <script src="js/smooth-scroll.js?v=344"></script>
+    <script src="js/auth.js?v=345"></script>
+    <script src="js/router.js?v=345"></script>
+    <script src="js/clock.js?v=345"></script>
+    <script src="js/confetti.js?v=345"></script>
+    <script src="js/quotes.js?v=345"></script>
+    <script src="js/level.js?v=345"></script>
+    <script src="js/tasks.js?v=345"></script>
+    <script src="js/dump.js?v=345"></script>
+    <script src="js/pomo.js?v=345"></script>
+    <script src="js/habits.js?v=345"></script>
+    <script src="js/home.js?v=345"></script>
+    <script src="js/report.js?v=345"></script>
+    <script src="js/account.js?v=345"></script>
+    <script src="js/settings.js?v=345"></script>
+    <script src="js/onboard.js?v=345"></script>
+    <script src="js/command-glass.js?v=345"></script>
+    <script src="js/games.js?v=345"></script>
+    <script src="js/smooth-scroll.js?v=345"></script>
 
-    <!-- Boot (last â€” all modules must be defined first) -->
-    <script src="js/app.js?v=344"></script>
+    <!-- Boot (last — all modules must be defined first) -->
+    <script src="js/app.js?v=345"></script>
 
     <!-- Global data-action event bus (replaces all inline onclick) -->
     <script>
@@ -1139,12 +1143,13 @@
         if (!el) return;
         const action = el.dataset.action;
 
-        /* â”€â”€ Navigation â”€â”€ */
+        /* ── Navigation ── */
         if (action === 'nav-go')       { Nav.go(el.dataset.page); return; }
         if (action === 'nav-dump')     { Nav.go('dump'); return; }
         if (action === 'nav-tasks')    { Nav.go('tasks'); return; }
         if (action === 'nav-habits')   { Nav.go('habits'); return; }
         if (action === 'nav-report')   { Nav.go('report'); return; }
+        if (action === 'quote-next')   { Quotes.next(); return; }
 
         /* â”€â”€ Auth â”€â”€ */
         if (action === 'auth-google')  { Auth.signInGoogle(); return; }
