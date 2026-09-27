@@ -243,9 +243,9 @@ const Quotes = {
         // Default: display today's quote with its category badge
         const q = this.getTodayQuote();
         text.textContent = `"${q.text}"`;
-        author.textContent = `— ${q.author}`;
-        if (tag) tag.textContent = q.cat ? `${q.cat} ✦` : 'Wisdom ✦';
-        if (sparkle && Icons.spark) sparkle.innerHTML = Icons.spark(14);
+        author.textContent = `- ${q.author}`;
+        if (tag) tag.textContent = q.cat || 'Wisdom';
+        if (sparkle && Icons && Icons.spark) sparkle.innerHTML = Icons.spark(11);
 
         card.style.display = 'flex';
     }
